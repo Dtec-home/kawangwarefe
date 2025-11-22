@@ -7,6 +7,7 @@
  */
 
 import { ApolloLink, HttpLink } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
 import {
   ApolloClient,
   ApolloNextAppProvider,
@@ -24,6 +25,19 @@ function makeClient() {
     fetchOptions: { cache: "no-store" },
   });
 
+  // Auth link to add JWT token to requests
+  const authLink = setContext((_, { headers }) => {
+    // Get token from localStorage
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : "",
+      },
+    };
+  });
+
   return new ApolloClient({
     cache: new InMemoryCache(),
     link:
@@ -34,7 +48,7 @@ function makeClient() {
             }),
             httpLink,
           ])
-        : httpLink,
+        : ApolloLink.from([authLink, httpLink]),
   });
 }
 

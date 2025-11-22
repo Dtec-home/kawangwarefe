@@ -25,6 +25,10 @@ interface Category {
   description: string;
 }
 
+interface GetCategoriesData {
+  contributionCategories: Category[];
+}
+
 interface CategorySelectProps {
   label?: string;
   name: string;
@@ -42,7 +46,7 @@ export function CategorySelect({
   error,
   required = true,
 }: CategorySelectProps) {
-  const { data, loading, error: queryError } = useQuery(
+  const { data, loading, error: queryError } = useQuery<GetCategoriesData>(
     GET_CONTRIBUTION_CATEGORIES
   );
 

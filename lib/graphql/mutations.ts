@@ -46,3 +46,33 @@ export const INITIATE_CONTRIBUTION = gql`
     }
   }
 `;
+
+/**
+ * Generate contribution report
+ * Requires staff permissions
+ */
+export const GENERATE_CONTRIBUTION_REPORT = gql`
+  mutation GenerateContributionReport(
+    $format: String!
+    $reportType: String!
+    $dateFrom: DateTime
+    $dateTo: DateTime
+    $categoryId: Int
+    $memberId: Int
+  ) {
+    generateContributionReport(
+      format: $format
+      reportType: $reportType
+      dateFrom: $dateFrom
+      dateTo: $dateTo
+      categoryId: $categoryId
+      memberId: $memberId
+    ) {
+      success
+      message
+      fileData
+      filename
+      contentType
+    }
+  }
+`;
