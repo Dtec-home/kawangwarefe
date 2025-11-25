@@ -34,14 +34,44 @@ const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_KEY = "user";
 
+// GraphQL response types
+interface VerifyOtpPayload {
+  success: boolean;
+  accessToken?: string;
+  refreshToken?: string;
+  userId?: number;
+  memberId?: number;
+  phoneNumber?: string;
+  fullName?: string;
+  message: string;
+}
+
+interface RefreshTokenPayload {
+  success: boolean;
+  accessToken?: string;
+  message: string;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [verifyOtpMutation] = useMutation(VERIFY_OTP);
-  const [logoutMutation] = useMutation(LOGOUT);
-  const [refreshTokenMutation] = useMutation(REFRESH_TOKEN);
+  // Typed mutations so `data` is strongly typed (not `unknown`)
+  const [verifyOtpMutation] = useMutation<
+    { verifyOtp: VerifyOtpPayload },
+    { phoneNumber: string; otpCode: string }
+  >(VERIFY_OTP);
+
+  const [logoutMutation] = useMutation<
+    { logout: { success: boolean } },
+    { refreshToken: string }
+  >(LOGOUT);
+
+  const [refreshTokenMutation] = useMutation<
+    { refreshToken: RefreshTokenPayload },
+    { refreshToken: string }
+  >(REFRESH_TOKEN);
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -72,19 +102,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           variables: { phoneNumber, otpCode },
         });
 
+        if (!data || !data.verifyOtp) {
+          return { success: false, message: "No response from server" };
+        }
+
         const result = data.verifyOtp;
 
         if (result.success && result.accessToken) {
           // Store tokens
           localStorage.setItem(TOKEN_KEY, result.accessToken);
-          localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
+          if (result.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
 
           // Store user info
           const userData: User = {
-            userId: result.userId,
-            memberId: result.memberId,
-            phoneNumber: result.phoneNumber,
-            fullName: result.fullName,
+            userId: result.userId ?? 0,
+            memberId: result.memberId ?? 0,
+            phoneNumber: result.phoneNumber ?? phoneNumber,
+            fullName: result.fullName ?? "",
           };
           localStorage.setItem(USER_KEY, JSON.stringify(userData));
 
@@ -139,6 +173,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data } = await refreshTokenMutation({
         variables: { refreshToken },
       });
+
+      if (!data || !data.refreshToken) {
+        await logout();
+        return false;
+      }
 
       const result = data.refreshToken;
 

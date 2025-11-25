@@ -21,7 +21,10 @@ export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [requestOtp] = useMutation(REQUEST_OTP);
+  const [requestOtp] = useMutation<
+    { requestOtp: { success: boolean; message: string; otpCode?: string } },
+    { phoneNumber: string }
+  >(REQUEST_OTP);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,12 +43,14 @@ export default function LoginPage() {
         variables: { phoneNumber },
       });
 
-      if (data.requestOtp.success) {
-        toast.success(data.requestOtp.message);
+      const resp = data?.requestOtp;
+
+      if (resp?.success) {
+        toast.success(resp.message);
 
         // For development - show OTP in toast
-        if (data.requestOtp.otpCode) {
-          toast.success(`OTP Code: ${data.requestOtp.otpCode}`, {
+        if (resp.otpCode) {
+          toast.success(`OTP Code: ${resp.otpCode}`, {
             duration: 10000,
           });
         }
@@ -53,11 +58,15 @@ export default function LoginPage() {
         // Navigate to OTP verification page
         router.push(`/verify-otp?phone=${phoneNumber}`);
       } else {
-        toast.error(data.requestOtp.message);
+        toast.error(resp?.message || "Failed to request OTP");
       }
     } catch (error) {
       console.error("OTP request error:", error);
-      toast.error("Failed to send OTP. Please try again.");
+      if (error instanceof Error && error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to send OTP. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }

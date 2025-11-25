@@ -39,6 +39,21 @@ interface ContributionFormProps {
   onSuccess?: (data: any) => void;
 }
 
+// Add explicit types for the mutation response and variables
+type InitiateContributionResult = {
+  initiateContribution: {
+    success: boolean;
+    message: string;
+    // add other fields returned by the mutation here if needed
+  };
+};
+
+type InitiateContributionVars = {
+  phoneNumber: string;
+  amount: string;
+  categoryId: string;
+};
+
 export function ContributionForm({ onSuccess }: ContributionFormProps) {
   const [categoryValue, setCategoryValue] = useState("");
 
@@ -52,24 +67,25 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     resolver: zodResolver(contributionSchema),
   });
 
-  const [initiateContribution, { loading }] = useMutation(
-    INITIATE_CONTRIBUTION,
-    {
-      onCompleted: (data) => {
-        if (data.initiateContribution.success) {
-          toast.success(data.initiateContribution.message);
-          reset();
-          setCategoryValue("");
-          onSuccess?.(data.initiateContribution);
-        } else {
-          toast.error(data.initiateContribution.message);
-        }
-      },
-      onError: (error) => {
-        toast.error(`Error: ${error.message}`);
-      },
-    }
-  );
+  // Use the generics on useMutation so `data` is typed
+  const [initiateContribution, { loading }] = useMutation<
+    InitiateContributionResult,
+    InitiateContributionVars
+  >(INITIATE_CONTRIBUTION, {
+    onCompleted: (data) => {
+      if (data.initiateContribution.success) {
+        toast.success(data.initiateContribution.message);
+        reset();
+        setCategoryValue("");
+        onSuccess?.(data.initiateContribution);
+      } else {
+        toast.error(data.initiateContribution.message);
+      }
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
 
   const onSubmit = async (data: ContributionFormData) => {
     try {
