@@ -29,18 +29,19 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate phone number
-    const phoneRegex = /^254\d{9}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      toast.error("Phone number must be in format 254XXXXXXXXX");
+    // Validate phone number (should be 9 digits)
+    if (phoneNumber.length !== 9) {
+      toast.error("Please enter a valid 9-digit phone number");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      // Send with 254 prefix
+      const fullPhone = `254${phoneNumber}`;
       const { data } = await requestOtp({
-        variables: { phoneNumber },
+        variables: { phoneNumber: fullPhone },
       });
 
       const resp = data?.requestOtp;
@@ -55,8 +56,8 @@ export default function LoginPage() {
           });
         }
 
-        // Navigate to OTP verification page
-        router.push(`/verify-otp?phone=${phoneNumber}`);
+        // Navigate to OTP verification page (send full phone with 254)
+        router.push(`/verify-otp?phone=${fullPhone}`);
       } else {
         toast.error(resp?.message || "Failed to request OTP");
       }
@@ -72,24 +73,19 @@ export default function LoginPage() {
     }
   };
 
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    let cleaned = value.replace(/\D/g, "");
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Only allow digits
+    let value = e.target.value.replace(/\D/g, "");
 
-    // If starts with 0, replace with 254
-    if (cleaned.startsWith("0")) {
-      cleaned = "254" + cleaned.substring(1);
+    // If user starts with 0, remove it (they should just type 797030300)
+    if (value.startsWith("0")) {
+      value = value.substring(1);
     }
 
-    // Limit to 12 digits (254XXXXXXXXX)
-    cleaned = cleaned.substring(0, 12);
+    // Limit to 9 digits
+    value = value.substring(0, 9);
 
-    return cleaned;
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    setPhoneNumber(formatted);
+    setPhoneNumber(value);
   };
 
   return (
@@ -105,25 +101,30 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Input
-                id="phoneNumber"
-                type="tel"
-                placeholder="254712345678"
-                value={phoneNumber}
-                onChange={handlePhoneChange}
-                required
-                disabled={isSubmitting}
-                className="text-lg"
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                  +254
+                </div>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="797030300"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  required
+                  disabled={isSubmitting}
+                  className="text-lg pl-16"
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
-                Enter your M-Pesa number (e.g., 254712345678)
+                Enter your 9-digit M-Pesa number (e.g., 797030300)
               </p>
             </div>
 
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting || phoneNumber.length !== 12}
+              disabled={isSubmitting || phoneNumber.length !== 9}
             >
               {isSubmitting ? (
                 <>

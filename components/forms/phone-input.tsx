@@ -7,7 +7,6 @@
 
 import React from "react";
 import { UseFormRegister, FieldError } from "react-hook-form";
-import { Phone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -25,7 +24,7 @@ export function PhoneInput({
   name,
   register,
   error,
-  placeholder = "254712345678",
+  placeholder = "797030300",
   required = true,
 }: PhoneInputProps) {
   return (
@@ -35,20 +34,36 @@ export function PhoneInput({
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
       <div className="relative">
-        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+          +254
+        </div>
         <Input
           id={name}
           type="tel"
           placeholder={placeholder}
-          className={`pl-10 ${error ? "border-destructive" : ""}`}
-          {...register(name)}
+          maxLength={9}
+          className={`pl-16 ${error ? "border-destructive" : ""}`}
+          {...register(name, {
+            onChange: (e) => {
+              // Only allow digits
+              let value = e.target.value.replace(/\D/g, "");
+
+              // If starts with 0, remove it
+              if (value.startsWith("0")) {
+                value = value.substring(1);
+              }
+
+              // Limit to 9 digits
+              e.target.value = value.substring(0, 9);
+            }
+          })}
         />
       </div>
       {error && (
         <p className="text-sm text-destructive">{error.message}</p>
       )}
       <p className="text-xs text-muted-foreground">
-        Format: 254XXXXXXXXX (Kenyan format)
+        Enter your 9-digit M-Pesa number (e.g., 797030300)
       </p>
     </div>
   );

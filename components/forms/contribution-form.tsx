@@ -24,7 +24,7 @@ import toast from "react-hot-toast";
 const contributionSchema = z.object({
   phoneNumber: z
     .string()
-    .regex(/^254\d{9}$/, "Phone number must be in format 254XXXXXXXXX"),
+    .regex(/^\d{9}$/, "Please enter a valid 9-digit phone number"),
   amount: z
     .string()
     .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 1, {
@@ -91,7 +91,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     try {
       await initiateContribution({
         variables: {
-          phoneNumber: data.phoneNumber,
+          phoneNumber: `254${data.phoneNumber}`, // Add 254 prefix
           amount: data.amount,
           categoryId: data.categoryId,
         },
