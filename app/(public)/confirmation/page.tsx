@@ -14,6 +14,7 @@ import { GET_CONTRIBUTION } from "@/lib/graphql/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, ArrowLeft, RefreshCw } from "lucide-react";
+import { LoginButton } from "@/components/auth/login-button";
 
 interface Contribution {
   id: string;
@@ -279,24 +280,33 @@ function ConfirmationContent() {
         )}
 
         {/* Actions */}
-        <div className="flex gap-4">
-          {contribution.status === "pending" && (
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-4">
+            {contribution.status === "pending" && (
+              <Button
+                onClick={() => refetch()}
+                variant="outline"
+                className="flex-1"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Check Status
+              </Button>
+            )}
+
             <Button
-              onClick={() => refetch()}
-              variant="outline"
+              onClick={() => router.push("/contribute")}
               className="flex-1"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Check Status
+              Make Another Contribution
             </Button>
-          )}
+          </div>
 
-          <Button
-            onClick={() => router.push("/contribute")}
-            className="flex-1"
-          >
-            Make Another Contribution
-          </Button>
+          {/* Show login button after successful payment */}
+          {contribution.status === "completed" && (
+            <LoginButton variant="secondary" className="w-full">
+              Login to View Dashboard
+            </LoginButton>
+          )}
         </div>
       </div>
     </div>

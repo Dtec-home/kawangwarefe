@@ -8,6 +8,7 @@
 import { useRouter } from "next/navigation";
 import { ContributionForm } from "@/components/forms/contribution-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoginButton } from "@/components/auth/login-button";
 
 export default function ContributePage() {
   const router = useRouter();
@@ -29,6 +30,9 @@ export default function ContributePage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
+          <div className="flex justify-end mb-2">
+            <LoginButton>Login to View History</LoginButton>
+          </div>
           <h1 className="text-4xl font-bold tracking-tight">
             Church Contribution Portal
           </h1>

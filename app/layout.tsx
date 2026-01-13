@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Church Funds Collection System",
-  description: "Secure and efficient contribution management for churches",
+  title: "Seventh-Day Adventist Church Kawangware",
+  description: "Join us for worship at SDA Church Kawangware. Sabbath services, devotionals, events, and online giving.",
 };
 
 export default function RootLayout({
