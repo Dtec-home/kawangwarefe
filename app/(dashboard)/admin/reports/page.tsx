@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { AdminLayout } from "@/components/layouts/admin-layout";
+import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { Download, FileText, Table as TableIcon, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,7 +41,7 @@ interface ReportResponse {
   };
 }
 
-export default function ReportsPage() {
+function ReportsPageContent() {
   const [reportType, setReportType] = useState<string>("daily");
   const [format, setFormat] = useState<string>("excel");
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -328,5 +329,13 @@ export default function ReportsPage() {
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+export default function ReportsPage() {
+  return (
+    <AdminProtectedRoute requiredAccess="staff">
+      <ReportsPageContent />
+    </AdminProtectedRoute>
   );
 }

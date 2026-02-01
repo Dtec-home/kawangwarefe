@@ -12,9 +12,10 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useQuery } from "@apollo/client/react";
 import { GET_MY_CONTRIBUTIONS } from "@/lib/graphql/queries";
 import { GET_DASHBOARD_STATS } from "@/lib/graphql/admin-queries";
+import { useMyCategoryAdminRoles } from "@/lib/hooks/use-category-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, TrendingUp, DollarSign, Calendar, Shield } from "lucide-react";
+import { LogOut, TrendingUp, DollarSign, Calendar, Shield, FolderKey } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -63,6 +64,9 @@ function DashboardContent() {
   });
 
   const isStaff = !!adminCheck?.dashboardStats;
+
+  // Get category admin roles
+  const { roles: categoryAdminRoles, isAnyCategoryAdmin } = useMyCategoryAdminRoles();
 
   const contributions = data?.myContributions || [];
 
@@ -176,6 +180,46 @@ function DashboardContent() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Category Admin Roles */}
+        {isAnyCategoryAdmin && (
+          <Card className="mb-8 border-blue-200 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FolderKey className="h-5 w-5 text-blue-600" />
+                Your Category Admin Roles
+              </CardTitle>
+              <CardDescription>
+                You have admin privileges for the following contribution categories
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {categoryAdminRoles.map((role) => (
+                  <div
+                    key={role.id}
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg"
+                  >
+                    <Shield className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="font-medium text-sm">{role.category.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Since {new Date(role.assignedAt).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                As a category admin, you can view and manage contributions for your assigned categories.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Contribution History */}
         <Card>

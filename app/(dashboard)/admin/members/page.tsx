@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminLayout } from "@/components/layouts/admin-layout";
+import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { Search, Users, UserCheck, UserX } from "lucide-react";
 
 interface Member {
@@ -34,7 +35,7 @@ interface MembersData {
   membersList: Member[];
 }
 
-export default function MembersPage() {
+function MembersPageContent() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -246,5 +247,13 @@ export default function MembersPage() {
         </Card>
       </div>
     </AdminLayout>
+  );
+}
+
+export default function MembersPage() {
+  return (
+    <AdminProtectedRoute requiredAccess="staff">
+      <MembersPageContent />
+    </AdminProtectedRoute>
   );
 }
