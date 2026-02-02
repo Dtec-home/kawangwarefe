@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Heart, Home, BookOpen, Calendar } from "lucide-react";
+import { Menu, X, Heart, Home, BookOpen, Calendar, LogIn } from "lucide-react";
 import Image from "next/image";
 
 export function Navigation() {
@@ -14,6 +14,7 @@ export function Navigation() {
     { href: "#devotionals", label: "Devotionals", icon: BookOpen },
     { href: "#events", label: "Events", icon: Calendar },
     { href: "/contribute", label: "Give", icon: Heart, highlight: true },
+    { href: "/login", label: "Member Login", icon: LogIn, highlight: false },
   ];
 
   return (

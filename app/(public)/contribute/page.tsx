@@ -1,14 +1,8 @@
-/**
- * Public Contribution Page
- * Sprint 1: MVP - Core Payment Flow
- */
-
 "use client";
 
 import { useRouter } from "next/navigation";
 import { ContributionForm } from "@/components/forms/contribution-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LoginButton } from "@/components/auth/login-button";
+import { Navigation } from "@/components/landing/navigation";
 
 export default function ContributePage() {
   const router = useRouter();
@@ -26,54 +20,45 @@ export default function ContributePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex justify-end mb-2">
-            <LoginButton>Login to View History</LoginButton>
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <Navigation />
+
+      {/* Main content */}
+      <main className="container mx-auto px-4 py-8 md:py-12">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-3 animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Church Contribution Portal
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground">
+              Make your contribution securely via M-Pesa
+            </p>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">
-            Church Contribution Portal
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Make your contribution securely via M-Pesa
-          </p>
+
+          {/* Contribution Form */}
+          <div className="animate-slide-up">
+            <ContributionForm onSuccess={handleSuccess} />
+          </div>
+
+          {/* Quick Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-sm text-muted-foreground animate-slide-up">
+            <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-muted/50">
+              <span className="font-medium text-foreground">🔒 Secure</span>
+              <span className="text-xs">M-Pesa gateway</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-muted/50">
+              <span className="font-medium text-foreground">⚡ Instant</span>
+              <span className="text-xs">Immediate receipt</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-muted/50">
+              <span className="font-medium text-foreground">📊 Tracked</span>
+              <span className="text-xs">View history</span>
+            </div>
+          </div>
         </div>
-
-        {/* Contribution Form */}
-        <ContributionForm onSuccess={handleSuccess} />
-
-        {/* Information Cards */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Secure Payment</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              All contributions are processed through M-Pesa's secure payment gateway.
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Instant Receipt</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              You'll receive an M-Pesa confirmation message immediately after payment.
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Track History</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              All your contributions are tracked and can be viewed in your history.
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

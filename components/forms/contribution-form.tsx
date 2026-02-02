@@ -102,16 +102,16 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Make a Contribution</CardTitle>
-        <CardDescription>
+    <Card className="w-full shadow-lg">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-xl md:text-2xl">Make a Contribution</CardTitle>
+        <CardDescription className="text-sm">
           Enter your details below to initiate a contribution via M-Pesa.
           You'll receive a prompt on your phone to complete the payment.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <PhoneInput
             name="phoneNumber"
             register={register}
@@ -136,7 +136,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full h-11"
             disabled={loading}
             size="lg"
           >

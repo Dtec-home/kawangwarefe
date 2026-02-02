@@ -89,15 +89,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo/Title */}
           <div className="p-6 border-b border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold">Church Admin</h1>
+              <div className="flex items-center gap-3">
+                <div className="relative w-8 h-8">
+                  <img
+                    src="/logo.png"
+                    alt="SDA Church"
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+                <h1 className="text-xl font-bold">Church Admin</h1>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -109,7 +117,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             {/* Role badge */}
             {roleBadge && (
-              <span className={`inline-block mt-2 px-2 py-1 text-xs rounded-full ${roleBadge.color}`}>
+              <span className={`inline-block mt-3 px-3 py-1 text-xs font-medium rounded-full ${roleBadge.color}`}>
                 {roleBadge.text}
               </span>
             )}
@@ -136,7 +144,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           )}
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-1">
             {roleLoading ? (
               <div className="text-sm text-muted-foreground p-2">Loading...</div>
             ) : (
@@ -147,7 +155,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   <Button
                     key={item.name}
                     variant={isActive ? "secondary" : "ghost"}
-                    className="w-full justify-start"
+                    className={`w-full justify-start transition-all ${isActive
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "hover:bg-muted"
+                      }`}
                     onClick={() => {
                       router.push(item.href);
                       setSidebarOpen(false);
