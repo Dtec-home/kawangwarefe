@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminLayout } from "@/components/layouts/admin-layout";
-import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus } from "lucide-react";
+import Link from "next/link";
 
 interface Contribution {
   id: string;
@@ -108,9 +109,17 @@ export default function ContributionsPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Contributions</h1>
-          <p className="text-muted-foreground">View and manage all church contributions</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Contributions</h1>
+            <p className="text-muted-foreground">View and manage all church contributions</p>
+          </div>
+          <Link href="/admin/contributions/manual-entry">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Manual Entry
+            </Button>
+          </Link>
         </div>
 
         {/* Statistics Cards */}
@@ -303,12 +312,12 @@ export default function ContributionsPage() {
                         <td className="p-3 text-sm">
                           {contribution.transactionDate
                             ? new Date(contribution.transactionDate).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
                             : 'Pending'}
                         </td>
                         <td className="p-3 text-sm">
@@ -337,13 +346,12 @@ export default function ContributionsPage() {
                         </td>
                         <td className="p-3 text-center">
                           <span
-                            className={`inline-block px-2 py-1 text-xs rounded-full ${
-                              contribution.status === 'completed'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-                                : contribution.status === 'failed'
+                            className={`inline-block px-2 py-1 text-xs rounded-full ${contribution.status === 'completed'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                              : contribution.status === 'failed'
                                 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
                                 : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
-                            }`}
+                              }`}
                           >
                             {contribution.status}
                           </span>

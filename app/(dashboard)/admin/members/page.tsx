@@ -17,7 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
-import { Search, Users, UserCheck, UserX } from "lucide-react";
+import { Search, Users, UserCheck, UserX, Upload } from "lucide-react";
+import Link from "next/link";
 
 interface Member {
   id: string;
@@ -147,7 +148,7 @@ function MembersPageContent() {
               </div>
             </div>
 
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-between mt-4">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -157,6 +158,12 @@ function MembersPageContent() {
               >
                 Clear Filters
               </Button>
+              <Link href="/admin/members/import">
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Members
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -221,11 +228,10 @@ function MembersPageContent() {
                         </td>
                         <td className="p-3 text-center">
                           <span
-                            className={`inline-block px-2 py-1 text-xs rounded-full ${
-                              member.isActive
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-                            }`}
+                            className={`inline-block px-2 py-1 text-xs rounded-full ${member.isActive
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+                              }`}
                           >
                             {member.isActive ? 'Active' : 'Inactive'}
                           </span>
