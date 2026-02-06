@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { GET_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
 
 // Validation schema using Zod
 const multiContributionSchema = z.object({
@@ -53,7 +54,7 @@ interface ContributionFormProps {
   onSuccess?: (data: any) => void;
 }
 
-type FormStep = "input" | "summary" | "processing" | "success";
+type FormStep = "input" | "summary" | "processing" | "waiting" | "success";
 
 // Type definitions for GraphQL
 type InitiateMultiContributionResult = {
@@ -81,6 +82,10 @@ type InitiateMultiContributionVars = {
   }>;
 };
 
+type PaymentStatusResult = {
+  paymentStatus: string;
+};
+
 interface Category {
   id: string;
   name: string;
@@ -92,10 +97,20 @@ interface GetCategoriesData {
   contributionCategories: Category[];
 }
 
-type FormStep = "input" | "summary" | "processing" | "success";
+interface ContributionDetails {
+  phoneNumber: string;
+  totalAmount: string;
+  contributions: Array<{ categoryName: string; categoryCode: string; amount: string }>;
+  checkoutRequestId: string;
+  mpesaReceiptNumber?: string;
+}
 
 export function ContributionForm({ onSuccess }: ContributionFormProps) {
   const [step, setStep] = useState<FormStep>("input");
+  const [contributionDetails, setContributionDetails] = useState<ContributionDetails | null>(null);
+  const [pollingAttempts, setPollingAttempts] = useState(0);
+  const pollingAttemptsRef = useRef(0);
+  const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   const {
     register,
@@ -124,6 +139,13 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     InitiateMultiContributionResult,
     InitiateMultiContributionVars
   >(INITIATE_MULTI_CONTRIBUTION);
+
+  const { refetch: checkPaymentStatus } = useQuery<PaymentStatusResult>(
+    GET_PAYMENT_STATUS,
+    {
+      skip: true, // Don't run automatically
+    }
+  );
 
   // Calculate total amount
   const totalAmount = useMemo(() => {
@@ -161,6 +183,53 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     })();
   };
 
+  const startPaymentPolling = (checkoutRequestId: string) => {
+    setPollingAttempts(0);
+    pollingAttemptsRef.current = 0;
+
+    const pollInterval = setInterval(async () => {
+      pollingAttemptsRef.current += 1;
+      setPollingAttempts(pollingAttemptsRef.current);
+
+      // Check if we've exceeded max attempts (60 seconds)
+      if (pollingAttemptsRef.current >= 30) {
+        clearInterval(pollInterval);
+        setPollingIntervalId(null);
+        toast.error("Payment confirmation timeout. Please check your M-Pesa messages.");
+        setStep("input");
+        return;
+      }
+
+      try {
+        const { data } = await checkPaymentStatus({
+          checkoutRequestId,
+        });
+
+        const status = data?.paymentStatus;
+
+        if (status === 'completed') {
+          clearInterval(pollInterval);
+          setPollingIntervalId(null);
+
+          // Update contribution details with success
+          setContributionDetails((prev) => prev ? { ...prev, mpesaReceiptNumber: 'Confirmed' } : null);
+          toast.success("Payment completed successfully!");
+          setStep("success");
+        } else if (status === 'failed') {
+          clearInterval(pollInterval);
+          setPollingIntervalId(null);
+          toast.error("Payment failed. Please try again.");
+          setStep("input");
+        }
+        // If still pending, continue polling
+      } catch (error) {
+        console.error("Error checking payment status:", error);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    setPollingIntervalId(pollInterval);
+  };
+
   const handleConfirmSubmit = async () => {
     try {
       setStep("processing");
@@ -176,15 +245,21 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
       });
 
       if (result.data?.initiateMultiCategoryContribution?.success) {
-        toast.success("M-Pesa prompt sent! Please check your phone and enter your PIN to complete the payment.");
-        setStep("success");
+        const checkoutRequestId = result.data.initiateMultiCategoryContribution.checkoutRequestId || '';
 
-        // Auto-reset after 8 seconds
-        setTimeout(() => {
-          reset();
-          setStep("input");
-          if (onSuccess) onSuccess(result.data);
-        }, 8000);
+        // Store contribution details
+        setContributionDetails({
+          phoneNumber: `254${phoneNumber}`,
+          totalAmount: result.data.initiateMultiCategoryContribution.totalAmount || totalAmount,
+          contributions: result.data.initiateMultiCategoryContribution.contributions || [],
+          checkoutRequestId,
+        });
+
+        toast.success("M-Pesa prompt sent! Please check your phone.");
+        setStep("waiting");
+
+        // Start polling for payment status
+        startPaymentPolling(checkoutRequestId);
       } else {
         const errorMessage =
           result.data?.initiateMultiCategoryContribution?.message ||
@@ -200,6 +275,21 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
   };
 
   const handleEdit = () => {
+    // Clear polling if active
+    if (pollingIntervalId) {
+      clearInterval(pollingIntervalId);
+      setPollingIntervalId(null);
+    }
+    setStep("input");
+  };
+
+  const handleCancelWaiting = () => {
+    // Clear polling
+    if (pollingIntervalId) {
+      clearInterval(pollingIntervalId);
+      setPollingIntervalId(null);
+    }
+    toast("Payment cancelled. You can try again.");
     setStep("input");
   };
 
@@ -302,20 +392,117 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     );
   }
 
-  // Success Step
-  if (step === "success") {
+  // Waiting for Payment Step
+  if (step === "waiting" && contributionDetails) {
     return (
       <Card className="w-full shadow-lg">
-        <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
+        <CardContent className="flex flex-col items-center py-12 space-y-6">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+
+          <div className="text-center space-y-2">
+            <h3 className="text-2xl font-bold">Waiting for Payment Confirmation</h3>
+            <p className="text-muted-foreground max-w-md">
+              Please complete the payment on your phone{" "}
+              <span className="font-semibold">
+                ({contributionDetails.phoneNumber.replace(/^254/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3')})
+              </span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Enter your M-Pesa PIN to confirm the payment
+            </p>
+          </div>
+
+          <div className="w-full max-w-md space-y-4">
+            {/* Total Amount */}
+            <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg border">
+              <span className="font-semibold">Total Amount:</span>
+              <span className="text-xl font-bold text-primary">
+                KES {parseFloat(contributionDetails.totalAmount).toLocaleString("en-KE")}
+              </span>
+            </div>
+
+            {/* Polling indicator */}
+            <div className="text-center text-sm text-muted-foreground">
+              <p>Checking payment status... ({pollingAttempts}/30)</p>
+              <p className="text-xs mt-1">This may take up to 60 seconds</p>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={handleCancelWaiting}
+            className="mt-4"
+          >
+            Cancel
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Success Step
+  if (step === "success" && contributionDetails) {
+    return (
+      <Card className="w-full shadow-lg">
+        <CardContent className="flex flex-col items-center py-8 space-y-6">
           <CheckCircle2 className="h-16 w-16 text-green-500" />
-          <h3 className="text-2xl font-bold text-green-600">Success!</h3>
-          <p className="text-muted-foreground text-center max-w-md">
-            M-Pesa prompt sent successfully. Please check your phone and enter
-            your PIN to complete the contribution.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Redirecting in a moment...
-          </p>
+
+          <div className="text-center space-y-2">
+            <h3 className="text-2xl font-bold text-green-600">
+              Payment Completed Successfully!
+            </h3>
+            <p className="text-muted-foreground max-w-md">
+              Thank you for your contribution. You will receive an SMS receipt shortly.
+            </p>
+          </div>
+
+          <div className="w-full max-w-md space-y-4">
+            {/* Total Amount */}
+            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg border-2 border-green-200">
+              <span className="font-semibold text-lg">Total Amount:</span>
+              <span className="text-2xl font-bold text-green-600">
+                KES {parseFloat(contributionDetails.totalAmount).toLocaleString("en-KE")}
+              </span>
+            </div>
+
+            {/* Contribution Breakdown */}
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-muted-foreground">
+                Contribution Breakdown:
+              </h4>
+              <div className="space-y-2">
+                {contributionDetails.contributions.map((contrib, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
+                    <span className="font-medium">{contrib.categoryName}</span>
+                    <span className="font-semibold">
+                      KES {parseFloat(contrib.amount).toLocaleString("en-KE")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Reference ID */}
+            <div className="text-center text-xs text-muted-foreground space-y-1">
+              <p>Reference: {contributionDetails.checkoutRequestId}</p>
+              <p className="text-green-600 font-medium">✓ Payment Confirmed</p>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => {
+              reset();
+              setStep("input");
+              setContributionDetails(null);
+              if (onSuccess) onSuccess(null);
+            }}
+            size="lg"
+            className="w-full max-w-md"
+          >
+            Make Another Contribution
+          </Button>
         </CardContent>
       </Card>
     );
