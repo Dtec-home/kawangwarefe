@@ -38,13 +38,21 @@ interface ImportResult {
   duplicates: string[];
 }
 
+interface ImportMembersResult {
+  importMembers: ImportResult;
+}
+
+interface GetTemplateResult {
+  getMemberImportTemplate: string;
+}
+
 function MemberImportPageContent() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
-  const [importMembers] = useMutation(IMPORT_MEMBERS);
-  const [getTemplate] = useMutation(GET_MEMBER_IMPORT_TEMPLATE);
+  const [importMembers] = useMutation<ImportMembersResult>(IMPORT_MEMBERS);
+  const [getTemplate] = useMutation<GetTemplateResult>(GET_MEMBER_IMPORT_TEMPLATE);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);

@@ -47,6 +47,24 @@ interface Member {
   isGuest: boolean;
 }
 
+interface GetCategoriesData {
+  contributionCategories: Category[];
+}
+
+interface LookupMemberResult {
+  lookupMemberByPhone: {
+    found: boolean;
+    member?: Member;
+  };
+}
+
+interface CreateContributionResult {
+  createManualContribution: {
+    success: boolean;
+    message: string;
+  };
+}
+
 function ManualContributionPageContent() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [member, setMember] = useState<Member | null>(null);
@@ -61,11 +79,11 @@ function ManualContributionPageContent() {
   const [error, setError] = useState("");
 
   // Get categories
-  const { data: categoriesData } = useQuery(GET_CONTRIBUTION_CATEGORIES);
+  const { data: categoriesData } = useQuery<GetCategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const categories: Category[] = categoriesData?.contributionCategories || [];
 
-  const [lookupMember] = useMutation(LOOKUP_MEMBER_BY_PHONE);
-  const [createContribution] = useMutation(CREATE_MANUAL_CONTRIBUTION);
+  const [lookupMember] = useMutation<LookupMemberResult>(LOOKUP_MEMBER_BY_PHONE);
+  const [createContribution] = useMutation<CreateContributionResult>(CREATE_MANUAL_CONTRIBUTION);
 
   const handlePhoneNumberLookup = async () => {
     if (!phoneNumber.trim()) return;
