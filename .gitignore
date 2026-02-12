@@ -39,7 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
+web
 # Playwright
 node_modules/
 /test-results/

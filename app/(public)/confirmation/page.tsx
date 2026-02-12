@@ -53,6 +53,7 @@ function ConfirmationContent() {
     variables: { id: contributionId || "" },
     skip: !contributionId,
     pollInterval: isPolling ? 5000 : 0, // Poll every 5 seconds
+    fetchPolicy: "network-only", // Always fetch fresh data from server
   });
 
   const contribution = data?.contribution;
