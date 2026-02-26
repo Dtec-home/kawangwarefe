@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Download, FileText, Table as TableIcon, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -46,7 +47,7 @@ function ReportsPageContent() {
   const [format, setFormat] = useState<string>("excel");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  const [categoryId, setCategoryId] = useState<string>("all");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const categories = categoriesData?.contributionCategories || [];
@@ -112,7 +113,7 @@ function ReportsPageContent() {
         reportType,
         dateFrom: reportType === "custom" && dateFrom ? new Date(dateFrom).toISOString() : null,
         dateTo: reportType === "custom" && dateTo ? new Date(dateTo).toISOString() : null,
-        categoryId: categoryId && categoryId !== "all" ? Number.parseInt(categoryId) : null,
+        categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds.map((id) => Number.parseInt(id)) : null,
         memberId: null, // Can be added later if needed
       },
     });
@@ -225,26 +226,54 @@ function ReportsPageContent() {
               </div>
             )}
 
-            {/* Filters */}
+            {/* Category Filter */}
             <div className="space-y-4">
-              <h3 className="font-medium">Filters (Optional)</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name} ({category.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Filter by Categories (Optional)</h3>
+                {selectedCategoryIds.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedCategoryIds([])}
+                  >
+                    Clear selection
+                  </Button>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {selectedCategoryIds.length === 0
+                  ? "All categories will be included"
+                  : `${selectedCategoryIds.length} category(ies) selected`}
+              </p>
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                {categories.map((category) => {
+                  const isChecked = selectedCategoryIds.includes(category.id);
+                  return (
+                    <label
+                      key={category.id}
+                      className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
+                        isChecked
+                          ? "bg-primary/10 border-primary"
+                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750"
+                      }`}
+                    >
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedCategoryIds([...selectedCategoryIds, category.id]);
+                          } else {
+                            setSelectedCategoryIds(selectedCategoryIds.filter((id) => id !== category.id));
+                          }
+                        }}
+                      />
+                      <div>
+                        <span className="font-medium text-sm">{category.name}</span>
+                        <span className="text-xs text-muted-foreground ml-1">({category.code})</span>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
@@ -268,7 +297,7 @@ function ReportsPageContent() {
             onClick={() => {
               setReportType("daily");
               setFormat("excel");
-              setCategoryId("all");
+              setSelectedCategoryIds([]);
               setTimeout(handleGenerateReport, 100);
             }}
           >
@@ -289,7 +318,7 @@ function ReportsPageContent() {
             onClick={() => {
               setReportType("weekly");
               setFormat("excel");
-              setCategoryId("all");
+              setSelectedCategoryIds([]);
               setTimeout(handleGenerateReport, 100);
             }}
           >
@@ -310,7 +339,7 @@ function ReportsPageContent() {
             onClick={() => {
               setReportType("monthly");
               setFormat("pdf");
-              setCategoryId("all");
+              setSelectedCategoryIds([]);
               setTimeout(handleGenerateReport, 100);
             }}
           >
