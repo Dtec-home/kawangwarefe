@@ -296,7 +296,7 @@ function ManualContributionPageContent() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="envelope">Envelope</SelectItem>
-                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="cash">Local Evangelism/Loose Money</SelectItem>
                     <SelectItem value="manual">Manual Entry</SelectItem>
                   </SelectContent>
                 </Select>

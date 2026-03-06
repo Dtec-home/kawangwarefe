@@ -100,6 +100,7 @@ function MemberImportPageContent() {
         variables: {
           csvData: fileContent,
           fileType: fileType,
+          sendNotifications: false,
         },
       });
 
@@ -208,7 +209,7 @@ function MemberImportPageContent() {
           <CardContent>
             <FileUpload
               accept=".csv,.xlsx,.xls"
-              maxSize={5}
+              maxSize={10}
               onFileSelect={handleFileSelect}
               onClear={handleClearFile}
               selectedFile={selectedFile}

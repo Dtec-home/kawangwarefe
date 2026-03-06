@@ -22,6 +22,8 @@ import {
   X,
   Shield,
   FolderKey,
+  FolderOpen,
+  Smartphone,
 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -30,7 +32,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-type FeatureType = "overview" | "contributions" | "members" | "category-admins" | "reports";
+type FeatureType = "overview" | "contributions" | "members" | "categories" | "category-admins" | "reports" | "c2b-transactions";
 
 interface NavItem {
   name: string;
@@ -57,8 +59,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Overview", href: "/admin", icon: LayoutDashboard, feature: "overview" },
     { name: "Contributions", href: "/admin/contributions", icon: DollarSign, feature: "contributions" },
     { name: "Members", href: "/admin/members", icon: Users, feature: "members" },
+    { name: "Categories", href: "/admin/categories", icon: FolderOpen, feature: "categories" },
     { name: "Category Admins", href: "/admin/category-admins", icon: Shield, feature: "category-admins" },
     { name: "Reports", href: "/admin/reports", icon: FileText, feature: "reports" },
+    { name: "C2B / Pay Bill", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
   ];
 
   // Filter navigation based on user's role

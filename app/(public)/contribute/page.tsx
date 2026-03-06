@@ -9,13 +9,16 @@ export default function ContributePage() {
 
   const handleSuccess = (data: any) => {
     // Redirect to confirmation page with contribution details
-    const contributionId = data.contribution?.id;
-    const checkoutRequestId = data.checkoutRequestId;
+    const contributionId = data?.contribution?.id;
+    const checkoutRequestId = data?.checkoutRequestId;
 
     if (contributionId) {
       router.push(
         `/confirmation?id=${contributionId}&checkoutRequestId=${checkoutRequestId || ""}`
       );
+    } else if (checkoutRequestId) {
+      // Multi-category flow: no single contributionId — navigate by checkoutRequestId
+      router.push(`/confirmation?checkoutRequestId=${checkoutRequestId}`);
     }
   };
 

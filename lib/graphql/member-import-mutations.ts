@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const IMPORT_MEMBERS = gql`
-  mutation ImportMembers($csvData: String!, $fileType: String!) {
-    importMembers(csvData: $csvData, fileType: $fileType) {
+  mutation ImportMembers($csvData: String!, $fileType: String!, $sendNotifications: Boolean) {
+    importMembers(csvData: $csvData, fileType: $fileType, sendNotifications: $sendNotifications) {
       success
       message
       importedCount

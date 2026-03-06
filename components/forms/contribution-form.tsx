@@ -13,6 +13,7 @@ import { z } from "zod";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { INITIATE_MULTI_CONTRIBUTION } from "@/lib/graphql/multi-contribution-mutations";
 import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
+import { useAuth } from "@/lib/auth/auth-context";
 import { PhoneInput } from "./phone-input";
 import { MultiCategorySelector, CategoryAmount } from "./multi-category-selector";
 import { ContributionSummary } from "./contribution-summary";
@@ -111,6 +112,22 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
   const [pollingAttempts, setPollingAttempts] = useState(0);
   const pollingAttemptsRef = useRef(0);
   const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const onSuccessRef = useRef(onSuccess);
+
+  // Get logged-in user's phone number if available
+  const { user: authUser } = useAuth();
+
+  // Extract 9-digit phone from auth (stored as 254XXXXXXXXX)
+  const getDefaultPhone = () => {
+    if (authUser?.phoneNumber) {
+      const phone = authUser.phoneNumber.replace(/^\+?254/, "");
+      return phone.length === 9 ? phone : "";
+    }
+    return "";
+  };
+
+  // Keep onSuccess ref in sync so the polling closure always sees the latest
+  useEffect(() => { onSuccessRef.current = onSuccess; }, [onSuccess]);
 
   const {
     register,
@@ -122,10 +139,22 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
   } = useForm<MultiContributionFormData>({
     resolver: zodResolver(multiContributionSchema),
     defaultValues: {
-      phoneNumber: "",
+      phoneNumber: getDefaultPhone(),
       contributions: [{ categoryId: "", amount: "" }],
     },
   });
+
+  // Auto-fill phone when auth user loads after form init
+  const phoneFilledRef = useRef(false);
+  useEffect(() => {
+    if (authUser?.phoneNumber && !phoneFilledRef.current) {
+      const phone = authUser.phoneNumber.replace(/^\+?254/, "");
+      if (phone.length === 9) {
+        setValue("phoneNumber", phone);
+        phoneFilledRef.current = true;
+      }
+    }
+  }, [authUser, setValue]);
 
   const contributions = watch("contributions");
   const phoneNumber = watch("phoneNumber");
@@ -211,10 +240,16 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
           clearInterval(pollInterval);
           setPollingIntervalId(null);
 
-          // Update contribution details with success
-          setContributionDetails((prev) => prev ? { ...prev, mpesaReceiptNumber: 'Confirmed' } : null);
           toast.success("Payment completed successfully!");
           setStep("success");
+
+          // Redirect to confirmation page so the user sees the real DB status
+          // (with actual M-Pesa receipt number). Give toast 800ms to render first.
+          setTimeout(() => {
+            if (onSuccessRef.current && contributionDetails) {
+              onSuccessRef.current({ checkoutRequestId: contributionDetails.checkoutRequestId });
+            }
+          }, 800);
         } else if (status === 'failed') {
           clearInterval(pollInterval);
           setPollingIntervalId(null);
