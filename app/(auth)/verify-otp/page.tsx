@@ -19,6 +19,7 @@ function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phoneNumber = searchParams.get("phone") || "";
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const { login } = useAuth();
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -94,7 +95,7 @@ function VerifyOtpContent() {
 
       if (result.success) {
         toast.success("Login successful!");
-        router.push("/dashboard");
+        router.push(redirectTo);
       } else {
         toast.error(result.message);
         // Clear OTP on error

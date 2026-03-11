@@ -12,9 +12,9 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_CONTRIBUTION } from "@/lib/graphql/queries";
-import { GET_CONTRIBUTIONS_BY_CHECKOUT_ID } from "@/lib/graphql/payment-status-query";
+import { GET_CONTRIBUTIONS_BY_CHECKOUT_ID, CHECK_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, ArrowLeft, RefreshCw } from "lucide-react";
@@ -148,6 +148,7 @@ function SingleContributionConfirmation({
         isPending={contribution.status === "pending"}
         isCompleted={contribution.status === "completed"}
         onRefetch={refetch}
+        checkoutRequestId={checkoutRequestId}
       />
     </ConfirmationLayout>
   );
@@ -235,6 +236,7 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
         isPending={overallStatus === "pending"}
         isCompleted={overallStatus === "completed"}
         onRefetch={refetch}
+        checkoutRequestId={checkoutRequestId}
       />
     </ConfirmationLayout>
   );
@@ -389,19 +391,43 @@ function ActionButtons({
   isPending,
   isCompleted,
   onRefetch,
+  checkoutRequestId,
 }: {
   isPending: boolean;
   isCompleted: boolean;
   onRefetch: () => void;
+  checkoutRequestId?: string;
 }) {
   const router = useRouter();
+  const [checking, setChecking] = useState(false);
+
+  const [checkPaymentStatus] = useMutation(CHECK_PAYMENT_STATUS);
+
+  const handleCheckStatus = async () => {
+    if (!checkoutRequestId) {
+      onRefetch();
+      return;
+    }
+    setChecking(true);
+    try {
+      await checkPaymentStatus({ variables: { checkoutRequestId } });
+      // Refetch the query data to pick up any status changes
+      await onRefetch();
+    } catch {
+      // Fallback to plain refetch if mutation fails
+      await onRefetch();
+    } finally {
+      setChecking(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
         {isPending && (
-          <Button onClick={onRefetch} variant="outline" className="flex-1">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Check Status
+          <Button onClick={handleCheckStatus} variant="outline" className="flex-1" disabled={checking}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${checking ? "animate-spin" : ""}`} />
+            {checking ? "Checking M-Pesa..." : "Check Status"}
           </Button>
         )}
         <Button onClick={() => router.push("/contribute")} className="flex-1">

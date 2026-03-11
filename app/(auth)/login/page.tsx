@@ -5,9 +5,10 @@
 
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@apollo/client/react";
+import { useAuth } from "@/lib/auth/auth-context";
 import { REQUEST_OTP } from "@/lib/graphql/auth-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,22 @@ import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Read redirect target from query params (set by middleware)
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace(redirectTo);
+    }
+  }, [isAuthenticated, authLoading, router, redirectTo]);
 
   const [requestOtp] = useMutation<
     { requestOtp: { success: boolean; message: string; otpCode?: string } },
@@ -57,7 +70,9 @@ export default function LoginPage() {
         }
 
         // Navigate to OTP verification page (send full phone with 254)
-        router.push(`/verify-otp?phone=${fullPhone}`);
+        const redirectParam = redirectTo === "/dashboard" ? "" : `&redirect=${encodeURIComponent(redirectTo)}`;
+        const verifyUrl = `/verify-otp?phone=${fullPhone}${redirectParam}`;
+        router.push(verifyUrl);
       } else {
         toast.error(resp?.message || "Failed to request OTP");
       }
@@ -173,5 +188,19 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

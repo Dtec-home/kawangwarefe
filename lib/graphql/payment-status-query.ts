@@ -1,5 +1,5 @@
 /**
- * GraphQL Query for Payment Status
+ * GraphQL Query & Mutation for Payment Status
  */
 
 import { gql } from "@apollo/client";
@@ -7,6 +7,41 @@ import { gql } from "@apollo/client";
 export const GET_PAYMENT_STATUS = gql`
   query GetPaymentStatus($checkoutRequestId: String!) {
     paymentStatus(checkoutRequestId: $checkoutRequestId)
+  }
+`;
+
+/**
+ * Manually check payment status via M-Pesa STK Query API.
+ * Used when the callback was missed (e.g. ngrok was down).
+ */
+export const CHECK_PAYMENT_STATUS = gql`
+  mutation CheckPaymentStatus($checkoutRequestId: String!) {
+    checkPaymentStatus(checkoutRequestId: $checkoutRequestId) {
+      success
+      message
+      status
+      contribution {
+        id
+        amount
+        status
+        transactionDate
+        member {
+          id
+          fullName
+          phoneNumber
+        }
+        category {
+          id
+          name
+        }
+        mpesaTransaction {
+          id
+          mpesaReceiptNumber
+          status
+          resultDesc
+        }
+      }
+    }
   }
 `;
 

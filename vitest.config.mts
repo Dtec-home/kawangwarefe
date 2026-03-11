@@ -6,5 +6,13 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
     environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./setupTests.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['components/**', 'lib/**', 'app/**'],
+      exclude: ['**/*.d.ts', '**/__tests__/**', '**/node_modules/**'],
+    },
   },
 })

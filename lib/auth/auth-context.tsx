@@ -2,7 +2,8 @@
  * Authentication Context
  * Sprint 2: Authentication & Member Dashboard
  *
- * Provides authentication state and methods throughout the app
+ * Provides authentication state and methods throughout the app.
+ * Validates token expiry on load so stale tokens don't appear "logged in".
  */
 
 "use client";
@@ -33,6 +34,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_KEY = "user";
+
+/**
+ * Set or clear the lightweight "has_session" cookie used by
+ * Next.js middleware for server-side route protection.
+ * This cookie carries NO secret data — it's a boolean flag only.
+ */
+function setSessionCookie(active: boolean) {
+  if (typeof document === "undefined") return;
+  if (active) {
+    // Set cookie that lasts 7 days (matching refresh token lifetime)
+    document.cookie = "has_session=1; path=/; max-age=604800; SameSite=Lax";
+  } else {
+    document.cookie = "has_session=; path=/; max-age=0; SameSite=Lax";
+  }
+}
+
+/**
+ * Decode a JWT and check whether it has expired.
+ * Returns true if the token is still valid (exp > now).
+ */
+function isTokenValid(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    // exp is in seconds, Date.now() in ms — add 30s buffer
+    return payload.exp * 1000 > Date.now() + 30_000;
+  } catch {
+    return false;
+  }
+}
 
 // GraphQL response types
 interface VerifyOtpPayload {
@@ -73,17 +103,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     { refreshToken: string }
   >(REFRESH_TOKEN);
 
-  // Load user from localStorage on mount
+  // Load user from localStorage on mount — validate token expiry
   useEffect(() => {
-    const loadUser = () => {
+    const loadUser = async () => {
       try {
         const storedToken = localStorage.getItem(TOKEN_KEY);
+        const storedRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
         const storedUser = localStorage.getItem(USER_KEY);
 
-        if (storedToken && storedUser) {
+        if (!storedToken || !storedUser) {
+          // No session — nothing to restore
+          setIsLoading(false);
+          return;
+        }
+
+        // If the access token is still valid, use it directly
+        if (isTokenValid(storedToken)) {
           setAccessToken(storedToken);
           setUser(JSON.parse(storedUser));
+          setSessionCookie(true);
+          setIsLoading(false);
+          return;
         }
+
+        // Access token expired — try to silently refresh using the refresh token
+        if (storedRefresh && isTokenValid(storedRefresh)) {
+          try {
+            const response = await fetch(
+              process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:8000/graphql",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  query: `mutation RefreshToken($refreshToken: String!) {
+                    refreshToken(refreshToken: $refreshToken) {
+                      success
+                      accessToken
+                    }
+                  }`,
+                  variables: { refreshToken: storedRefresh },
+                }),
+              }
+            );
+            const data = await response.json();
+            const result = data?.data?.refreshToken;
+
+            if (result?.success && result?.accessToken) {
+              localStorage.setItem(TOKEN_KEY, result.accessToken);
+              setAccessToken(result.accessToken);
+              setUser(JSON.parse(storedUser));
+              setSessionCookie(true);
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // Refresh failed — fall through to clear
+          }
+        }
+
+        // Both tokens expired or refresh failed — clear stale session
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        setSessionCookie(false);
       } catch (error) {
         console.error("Error loading user from storage:", error);
       } finally {
@@ -125,6 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Update state
           setAccessToken(result.accessToken);
           setUser(userData);
+          setSessionCookie(true);
 
           return { success: true, message: result.message };
         } else {
@@ -156,6 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      setSessionCookie(false);
       setAccessToken(null);
       setUser(null);
     }
@@ -184,6 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (result.success && result.accessToken) {
         localStorage.setItem(TOKEN_KEY, result.accessToken);
         setAccessToken(result.accessToken);
+        setSessionCookie(true);
         return true;
       } else {
         // Refresh token is invalid, logout user

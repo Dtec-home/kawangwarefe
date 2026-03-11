@@ -2,19 +2,38 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Heart, Home, BookOpen, Calendar, LogIn } from "lucide-react";
+import { Menu, X, Heart, Home, BookOpen, Calendar, LogIn, LayoutDashboard, LogOut } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/lib/auth/auth-context";
+import toast from "react-hot-toast";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+  const router = useRouter();
 
+  const handleLogout = async () => {
+    await logout();
+    toast.success("Logged out successfully");
+    router.push("/");
+  };
+
+  // Build nav links based on auth state
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "#devotionals", label: "Devotionals", icon: BookOpen },
     { href: "#events", label: "Events", icon: Calendar },
     { href: "/contribute", label: "Give", icon: Heart, highlight: true },
-    { href: "/login", label: "Member Login", icon: LogIn, highlight: false },
+    // Auth-aware: show Dashboard for logged-in users, Login for guests
+    ...(isAuthenticated
+      ? [
+          { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, highlight: false },
+        ]
+      : [
+          { href: "/login", label: "Member Login", icon: LogIn, highlight: false },
+        ]),
   ];
 
   return (
@@ -56,6 +75,15 @@ export function Navigation() {
                 </Link>
               );
             })}
+            {isAuthenticated && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -85,6 +113,18 @@ export function Navigation() {
                 </Link>
               );
             })}
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  handleLogout();
+                }}
+                className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-600 hover:bg-muted rounded-md transition-colors w-full"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            )}
           </div>
         )}
       </div>
