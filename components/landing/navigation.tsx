@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Heart, Home, BookOpen, Calendar, LogIn, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, X, Heart, Home, BookOpen, Calendar, LogIn, LayoutDashboard, LogOut, Bell, Video } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
 import toast from "react-hot-toast";
@@ -23,8 +23,10 @@ export function Navigation() {
   // Build nav links based on auth state
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
-    { href: "#devotionals", label: "Devotionals", icon: BookOpen },
-    { href: "#events", label: "Events", icon: Calendar },
+    { href: "/announcements", label: "Announcements", icon: Bell },
+    { href: "/devotionals", label: "Devotionals", icon: BookOpen },
+    { href: "/events", label: "Events", icon: Calendar },
+    { href: "/sermons", label: "Sermons", icon: Video },
     { href: "/contribute", label: "Give", icon: Heart, highlight: true },
     // Auth-aware: show Dashboard for logged-in users, Login for guests
     ...(isAuthenticated

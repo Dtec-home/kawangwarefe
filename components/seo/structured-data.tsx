@@ -1,5 +1,5 @@
 export function StructuredData() {
-  const siteUrl = "https://sdakawangwangware.site";
+  const siteUrl = "https://www.sdakawangware.org";
 
   const churchSchema = {
     "@context": "https://schema.org",
@@ -12,7 +12,6 @@ export function StructuredData() {
     url: siteUrl,
     logo: `${siteUrl}/logo.png`,
     image: `${siteUrl}/og-image.jpg`,
-    telephone: "+254-XXX-XXX-XXX",
     email: "info@sdakawangware.org",
     address: {
       "@type": "PostalAddress",
@@ -82,14 +81,6 @@ export function StructuredData() {
       "Official website of Seventh-Day Adventist Church Kawangware - Sabbath worship, devotionals, events, and online giving.",
     publisher: {
       "@id": `${siteUrl}/#church`,
-    },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${siteUrl}/?s={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
     },
     inLanguage: "en-KE",
   };

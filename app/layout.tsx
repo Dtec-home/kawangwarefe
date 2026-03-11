@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = "https://sdakawangwangware.site";
+const siteUrl = "https://www.sdakawangware.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -83,9 +83,6 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   category: "religion",
-  verification: {
-    google: "your-google-verification-code",
-  },
 };
 
 export default function RootLayout({

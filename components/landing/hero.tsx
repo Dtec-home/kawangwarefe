@@ -63,7 +63,7 @@ export function Hero() {
                 className="text-lg px-8 py-6 border-2 border-teal-600 text-teal-700 hover:bg-teal-50 transition-all duration-300"
                 asChild
               >
-                <Link href="#events">
+                <Link href="/events">
                   <Calendar className="w-5 h-5 mr-2" />
                   View Events
                 </Link>
