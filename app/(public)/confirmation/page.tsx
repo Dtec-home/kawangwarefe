@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { LoginButton } from "@/components/auth/login-button";
+import { useAuth } from "@/lib/auth/auth-context";
 
 interface Contribution {
   id: string;
@@ -400,6 +401,7 @@ function ActionButtons({
 }) {
   const router = useRouter();
   const [checking, setChecking] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const [checkPaymentStatus] = useMutation(CHECK_PAYMENT_STATUS);
 
@@ -435,9 +437,15 @@ function ActionButtons({
         </Button>
       </div>
       {isCompleted && (
-        <LoginButton variant="secondary" className="w-full">
-          Login to View Dashboard
-        </LoginButton>
+        isAuthenticated ? (
+          <Button variant="secondary" className="w-full" onClick={() => router.push("/dashboard")}>
+            Go to Dashboard
+          </Button>
+        ) : (
+          <LoginButton variant="secondary" className="w-full">
+            Login to View Dashboard
+          </LoginButton>
+        )
       )}
     </div>
   );

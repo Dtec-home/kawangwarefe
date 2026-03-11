@@ -3,9 +3,13 @@
 import { useRouter } from "next/navigation";
 import { ContributionForm } from "@/components/forms/contribution-form";
 import { Navigation } from "@/components/landing/navigation";
+import { useAuth } from "@/lib/auth/auth-context";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function ContributePage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const handleSuccess = (data: any) => {
     // Redirect to confirmation page with contribution details
@@ -26,6 +30,22 @@ export default function ContributePage() {
     <div className="min-h-screen bg-background">
       {/* Navigation */}
       <Navigation />
+
+      {/* Dashboard return bar for logged-in users */}
+      {isAuthenticated && (
+        <div className="bg-muted/60 border-b">
+          <div className="container mx-auto px-4 py-2 flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/dashboard")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-8 md:py-12">

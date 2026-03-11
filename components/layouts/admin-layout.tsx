@@ -46,7 +46,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isStaff, isCategoryAdmin, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  const { isStaff, isCategoryAdmin, isContentAdmin, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -74,6 +74,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const getRoleBadge = () => {
     if (isStaff) {
       return { text: "Staff Admin", color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100" };
+    }
+    if (isContentAdmin) {
+      return { text: "Content Admin", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100" };
     }
     if (isCategoryAdmin) {
       return { text: "Category Admin", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" };

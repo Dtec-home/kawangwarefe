@@ -77,7 +77,7 @@ export function useUserRole() {
     isContentAdmin: roleInfo?.isContentAdmin ?? false,
 
     // Combined check: can access admin panel
-    canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin) ?? false,
+    canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin || roleInfo?.isContentAdmin) ?? false,
 
     // Can access content management
     canAccessContent: (roleInfo?.isStaff || roleInfo?.isContentAdmin) ?? false,
