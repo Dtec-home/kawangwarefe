@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, BookMarked } from "lucide-react";
+import { BookOpen, BookMarked, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface Devotional {
@@ -19,8 +20,35 @@ interface DevotionalsSectionProps {
   devotionals: Devotional[];
 }
 
-export function DevotionalsSection({ devotionals }: DevotionalsSectionProps) {
-  const hasDevotionals = devotionals && devotionals.length > 0;
+export function DevotionalsSection({ devotionals: initialDevotionals }: DevotionalsSectionProps) {
+  const [egwDevotional, setEgwDevotional] = useState<Devotional | null>(null);
+  const [loadingEgw, setLoadingEgw] = useState(true);
+
+  useEffect(() => {
+    async function fetchEgw() {
+      try {
+        const res = await fetch("/api/devotional");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.devotional) {
+            setEgwDevotional(data.devotional);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch EGW devotional:", err);
+      } finally {
+        setLoadingEgw(false);
+      }
+    }
+    fetchEgw();
+  }, []);
+
+  // Combine EGW devotional with initial devotionals. EGW will be featured.
+  const combinedDevotionals = egwDevotional
+    ? [egwDevotional, ...(initialDevotionals || []).map(d => ({ ...d, isFeatured: false }))]
+    : initialDevotionals || [];
+
+  const hasDevotionals = combinedDevotionals.length > 0 || loadingEgw;
 
   if (!hasDevotionals) {
     return (
@@ -52,8 +80,8 @@ export function DevotionalsSection({ devotionals }: DevotionalsSectionProps) {
     );
   }
 
-  const featured = devotionals.find((d) => d.isFeatured);
-  const regular = devotionals.filter((d) => !d.isFeatured).slice(0, 5);
+  const featured = combinedDevotionals.find((d) => d.isFeatured);
+  const regular = combinedDevotionals.filter((d) => !d.isFeatured).slice(0, 5);
 
   return (
     <section id="devotionals" className="py-16 bg-gradient-to-b from-background to-muted/20">
@@ -70,8 +98,15 @@ export function DevotionalsSection({ devotionals }: DevotionalsSectionProps) {
             <p className="text-muted-foreground">Grow in faith with our daily devotional readings</p>
           </div>
 
+          {/* Loading state for Featured Devotional */}
+          {loadingEgw && (
+            <Card className="mb-8 overflow-hidden h-64 flex items-center justify-center border-2 border-primary/20 bg-muted/30">
+               <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </Card>
+          )}
+
           {/* Featured Devotional */}
-          {featured && (
+          {!loadingEgw && featured && (
             <Card className="mb-8 overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 border-primary/20 animate-slide-up">
               <div className="grid md:grid-cols-2">
                 {featured.featuredImageUrl && (
@@ -92,8 +127,13 @@ export function DevotionalsSection({ devotionals }: DevotionalsSectionProps) {
                     </p>
                   </CardHeader>
                   <CardContent>
-                    <p className="line-clamp-4 mb-4">{featured.content}</p>
-                    <p className="text-xs text-muted-foreground">
+                     {/* Split by double newline to render paragraphs properly */}
+                     <div className="space-y-4 mb-4 text-muted-foreground">
+                       {featured.content.split("\n\n").map((para, idx) => (
+                          <p key={idx} className="line-clamp-4">{para}</p>
+                       ))}
+                     </div>
+                    <p className="text-xs text-muted-foreground font-semibold">
                       {format(new Date(featured.publishDate), "MMMM d, yyyy")}
                     </p>
                   </CardContent>
@@ -104,7 +144,7 @@ export function DevotionalsSection({ devotionals }: DevotionalsSectionProps) {
 
           {/* Regular Devotionals Grid */}
           {regular.length > 0 && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {regular.map((devotional, index) => (
                 <Card
                   key={devotional.id}
