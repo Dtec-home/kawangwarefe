@@ -62,3 +62,36 @@ test.describe("Admin Contributions Page", () => {
     }
   });
 });
+
+test.describe("Admin Manual Entry Page", () => {
+  test.beforeEach(async ({ page }) => {
+    await injectSession(page, { role: "staff" });
+    await page.goto("/admin/contributions/manual-entry", { waitUntil: "networkidle" });
+  });
+
+  test("renders manual entry heading", async ({ page }) => {
+    const hasHeading = await page.getByRole("heading", { name: /manual entry/i }).count();
+    expect(hasHeading).toBeGreaterThan(0);
+  });
+
+  test("renders member phone lookup field", async ({ page }) => {
+    const hasPhone = await page.getByPlaceholder(/phone|member/i).count();
+    const hasInput = await page.locator("input[type='tel'], input[type='text']").count();
+    expect(hasPhone > 0 || hasInput > 0).toBeTruthy();
+  });
+
+  test("renders category selector", async ({ page }) => {
+    const hasCategory = await page.getByText(/category/i).count();
+    expect(hasCategory).toBeGreaterThan(0);
+  });
+
+  test("renders amount input", async ({ page }) => {
+    const hasAmount = await page.getByText(/amount/i).count();
+    expect(hasAmount).toBeGreaterThan(0);
+  });
+
+  test("submit button is present", async ({ page }) => {
+    const hasSubmit = await page.getByRole("button", { name: /submit|record|save|add/i }).count();
+    expect(hasSubmit).toBeGreaterThan(0);
+  });
+});

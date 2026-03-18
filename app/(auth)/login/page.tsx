@@ -90,7 +90,7 @@ function LoginContent() {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow digits
-    let value = e.target.value.replace(/\D/g, "");
+    let value = e.currentTarget.value.replaceAll(/\D/g, "");
 
     // If user starts with 0, remove it (they should just type 797030300)
     if (value.startsWith("0")) {

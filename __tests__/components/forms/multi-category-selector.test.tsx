@@ -13,6 +13,16 @@ import { MultiCategorySelector } from '@/components/forms/multi-category-selecto
 import { GET_CONTRIBUTION_CATEGORIES } from '@/lib/graphql/queries'
 import { makeCategory, makeCategoryAmount } from '../../fixtures'
 
+// CategoryAmountRow uses Radix Select which doesn't work in jsdom — mock it
+vi.mock('@/components/forms/category-amount-row', () => ({
+  CategoryAmountRow: ({ index, onRemove, canRemove }: any) => (
+    <div data-testid={`category-row-${index}`}>
+      <span>Category Row {index}</span>
+      {canRemove && <button onClick={() => onRemove(index)}>Remove</button>}
+    </div>
+  ),
+}))
+
 const cat1 = makeCategory({ id: 'cat-1', name: 'Tithe', code: 'TITHE' })
 const cat2 = makeCategory({ id: 'cat-2', name: 'Offering', code: 'OFFERING' })
 const cat3 = makeCategory({ id: 'cat-3', name: 'Building Fund', code: 'BUILD' })

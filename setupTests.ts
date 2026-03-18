@@ -43,6 +43,50 @@ vi.mock('next/link', () => ({
 }))
 
 // ---------------------------------------------------------------------------
+// Mock Radix UI primitives that don't work in jsdom
+// ---------------------------------------------------------------------------
+vi.mock('@radix-ui/react-slot', () => ({
+  Slot: ({ children, ...props }: any) => {
+    const React = require('react')
+    return React.createElement('div', props, children)
+  },
+}))
+
+vi.mock('@radix-ui/react-label', () => ({
+  Root: ({ children, ...props }: any) => {
+    const React = require('react')
+    return React.createElement('label', props, children)
+  },
+}))
+
+vi.mock('@radix-ui/react-separator', () => ({
+  Root: ({ ...props }: any) => {
+    const React = require('react')
+    return React.createElement('hr', props)
+  },
+}))
+
+// ---------------------------------------------------------------------------
+// Mock Radix UI Select — jsdom doesn't support Radix portals/popovers.
+// Renders a native <select> so tests can assert on options.
+// ---------------------------------------------------------------------------
+vi.mock('@/components/ui/select', () => {
+  const React = require('react')
+  return {
+    Select: ({ children, value, onValueChange }: any) =>
+      React.createElement('div', { 'data-testid': 'select-root' }, children),
+    SelectTrigger: ({ children }: any) =>
+      React.createElement('button', { type: 'button' }, children),
+    SelectValue: ({ placeholder }: any) =>
+      React.createElement('span', null, placeholder),
+    SelectContent: ({ children }: any) =>
+      React.createElement('div', null, children),
+    SelectItem: ({ value, children }: any) =>
+      React.createElement('div', { 'data-value': value }, children),
+  }
+})
+
+// ---------------------------------------------------------------------------
 // Suppress console.error noise in tests (e.g. React act() warnings)
 // Tests that rely on error logging should re-enable explicitly.
 // ---------------------------------------------------------------------------

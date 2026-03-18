@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { ApolloWrapper } from "@/lib/graphql/apollo-client";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { StructuredData } from "@/components/seo/structured-data";
+import { UpdatePrompt } from "@/components/pwa/update-prompt";
 import "./globals.css";
 //Because we must deploy
 const geistSans = Geist({
@@ -139,6 +140,9 @@ export default function RootLayout({
           </a>
         </footer>
         <Analytics />
+        {/* Mandatory PWA update overlay — rendered outside auth/apollo context
+            so it works even if the GraphQL server is temporarily unreachable */}
+        <UpdatePrompt />
       </body>
     </html>
   );

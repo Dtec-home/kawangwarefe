@@ -295,3 +295,15 @@ jobs:
 - [Playwright Documentation](https://playwright.dev/)
 - [Testing Library Documentation](https://testing-library.com/)
 - [Next.js Testing Guide](https://nextjs.org/docs/app/building-your-application/testing)
+
+## Test Failure Triage
+
+When CI fails:
+
+1. Open the `playwright-report` or `unit-test-results` artifact from the failed run
+2. Identify the failing spec and assertion
+3. If it's a real defect — open a **Bug Report** issue and link it to the failing spec line
+4. If the test is flaky (passes locally, fails in CI) — add a `test.fixme` annotation with a comment and open a **Test Gap** issue
+5. If the scenario is no longer valid — remove the test and document why in the PR description
+
+Never skip a failing test without an open issue tracking it.
