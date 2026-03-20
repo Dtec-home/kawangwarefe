@@ -16,7 +16,41 @@ export const GET_CONTRIBUTION_CATEGORIES = gql`
       code
       description
       isActive
+      routingMode
+      fallbackIfNoGroup
     }
+  }
+`;
+
+/**
+ * Get active purposes for a department/category.
+ */
+export const GET_DEPARTMENT_PURPOSES = gql`
+  query GetDepartmentPurposes($categoryId: ID!) {
+    departmentPurposes(categoryId: $categoryId, isActive: true) {
+      id
+      name
+      code
+      description
+      isActive
+    }
+  }
+`;
+
+/**
+ * Get a formatted paybill instruction message for in-app display.
+ */
+export const GET_PAYBILL_INSTRUCTION_MESSAGE = gql`
+  query GetPaybillInstructionMessage(
+    $categoryCode: String!
+    $purposeCode: String
+    $amount: String
+  ) {
+    paybillInstructionMessage(
+      categoryCode: $categoryCode
+      purposeCode: $purposeCode
+      amount: $amount
+    )
   }
 `;
 

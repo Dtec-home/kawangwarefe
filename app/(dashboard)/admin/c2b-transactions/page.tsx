@@ -158,7 +158,7 @@ function ResolveModal({
 
   const handleResolve = () => {
     if (!selectedCategory) {
-      toast.error("Please select a category");
+      toast.error("Please select a department");
       return;
     }
     resolveC2B({
@@ -175,7 +175,7 @@ function ResolveModal({
         <div className="p-6 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-semibold">Resolve Unmatched Transaction</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Assign a contribution category to complete this transaction.
+            Assign a contribution department to complete this transaction.
           </p>
         </div>
 
@@ -210,12 +210,12 @@ function ResolveModal({
             </div>
           </div>
 
-          {/* Category selector */}
+          {/* Department selector */}
           <div className="space-y-2">
-            <Label htmlFor="resolve-category">Assign Category</Label>
+            <Label htmlFor="resolve-category">Assign Department</Label>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger id="resolve-category">
-                <SelectValue placeholder="Select a category..." />
+                <SelectValue placeholder="Select a department..." />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
@@ -231,8 +231,7 @@ function ResolveModal({
           </div>
 
           <p className="text-xs text-muted-foreground">
-            This will create a completed contribution record and send an SMS receipt
-            to the customer.
+            This will create a completed contribution record for this payment.
           </p>
         </div>
 
@@ -379,8 +378,8 @@ export default function C2BTransactionsPage() {
               </p>
               <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-0.5">
                 These are Pay Bill payments where the account reference didn&apos;t
-                match any category code. Resolve them by assigning the correct
-                category.
+                match any department code. Resolve them by assigning the correct
+                department.
               </p>
             </div>
             <Button
@@ -522,7 +521,7 @@ export default function C2BTransactionsPage() {
                         <th className="text-left p-3 font-medium">Reference</th>
                         <th className="text-right p-3 font-medium">Amount</th>
                         <th className="text-center p-3 font-medium">Status</th>
-                        <th className="text-left p-3 font-medium">Category</th>
+                        <th className="text-left p-3 font-medium">Department</th>
                         <th className="text-center p-3 font-medium">Action</th>
                       </tr>
                     </thead>

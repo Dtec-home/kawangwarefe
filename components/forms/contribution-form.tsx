@@ -1,6 +1,6 @@
 /**
  * Multi-Category Contribution Form Component
- * Supports selecting multiple categories with amounts and displays summary before submission
+ * Supports selecting multiple departments with amounts and displays summary before submission
  * Following SOLID principles with step-based flow
  */
 
@@ -31,7 +31,8 @@ const multiContributionSchema = z.object({
   contributions: z
     .array(
       z.object({
-        categoryId: z.string().min(1, "Please select a category"),
+        categoryId: z.string().min(1, "Please select a department"),
+        purposeId: z.string().optional(),
         amount: z
           .string()
           .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 1, {
@@ -45,7 +46,7 @@ const multiContributionSchema = z.object({
         const categoryIds = contributions.map((c) => c.categoryId);
         return new Set(categoryIds).size === categoryIds.length;
       },
-      { message: "Duplicate categories are not allowed" }
+      { message: "Duplicate departments are not allowed" }
     ),
 });
 
@@ -80,6 +81,7 @@ type InitiateMultiContributionVars = {
   contributions: Array<{
     categoryId: string;
     amount: string;
+    purposeId?: string;
   }>;
 };
 
@@ -92,6 +94,8 @@ interface Category {
   name: string;
   code: string;
   description: string;
+  routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
+  fallbackIfNoGroup?: "TOP_LEVEL" | "REJECT";
 }
 
 interface GetCategoriesData {
@@ -134,13 +138,15 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     handleSubmit,
     formState: { errors },
     setValue,
+    setError,
+    clearErrors,
     watch,
     reset,
   } = useForm<MultiContributionFormData>({
     resolver: zodResolver(multiContributionSchema),
     defaultValues: {
       phoneNumber: getDefaultPhone(),
-      contributions: [{ categoryId: "", amount: "" }],
+      contributions: [{ categoryId: "", amount: "", purposeId: "" }],
     },
   });
 
@@ -208,6 +214,29 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
 
   const handleReviewClick = () => {
     handleSubmit(() => {
+      const categoryMap = new Map(
+        (categoriesData?.contributionCategories || []).map((category) => [category.id, category])
+      );
+
+      let hasPurposeError = false;
+      contributions.forEach((contribution, index) => {
+        const category = categoryMap.get(contribution.categoryId);
+        if (category?.routingMode === "REQUIRES_PURPOSE" && !contribution.purposeId) {
+          hasPurposeError = true;
+          setError(`contributions.${index}.purposeId` as any, {
+            type: "manual",
+            message: "Please select a purpose",
+          });
+        } else {
+          clearErrors(`contributions.${index}.purposeId` as any);
+        }
+      });
+
+      if (hasPurposeError) {
+        toast.error("Please select purpose for required departments.");
+        return;
+      }
+
       setStep("summary");
     })();
   };
@@ -275,6 +304,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
           contributions: contributions.map((c) => ({
             categoryId: c.categoryId,
             amount: c.amount,
+            purposeId: c.purposeId || undefined,
           })),
         },
       });
@@ -337,7 +367,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
             Make a Contribution
           </CardTitle>
           <CardDescription className="text-sm">
-            Select one or more categories and enter amounts. You'll receive a
+            Select one or more departments and enter amounts. You'll receive a
             single M-Pesa prompt for the total.
           </CardDescription>
         </CardHeader>
@@ -361,6 +391,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
                   Array.isArray(errors.contributions)
                     ? errors.contributions.map((err) => ({
                       categoryId: err?.categoryId?.message,
+                      purposeId: (err as any)?.purposeId?.message,
                       amount: err?.amount?.message,
                     }))
                     : undefined

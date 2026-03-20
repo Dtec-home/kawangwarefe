@@ -128,7 +128,7 @@ function SingleContributionConfirmation({
 
       <DetailsCard>
         <DetailRow label="Amount" value={`KES ${Number.parseFloat(contribution.amount).toLocaleString()}`} />
-        <DetailRow label="Category" value={contribution.category.name} />
+        <DetailRow label="Department" value={contribution.category.name} />
         <DetailRow label="Status" value={<span className="capitalize">{contribution.status}</span>} />
         <DetailRow
           label="Date"

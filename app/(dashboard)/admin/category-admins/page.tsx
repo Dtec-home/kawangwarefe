@@ -150,7 +150,7 @@ function CategoryAdminsPageContent() {
         }
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to assign category admin");
+        toast.error(error.message || "Failed to assign department admin");
       },
     });
 
@@ -166,7 +166,7 @@ function CategoryAdminsPageContent() {
         }
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to remove category admin");
+        toast.error(error.message || "Failed to remove department admin");
       },
     });
 
@@ -176,7 +176,7 @@ function CategoryAdminsPageContent() {
 
   const handleAssignAdmin = () => {
     if (!selectedMember || !assignCategory) {
-      toast.error("Please select both a member and a category");
+      toast.error("Please select both a member and a department");
       return;
     }
 
@@ -189,7 +189,7 @@ function CategoryAdminsPageContent() {
   };
 
   const handleRemoveAdmin = (categoryAdminId: string) => {
-    if (confirm("Are you sure you want to remove this category admin role?")) {
+    if (confirm("Are you sure you want to remove this department admin role?")) {
       removeAdmin({
         variables: {
           categoryAdminId,
@@ -221,11 +221,11 @@ function CategoryAdminsPageContent() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Shield className="h-8 w-8" />
-            Category Admins
+            Department Admins
           </h1>
           <p className="text-muted-foreground">
             Assign members as administrators for specific contribution
-            categories
+            departments
           </p>
         </div>
 
@@ -234,14 +234,14 @@ function CategoryAdminsPageContent() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Categories
+                Total Departments
               </CardTitle>
               <FolderKey className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{categories.length}</div>
               <p className="text-xs text-muted-foreground">
-                Active contribution categories
+                Active contribution departments
               </p>
             </CardContent>
           </Card>
@@ -249,7 +249,7 @@ function CategoryAdminsPageContent() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Category Admins
+                Department Admins
               </CardTitle>
               <Shield className="h-4 w-4 text-blue-600" />
             </CardHeader>
@@ -266,7 +266,7 @@ function CategoryAdminsPageContent() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Categories with Admins
+                Departments with Admins
               </CardTitle>
               <Users className="h-4 w-4 text-green-600" />
             </CardHeader>
@@ -275,22 +275,22 @@ function CategoryAdminsPageContent() {
                 {Object.keys(adminsByCategory).length}
               </div>
               <p className="text-xs text-muted-foreground">
-                Categories with assigned admins
+                Departments with assigned admins
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Assign New Category Admin */}
+        {/* Assign New Department Admin */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
-              Assign Category Admin
+              Assign Department Admin
             </CardTitle>
             <CardDescription>
               Grant a member admin privileges for a specific contribution
-              category
+              department
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -326,12 +326,12 @@ function CategoryAdminsPageContent() {
                 </Select>
               </div>
 
-              {/* Category Select */}
+              {/* Department Select */}
               <div className="space-y-2">
-                <Label htmlFor="category-select">Select Category</Label>
+                <Label htmlFor="category-select">Select Department</Label>
                 <Select value={assignCategory} onValueChange={setAssignCategory}>
                   <SelectTrigger id="category-select">
-                    <SelectValue placeholder="Choose a category" />
+                    <SelectValue placeholder="Choose a department" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -362,17 +362,17 @@ function CategoryAdminsPageContent() {
           </CardContent>
         </Card>
 
-        {/* Filter by Category */}
+        {/* Filter by Department */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              Filter Category Admins
+              Filter Department Admins
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="max-w-sm">
-              <Label htmlFor="filter-category">Filter by Category</Label>
+              <Label htmlFor="filter-category">Filter by Department</Label>
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
@@ -381,7 +381,7 @@ function CategoryAdminsPageContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">All Departments</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -393,10 +393,10 @@ function CategoryAdminsPageContent() {
           </CardContent>
         </Card>
 
-        {/* Category Admins List */}
+        {/* Department Admins List */}
         <Card>
           <CardHeader>
-            <CardTitle>Current Category Admins</CardTitle>
+            <CardTitle>Current Department Admins</CardTitle>
             <CardDescription>
               {categoryAdmins.length} admin assignment
               {categoryAdmins.length !== 1 ? "s" : ""} found
@@ -405,19 +405,19 @@ function CategoryAdminsPageContent() {
           <CardContent>
             {loading && (
               <div className="text-center py-8 text-muted-foreground">
-                Loading category admins...
+                Loading department admins...
               </div>
             )}
 
             {error && (
               <div className="text-center py-8 text-red-600">
-                Error loading category admins: {error.message}
+                Error loading department admins: {error.message}
               </div>
             )}
 
             {!loading && !error && categoryAdmins.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                No category admins assigned yet
+                No department admins assigned yet
               </div>
             )}
 

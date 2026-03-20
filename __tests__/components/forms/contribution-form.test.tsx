@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MockedProvider } from '@apollo/client/testing'
+import { MockedProvider } from '@apollo/client/testing/react'
 import { ContributionForm } from '@/components/forms/contribution-form'
 import { GET_CONTRIBUTION_CATEGORIES } from '@/lib/graphql/queries'
 import { GET_PAYMENT_STATUS } from '@/lib/graphql/payment-status-query'
@@ -38,7 +38,7 @@ vi.mock('@/components/forms/multi-category-selector', () => ({
   MultiCategorySelector: () => {
     const React = require('react')
     return React.createElement('div', { 'data-testid': 'multi-category-selector' },
-      React.createElement('label', null, 'Category')
+      React.createElement('label', null, 'Department')
     )
   },
 }))
@@ -87,9 +87,10 @@ describe('ContributionForm — input step', () => {
     expect(screen.getByRole('button', { name: /review contribution/i })).toBeInTheDocument()
   })
 
-  it('renders at least one category label', () => {
+  it('renders at least one department label', () => {
     renderForm()
-    expect(screen.getByText(/category/i)).toBeInTheDocument()
+    // Check for the mocked MultiCategorySelector by its label
+    expect(screen.getByText('Department')).toBeInTheDocument()
   })
 
   it('shows validation error when Review is clicked with empty phone', async () => {

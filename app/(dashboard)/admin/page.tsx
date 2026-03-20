@@ -179,7 +179,7 @@ function AdminDashboardContent() {
                   <tr className="border-b">
                     <th className="text-left p-2 font-medium text-sm">Date</th>
                     <th className="text-left p-2 font-medium text-sm">Member</th>
-                    <th className="text-left p-2 font-medium text-sm">Category</th>
+                    <th className="text-left p-2 font-medium text-sm">Department</th>
                     <th className="text-right p-2 font-medium text-sm">Amount</th>
                   </tr>
                 </thead>

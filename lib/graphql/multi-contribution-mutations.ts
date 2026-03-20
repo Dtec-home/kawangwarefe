@@ -22,6 +22,8 @@ export const INITIATE_MULTI_CONTRIBUTION = gql`
         categoryName
         categoryCode
         amount
+        purposeName
+        routedGroupName
       }
       checkoutRequestId
       transactionId

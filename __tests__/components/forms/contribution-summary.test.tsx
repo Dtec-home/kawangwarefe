@@ -38,12 +38,12 @@ describe('ContributionSummary', () => {
     expect(screen.getByText(/0712/)).toBeDefined()
   })
 
-  it('renders category name', () => {
+  it('renders department name', () => {
     renderSummary()
     expect(screen.getByText('Tithe')).toBeDefined()
   })
 
-  it('renders category code', () => {
+  it('renders department code', () => {
     renderSummary()
     expect(screen.getByText('TITHE')).toBeDefined()
   })
@@ -53,7 +53,7 @@ describe('ContributionSummary', () => {
     expect(screen.getAllByText(/1,000/).length).toBeGreaterThan(0)
   })
 
-  it('renders all categories for multi-contribution', () => {
+  it('renders all departments for multi-contribution', () => {
     renderSummary({ contributions: multiContrib, totalAmount: '1500' })
     expect(screen.getByText('Tithe')).toBeDefined()
     expect(screen.getByText('Offering')).toBeDefined()

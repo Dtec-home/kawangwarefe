@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GENERATE_CONTRIBUTION_REPORT } from "@/lib/graphql/mutations";
 import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
+import { GET_DEPARTMENT_ROUTING_REPORT } from "@/lib/graphql/admin-queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,56 @@ interface ReportResponse {
   };
 }
 
+interface DepartmentRoutingSummary {
+  totalCompletedAmount: string;
+  totalCompletedCount: number;
+  guestTopLevelAmount: string;
+  guestTopLevelCount: number;
+  memberRoutedAmount: string;
+  memberRoutedCount: number;
+  memberTopLevelAmount: string;
+  memberTopLevelCount: number;
+}
+
+interface DepartmentBreakdownItem {
+  departmentId: string;
+  departmentName: string;
+  departmentCode: string;
+  totalAmount: string;
+  totalCount: number;
+}
+
+interface DepartmentPurposeBreakdownItem {
+  departmentId: string;
+  departmentName: string;
+  departmentCode: string;
+  purposeId: string;
+  purposeName: string;
+  purposeCode: string;
+  totalAmount: string;
+  totalCount: number;
+}
+
+interface DepartmentGroupBreakdownItem {
+  departmentId: string;
+  departmentName: string;
+  departmentCode: string;
+  groupId: string | null;
+  groupName: string;
+  isTopLevel: boolean;
+  totalAmount: string;
+  totalCount: number;
+}
+
+interface DepartmentRoutingReportData {
+  departmentRoutingReport: {
+    summary: DepartmentRoutingSummary;
+    byDepartment: DepartmentBreakdownItem[];
+    byDepartmentPurpose: DepartmentPurposeBreakdownItem[];
+    byDepartmentGroup: DepartmentGroupBreakdownItem[];
+  };
+}
+
 function ReportsPageContent() {
   const [reportType, setReportType] = useState<string>("daily");
   const [format, setFormat] = useState<string>("excel");
@@ -51,6 +102,23 @@ function ReportsPageContent() {
 
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const categories = categoriesData?.contributionCategories || [];
+
+  const customDateFrom = reportType === "custom" && dateFrom
+    ? new Date(dateFrom).toISOString()
+    : null;
+  const customDateTo = reportType === "custom" && dateTo
+    ? new Date(dateTo).toISOString()
+    : null;
+
+  const {
+    data: routingReportData,
+    loading: routingReportLoading,
+  } = useQuery<DepartmentRoutingReportData>(GET_DEPARTMENT_ROUTING_REPORT, {
+    variables: {
+      dateFrom: customDateFrom,
+      dateTo: customDateTo,
+    },
+  });
 
   const [generateReport, { loading }] = useMutation<ReportResponse>(GENERATE_CONTRIBUTION_REPORT, {
     onCompleted: (data) => {
@@ -79,20 +147,20 @@ function ReportsPageContent() {
     const byteCharacters = atob(base64Data);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+      byteNumbers[i] = byteCharacters.codePointAt(i) ?? 0;
     }
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: contentType });
 
     // Create download link
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    link.remove();
+    globalThis.URL.revokeObjectURL(url);
   };
 
   const handleGenerateReport = () => {
@@ -111,13 +179,18 @@ function ReportsPageContent() {
       variables: {
         format,
         reportType,
-        dateFrom: reportType === "custom" && dateFrom ? new Date(dateFrom).toISOString() : null,
-        dateTo: reportType === "custom" && dateTo ? new Date(dateTo).toISOString() : null,
+        dateFrom: customDateFrom,
+        dateTo: customDateTo,
         categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds.map((id) => Number.parseInt(id)) : null,
         memberId: null, // Can be added later if needed
       },
     });
   };
+
+  const routingSummary = routingReportData?.departmentRoutingReport?.summary;
+  const topDepartments = (routingReportData?.departmentRoutingReport?.byDepartment || []).slice(0, 5);
+  const topPurposeBreakdown = (routingReportData?.departmentRoutingReport?.byDepartmentPurpose || []).slice(0, 5);
+  const topGroupBreakdown = (routingReportData?.departmentRoutingReport?.byDepartmentGroup || []).slice(0, 5);
 
   return (
     <AdminLayout>
@@ -226,10 +299,10 @@ function ReportsPageContent() {
               </div>
             )}
 
-            {/* Category Filter */}
+            {/* Department Filter */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">Filter by Categories (Optional)</h3>
+                <h3 className="font-medium">Filter by Departments (Optional)</h3>
                 {selectedCategoryIds.length > 0 && (
                   <Button
                     variant="ghost"
@@ -242,8 +315,8 @@ function ReportsPageContent() {
               </div>
               <p className="text-sm text-muted-foreground">
                 {selectedCategoryIds.length === 0
-                  ? "All categories will be included"
-                  : `${selectedCategoryIds.length} category(ies) selected`}
+                  ? "All departments will be included"
+                  : `${selectedCategoryIds.length} department(s) selected`}
               </p>
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
                 {categories.map((category) => {
@@ -356,6 +429,98 @@ function ReportsPageContent() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Department Routing Analytics */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Department Routing Analytics</CardTitle>
+            <CardDescription>
+              Live split of top-level, purpose-based, and group-routed giving
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {routingReportLoading && (
+              <p className="text-sm text-muted-foreground">Loading routing analytics...</p>
+            )}
+
+            {!routingReportLoading && routingSummary && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">Total Completed</p>
+                    <p className="text-lg font-semibold">KES {Number(routingSummary.totalCompletedAmount).toLocaleString("en-KE")}</p>
+                    <p className="text-xs text-muted-foreground">{routingSummary.totalCompletedCount} contributions</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">Guest Top-level</p>
+                    <p className="text-lg font-semibold">KES {Number(routingSummary.guestTopLevelAmount).toLocaleString("en-KE")}</p>
+                    <p className="text-xs text-muted-foreground">{routingSummary.guestTopLevelCount} contributions</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">Member Routed to Group</p>
+                    <p className="text-lg font-semibold">KES {Number(routingSummary.memberRoutedAmount).toLocaleString("en-KE")}</p>
+                    <p className="text-xs text-muted-foreground">{routingSummary.memberRoutedCount} contributions</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">Member Top-level</p>
+                    <p className="text-lg font-semibold">KES {Number(routingSummary.memberTopLevelAmount).toLocaleString("en-KE")}</p>
+                    <p className="text-xs text-muted-foreground">{routingSummary.memberTopLevelCount} contributions</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-md border p-3">
+                    <p className="mb-2 text-sm font-medium">Top Departments</p>
+                    <div className="space-y-2">
+                      {topDepartments.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No department data</p>
+                      )}
+                      {topDepartments.map((row) => (
+                        <div key={row.departmentId} className="flex items-center justify-between text-sm">
+                          <span>{row.departmentName}</span>
+                          <span className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border p-3">
+                    <p className="mb-2 text-sm font-medium">Top Department Purposes</p>
+                    <div className="space-y-2">
+                      {topPurposeBreakdown.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No purpose data</p>
+                      )}
+                      {topPurposeBreakdown.map((row) => (
+                        <div key={`${row.departmentId}-${row.purposeId}`} className="flex items-center justify-between text-sm">
+                          <span>{row.departmentName} • {row.purposeName}</span>
+                          <span className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border p-3">
+                    <p className="mb-2 text-sm font-medium">Top Department Groups</p>
+                    <div className="space-y-2">
+                      {topGroupBreakdown.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No group data</p>
+                      )}
+                      {topGroupBreakdown.map((row, index) => {
+                        const groupKey = row.groupId || `top-${index}`;
+                        return (
+                          <div key={`${row.departmentId}-${groupKey}`} className="flex items-center justify-between text-sm">
+                            <span>{row.departmentName} • {row.groupName}</span>
+                            <span className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );

@@ -228,15 +228,15 @@ export default function ContributionsPage() {
                 </Select>
               </div>
 
-              {/* Category Filter */}
+              {/* Department Filter */}
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">Department</Label>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger id="category">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="all">All Departments</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
@@ -344,7 +344,7 @@ export default function ContributionsPage() {
                       <th className="text-left p-3 font-medium">Date</th>
                       <th className="text-left p-3 font-medium">Member</th>
                       <th className="text-left p-3 font-medium">Phone</th>
-                      <th className="text-left p-3 font-medium">Category</th>
+                      <th className="text-left p-3 font-medium">Department</th>
                       <th className="text-right p-3 font-medium">Amount</th>
                       <th className="text-center p-3 font-medium">Status</th>
                       <th className="text-left p-3 font-medium">Receipt</th>

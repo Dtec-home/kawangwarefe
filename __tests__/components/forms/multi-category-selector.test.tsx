@@ -8,7 +8,7 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MockedProvider } from '@apollo/client/testing'
+import { MockedProvider } from '@apollo/client/testing/react'
 import { MultiCategorySelector } from '@/components/forms/multi-category-selector'
 import { GET_CONTRIBUTION_CATEGORIES } from '@/lib/graphql/queries'
 import { makeCategory, makeCategoryAmount } from '../../fixtures'
@@ -65,7 +65,7 @@ function renderSelector(
 describe('MultiCategorySelector', () => {
   describe('loading state', () => {
     it('renders a skeleton/pulse placeholder while the query is loading', () => {
-      const { container } = renderSelector({ mocks: [] })
+      const { container } = renderSelector({ mocks: [loadingMock] })
       // Loading: shows a pulse skeleton (animate-pulse class)
       const skeleton = container.querySelector('.animate-pulse')
       expect(skeleton).toBeInTheDocument()
@@ -73,28 +73,27 @@ describe('MultiCategorySelector', () => {
   })
 
   describe('after data loads', () => {
-    it('renders one CategoryAmountRow per contribution entry', async () => {
+    it('renders one department row per contribution entry', async () => {
       const contribs = [makeCategoryAmount(), makeCategoryAmount()]
       renderSelector({ contributions: contribs })
       await waitFor(() => {
-        // Each row renders an amount label; 2 rows = 2 "Amount (KES)" labels
-        const labels = screen.getAllByText(/amount \(kes\)/i)
-        expect(labels).toHaveLength(2)
+        expect(screen.getByTestId('category-row-0')).toBeInTheDocument()
+        expect(screen.getByTestId('category-row-1')).toBeInTheDocument()
       })
     })
 
-    it('shows "Add Another Category" button when below maxCategories', async () => {
+    it('shows "Add Another Department" button when below maxCategories', async () => {
       renderSelector({ contributions: [makeCategoryAmount()], maxCategories: 3 })
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /add another category/i })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /add another department/i })).toBeInTheDocument()
       })
     })
 
-    it('hides "Add Another Category" button when at maxCategories limit', async () => {
+    it('hides "Add Another Department" button when at maxCategories limit', async () => {
       const contribs = [makeCategoryAmount(), makeCategoryAmount(), makeCategoryAmount()]
       renderSelector({ contributions: contribs, maxCategories: 3 })
       await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /add another category/i })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /add another department/i })).not.toBeInTheDocument()
       })
     })
 
@@ -102,25 +101,25 @@ describe('MultiCategorySelector', () => {
       const contribs = [makeCategoryAmount(), makeCategoryAmount()]
       renderSelector({ contributions: contribs, maxCategories: 2 })
       await waitFor(() => {
-        expect(screen.getByText(/maximum 2 categories reached/i)).toBeInTheDocument()
+        expect(screen.getByText(/maximum 2 departments reached/i)).toBeInTheDocument()
       })
     })
 
-    it('calls onChange with a new empty row appended when "Add Another Category" clicked', async () => {
+    it('calls onChange with a new empty row appended when "Add Another Department" clicked', async () => {
       const onChange = vi.fn()
       const initial = [makeCategoryAmount({ categoryId: 'cat-1', amount: '100' })]
       renderSelector({ contributions: initial, onChange, maxCategories: 5 })
 
       await waitFor(() =>
-        screen.getByRole('button', { name: /add another category/i })
+        screen.getByRole('button', { name: /add another department/i })
       )
 
-      fireEvent.click(screen.getByRole('button', { name: /add another category/i }))
+      fireEvent.click(screen.getByRole('button', { name: /add another department/i }))
 
       expect(onChange).toHaveBeenCalledOnce()
       const [newContribs] = onChange.mock.calls[0]
       expect(newContribs).toHaveLength(2)
-      expect(newContribs[1]).toEqual({ categoryId: '', amount: '' })
+      expect(newContribs[1]).toEqual({ categoryId: '', amount: '', purposeId: '' })
       // First row unchanged
       expect(newContribs[0]).toEqual({ categoryId: 'cat-1', amount: '100' })
     })

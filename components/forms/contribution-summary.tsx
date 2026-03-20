@@ -1,6 +1,6 @@
 /**
  * Contribution Summary Component
- * Displays a summary of multi-category contributions before final submission
+ * Displays a summary of multi-department contributions before final submission
  */
 
 "use client";
@@ -67,7 +67,7 @@ export function ContributionSummary({
         {/* Contributions List */}
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Categories
+            Departments
           </h3>
           <div className="space-y-2">
             {contributions.map((item, index) => (

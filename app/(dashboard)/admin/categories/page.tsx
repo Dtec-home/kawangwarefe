@@ -1,6 +1,6 @@
 /**
- * Category Management Page
- * Admin CRUD for contribution categories
+ * Department Management Page
+ * Admin CRUD for contribution departments
  */
 
 "use client";
@@ -125,10 +125,10 @@ function CategoryManagementPageContent() {
         setShowCreateForm(false);
         refetch();
       } else {
-        setError(data?.createCategory?.message || "Failed to create category");
+        setError(data?.createCategory?.message || "Failed to create department");
       }
     } catch (err: any) {
-      setError(err.message || "Error creating category");
+      setError(err.message || "Error creating department");
     }
   };
 
@@ -168,10 +168,10 @@ function CategoryManagementPageContent() {
         setEditingId(null);
         refetch();
       } else {
-        setError(data?.updateCategory?.message || "Failed to update category");
+        setError(data?.updateCategory?.message || "Failed to update department");
       }
     } catch (err: any) {
-      setError(err.message || "Error updating category");
+      setError(err.message || "Error updating department");
     }
   };
 
@@ -187,13 +187,13 @@ function CategoryManagementPageContent() {
       });
 
       if (data?.updateCategory?.success) {
-        setSuccess(`Category '${category.name}' ${category.isActive ? "deactivated" : "activated"}`);
+        setSuccess(`Department '${category.name}' ${category.isActive ? "deactivated" : "activated"}`);
         refetch();
       } else {
-        setError(data?.updateCategory?.message || "Failed to update category");
+        setError(data?.updateCategory?.message || "Failed to update department");
       }
     } catch (err: any) {
-      setError(err.message || "Error updating category");
+      setError(err.message || "Error updating department");
     }
   };
 
@@ -201,7 +201,7 @@ function CategoryManagementPageContent() {
     clearMessages();
 
     const confirmed = await confirm({
-      title: 'Delete Category',
+      title: 'Delete Department',
       description: `Are you sure you want to delete '${category.name}'? This cannot be undone.`,
       confirmText: 'Delete',
       cancelText: 'Cancel',
@@ -220,10 +220,10 @@ function CategoryManagementPageContent() {
         setSuccess(data.deleteCategory.message);
         refetch();
       } else {
-        setError(data?.deleteCategory?.message || "Failed to delete category");
+        setError(data?.deleteCategory?.message || "Failed to delete department");
       }
     } catch (err: any) {
-      setError(err.message || "Error deleting category");
+      setError(err.message || "Error deleting department");
     }
   };
 
@@ -236,14 +236,14 @@ function CategoryManagementPageContent() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Contribution Categories</h1>
+            <h1 className="text-3xl font-bold">Contribution Departments</h1>
             <p className="text-muted-foreground">
-              Manage contribution categories (e.g., Tithe, Offering, Building Fund)
+              Manage contribution departments (e.g., Tithe, Offering, Building Fund)
             </p>
           </div>
           <Button onClick={() => { setShowCreateForm(!showCreateForm); clearMessages(); }}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Category
+            Add Department
           </Button>
         </div>
 
@@ -251,7 +251,7 @@ function CategoryManagementPageContent() {
         <div className="grid md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Categories</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Departments</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{categories.length}</div>
@@ -295,14 +295,14 @@ function CategoryManagementPageContent() {
         {showCreateForm && (
           <Card>
             <CardHeader>
-              <CardTitle>Create New Category</CardTitle>
-              <CardDescription>Add a new contribution category</CardDescription>
+              <CardTitle>Create New Department</CardTitle>
+              <CardDescription>Add a new contribution department</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Category Name *</Label>
+                    <Label htmlFor="name">Department Name *</Label>
                     <Input
                       id="name"
                       placeholder="e.g., Building Fund"
@@ -349,7 +349,7 @@ function CategoryManagementPageContent() {
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" disabled={creating}>
-                    {creating ? "Creating..." : "Create Category"}
+                    {creating ? "Creating..." : "Create Department"}
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
                     Cancel
@@ -360,23 +360,23 @@ function CategoryManagementPageContent() {
           </Card>
         )}
 
-        {/* Categories List */}
+        {/* Departments List */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FolderOpen className="h-5 w-5" />
-              All Categories
+              All Departments
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex items-center gap-2 py-8 justify-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                <span>Loading categories...</span>
+                <span>Loading departments...</span>
               </div>
             ) : categories.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No categories found. Create one to get started.
+                No departments found. Create one to get started.
               </div>
             ) : (
               <div className="space-y-3">

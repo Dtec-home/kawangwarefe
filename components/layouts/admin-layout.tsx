@@ -3,7 +3,7 @@
  * Sprint 3: Admin Dashboard
  *
  * Sidebar navigation and header for admin pages
- * Role-based navigation: Full staff sees all, Category admins see limited options
+ * Role-based navigation: Full staff sees all, department admins see limited options
  */
 
 "use client";
@@ -61,8 +61,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Overview", href: "/admin", icon: LayoutDashboard, feature: "overview" },
     { name: "Contributions", href: "/admin/contributions", icon: DollarSign, feature: "contributions" },
     { name: "Members", href: "/admin/members", icon: Users, feature: "members" },
-    { name: "Categories", href: "/admin/categories", icon: FolderOpen, feature: "categories" },
-    { name: "Category Admins", href: "/admin/category-admins", icon: Shield, feature: "category-admins" },
+    { name: "Departments", href: "/admin/categories", icon: FolderOpen, feature: "categories" },
+    { name: "Department Admins", href: "/admin/category-admins", icon: Shield, feature: "category-admins" },
     { name: "Reports", href: "/admin/reports", icon: FileText, feature: "reports" },
     { name: "C2B / Pay Bill", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
     { name: "Church Content", href: "/admin/content", icon: Newspaper, feature: "content" },
@@ -80,7 +80,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       return { text: "Content Admin", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100" };
     }
     if (isCategoryAdmin) {
-      return { text: "Category Admin", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" };
+      return { text: "Department Admin", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" };
     }
     return null;
   };
@@ -133,12 +133,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             )}
           </div>
 
-          {/* Category Admin Scope Indicator */}
+          {/* Department Admin Scope Indicator */}
           {isCategoryAdmin && !isStaff && adminCategories.length > 0 && (
             <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800">
               <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300 mb-2">
                 <FolderKey className="h-3 w-3" />
-                <span className="font-medium">Your Categories:</span>
+                <span className="font-medium">Your Departments:</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {adminCategories.map((cat) => (

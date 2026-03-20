@@ -200,16 +200,16 @@ function DashboardContent() {
           </Card>
         </div>
 
-        {/* Category Admin Roles */}
+        {/* Department Admin Roles */}
         {isAnyCategoryAdmin && (
           <Card className="mb-8 border-blue-200 dark:border-blue-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FolderKey className="h-5 w-5 text-blue-600" />
-                Your Category Admin Roles
+                Your Department Admin Roles
               </CardTitle>
               <CardDescription>
-                You have admin privileges for the following contribution categories
+                You have admin privileges for the following contribution departments
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -234,7 +234,7 @@ function DashboardContent() {
                 ))}
               </div>
               <p className="text-sm text-muted-foreground mt-4">
-                As a category admin, you can view and manage contributions for your assigned categories.
+                As a department admin, you can view and manage contributions for your assigned departments.
               </p>
             </CardContent>
           </Card>
@@ -318,7 +318,7 @@ function DashboardContent() {
                   <thead>
                     <tr className="border-b">
                       <th className="text-left p-2 font-medium">Date</th>
-                      <th className="text-left p-2 font-medium">Category</th>
+                      <th className="text-left p-2 font-medium">Department</th>
                       <th className="text-right p-2 font-medium">Amount</th>
                       <th className="text-center p-2 font-medium">Status</th>
                       <th className="text-left p-2 font-medium">Receipt</th>

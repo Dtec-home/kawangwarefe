@@ -50,12 +50,12 @@ test.describe('Contribution Page — Form Validation', () => {
     await expect(phoneInput).toHaveValue('797030300')
   })
 
-  test('category select is present and loads options', async ({ page }) => {
+  test('department select is present and loads options', async ({ page }) => {
     // Wait for Apollo to fetch categories
     await page.waitForTimeout(1000)
-    const categoryTrigger = page.getByText(/select category/i).first()
-    if (await categoryTrigger.count() > 0) {
-      await expect(categoryTrigger).toBeVisible()
+    const departmentTrigger = page.getByText(/select department/i).first()
+    if (await departmentTrigger.count() > 0) {
+      await expect(departmentTrigger).toBeVisible()
     }
   })
 })

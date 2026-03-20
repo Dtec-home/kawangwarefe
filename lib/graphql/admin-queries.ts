@@ -113,3 +113,50 @@ export const GET_MEMBERS_LIST = gql`
     }
   }
 `;
+
+/**
+ * Get department routing analytics report.
+ */
+export const GET_DEPARTMENT_ROUTING_REPORT = gql`
+  query GetDepartmentRoutingReport($dateFrom: DateTime, $dateTo: DateTime) {
+    departmentRoutingReport(dateFrom: $dateFrom, dateTo: $dateTo) {
+      summary {
+        totalCompletedAmount
+        totalCompletedCount
+        guestTopLevelAmount
+        guestTopLevelCount
+        memberRoutedAmount
+        memberRoutedCount
+        memberTopLevelAmount
+        memberTopLevelCount
+      }
+      byDepartment {
+        departmentId
+        departmentName
+        departmentCode
+        totalAmount
+        totalCount
+      }
+      byDepartmentPurpose {
+        departmentId
+        departmentName
+        departmentCode
+        purposeId
+        purposeName
+        purposeCode
+        totalAmount
+        totalCount
+      }
+      byDepartmentGroup {
+        departmentId
+        departmentName
+        departmentCode
+        groupId
+        groupName
+        isTopLevel
+        totalAmount
+        totalCount
+      }
+    }
+  }
+`;

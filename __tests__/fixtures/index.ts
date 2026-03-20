@@ -51,11 +51,15 @@ export interface Category {
   name: string
   code: string
   description: string
+  isActive?: boolean
+  routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS"
+  fallbackIfNoGroup?: "TOP_LEVEL" | "REJECT"
 }
 
 export interface CategoryAmount {
   categoryId: string
   amount: string
+  purposeId?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -112,11 +116,15 @@ export const makeCategory = (overrides: Partial<Category> = {}): Category => ({
   name: 'Tithe',
   code: 'TITHE',
   description: 'Weekly tithe contribution',
+  isActive: true,
+  routingMode: 'TOP_LEVEL',
+  fallbackIfNoGroup: 'TOP_LEVEL',
   ...overrides,
 })
 
 export const makeCategoryAmount = (overrides: Partial<CategoryAmount> = {}): CategoryAmount => ({
   categoryId: '',
   amount: '',
+  purposeId: undefined,
   ...overrides,
 })

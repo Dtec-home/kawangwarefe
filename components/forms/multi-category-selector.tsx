@@ -17,6 +17,7 @@ interface Category {
   name: string;
   code: string;
   description: string;
+  routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
 }
 
 interface GetCategoriesData {
@@ -26,12 +27,13 @@ interface GetCategoriesData {
 export interface CategoryAmount {
   categoryId: string;
   amount: string;
+  purposeId?: string;
 }
 
 interface MultiCategorySelectorProps {
   contributions: CategoryAmount[];
   onChange: (contributions: CategoryAmount[]) => void;
-  errors?: Array<{ categoryId?: string; amount?: string }>;
+  errors?: Array<{ categoryId?: string; amount?: string; purposeId?: string }>;
   maxCategories?: number;
 }
 
@@ -62,11 +64,17 @@ export function MultiCategorySelector({
 
   const handleChange = (
     index: number,
-    field: "categoryId" | "amount",
+    field: "categoryId" | "amount" | "purposeId",
     value: string
   ) => {
     const updated = [...contributions];
     updated[index] = { ...updated[index], [field]: value };
+
+    // Reset purpose if department changes.
+    if (field === "categoryId") {
+      updated[index].purposeId = "";
+    }
+
     onChange(updated);
   };
 
@@ -77,7 +85,7 @@ export function MultiCategorySelector({
 
   const handleAdd = () => {
     if (contributions.length < maxCategories) {
-      onChange([...contributions, { categoryId: "", amount: "" }]);
+      onChange([...contributions, { categoryId: "", amount: "", purposeId: "" }]);
     }
   };
 
@@ -104,6 +112,7 @@ export function MultiCategorySelector({
             onChange={handleChange}
             onRemove={handleRemove}
             availableCategories={getAvailableCategories(contribution.categoryId)}
+            selectedCategory={allCategories.find((c) => c.id === contribution.categoryId)}
             canRemove={contributions.length > 1}
             errors={errors && errors[index] ? errors[index] : undefined}
           />
@@ -118,13 +127,13 @@ export function MultiCategorySelector({
           className="w-full"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Another Category
+          Add Another Department
         </Button>
       )}
 
       {contributions.length >= maxCategories && (
         <p className="text-xs text-muted-foreground text-center">
-          Maximum {maxCategories} categories reached
+          Maximum {maxCategories} departments reached
         </p>
       )}
     </div>

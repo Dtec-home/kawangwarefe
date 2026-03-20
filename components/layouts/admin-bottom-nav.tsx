@@ -19,8 +19,8 @@ const primaryAdminLinks: NavItem[] = [
 ];
 
 const moreAdminLinks: NavItem[] = [
-  { href: "/admin/categories", label: "Categories", icon: FolderOpen },
-  { href: "/admin/category-admins", label: "Cat. Admins", icon: Shield },
+  { href: "/admin/categories", label: "Departments", icon: FolderOpen },
+  { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
   { href: "/admin/c2b-transactions", label: "C2B / Pay Bill", icon: Smartphone },
   { href: "/admin/content", label: "Content", icon: Newspaper },
 ];

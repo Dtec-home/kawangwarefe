@@ -125,7 +125,7 @@ function ManualContributionPageContent() {
     }
 
     if (!categoryId) {
-      setError("Please select a category");
+      setError("Please select a department");
       return;
     }
 
@@ -236,7 +236,7 @@ function ManualContributionPageContent() {
                     onClick={handlePhoneNumberLookup}
                   >
                     <Search className="h-4 w-4 mr-2" />
-                    Lookup
+                    Search
                   </Button>
                 </div>
               </div>
@@ -302,12 +302,12 @@ function ManualContributionPageContent() {
                 </Select>
               </div>
 
-              {/* Category */}
+              {/* Department */}
               <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category">Department *</Label>
                 <Select value={categoryId} onValueChange={setCategoryId}>
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
