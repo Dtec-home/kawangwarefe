@@ -33,7 +33,9 @@ import {
   Save,
   X,
   FolderOpen,
+  ListChecks,
 } from "lucide-react";
+import Link from "next/link";
 
 interface Category {
   id: string;
@@ -443,6 +445,12 @@ function CategoryManagementPageContent() {
                               <Badge variant="secondary" className="text-xs">Inactive</Badge>
                             )}
                           </div>
+                            <Link href={`/admin/categories/${category.id}/purposes`}>
+                              <Button variant="outline" size="sm">
+                                <ListChecks className="h-4 w-4 mr-1" />
+                                Purposes
+                              </Button>
+                            </Link>
                           {category.description && (
                             <p className="text-sm text-muted-foreground">{category.description}</p>
                           )}

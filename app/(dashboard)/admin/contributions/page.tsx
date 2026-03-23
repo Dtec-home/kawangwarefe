@@ -9,7 +9,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@apollo/client/react";
-import { GET_ALL_CONTRIBUTIONS, GET_CONTRIBUTION_STATS } from "@/lib/graphql/admin-queries";
+import { GET_ALL_CONTRIBUTIONS, GET_CONTRIBUTION_STATS, GET_GROUP_CONTRIBUTIONS, GET_MY_GROUP_NAMES } from "@/lib/graphql/admin-queries";
 import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminLayout } from "@/components/layouts/admin-layout";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus } from "lucide-react";
 import Link from "next/link";
 
@@ -53,6 +54,14 @@ interface ContributionsData {
   };
 }
 
+interface GroupNamesData {
+  myGroupNames: string[];
+}
+
+interface GroupContributionsData {
+  groupContributions: Contribution[];
+}
+
 interface StatsData {
   contributionStats: {
     totalAmount: string;
@@ -76,20 +85,32 @@ interface CategoriesData {
 }
 
 export default function ContributionsPage() {
+  const { isStaff, isCategoryAdmin, isGroupAdmin } = useUserRole();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
 
   // Get categories
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const categories = categoriesData?.contributionCategories || [];
 
-  // Get stats
-  const { data: statsData } = useQuery<StatsData>(GET_CONTRIBUTION_STATS);
+  const { data: groupNamesData } = useQuery<GroupNamesData>(GET_MY_GROUP_NAMES, {
+    skip: !isGroupAdmin,
+  });
+  const groupNames = groupNamesData?.myGroupNames || [];
+
+  // Get stats (group-admins use scoped list, not staff stats)
+  const { data: statsData } = useQuery<StatsData>(GET_CONTRIBUTION_STATS, {
+    skip: isGroupAdmin && !isStaff && !isCategoryAdmin,
+  });
   const stats = statsData?.contributionStats;
 
   // Get contributions with filters
-  const { data, loading, error, refetch } = useQuery<ContributionsData>(GET_ALL_CONTRIBUTIONS, {
+  const isGroupScopedView = isGroupAdmin && !isStaff && !isCategoryAdmin;
+
+  const { data, loading, error } = useQuery<ContributionsData>(GET_ALL_CONTRIBUTIONS, {
+    skip: isGroupScopedView,
     variables: {
       filters: {
         status: statusFilter !== "all" ? statusFilter : null,
@@ -103,7 +124,21 @@ export default function ContributionsPage() {
     },
   });
 
-  const contributions = data?.allContributions.items || [];
+  const effectiveGroupName = selectedGroup !== "all" ? selectedGroup : groupNames[0];
+  const { data: groupData, loading: groupLoading, error: groupError } = useQuery<GroupContributionsData>(GET_GROUP_CONTRIBUTIONS, {
+    skip: !isGroupScopedView || !effectiveGroupName,
+    variables: {
+      groupName: effectiveGroupName,
+      limit: 100,
+      offset: 0,
+    },
+  });
+
+  const contributions = isGroupScopedView
+    ? (groupData?.groupContributions || [])
+    : (data?.allContributions.items || []);
+  const activeLoading = isGroupScopedView ? groupLoading : loading;
+  const activeError = isGroupScopedView ? groupError : error;
 
   return (
     <AdminLayout>
@@ -123,7 +158,7 @@ export default function ContributionsPage() {
         </div>
 
         {/* Statistics Cards */}
-        {stats && (
+        {stats && !isGroupScopedView && (
           <div className="grid md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -196,7 +231,7 @@ export default function ContributionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-4 gap-4">
               {/* Search */}
               <div className="space-y-2">
                 <Label htmlFor="search">Search</Label>
@@ -245,6 +280,26 @@ export default function ContributionsPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Group Filter (group admins) */}
+              {isGroupScopedView && (
+                <div className="space-y-2">
+                  <Label htmlFor="groupName">My Group</Label>
+                  <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                    <SelectTrigger id="groupName">
+                      <SelectValue placeholder="Select group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Default Group</SelectItem>
+                      {groupNames.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end mt-4">
@@ -271,25 +326,25 @@ export default function ContributionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading && (
+            {activeLoading && (
               <div className="text-center py-8 text-muted-foreground">
                 Loading contributions...
               </div>
             )}
 
-            {error && (
+            {activeError && (
               <div className="text-center py-8 text-red-600">
-                Error loading contributions: {error.message}
+                Error loading contributions: {activeError.message}
               </div>
             )}
 
-            {!loading && !error && contributions.length === 0 && (
+            {!activeLoading && !activeError && contributions.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 No contributions found
               </div>
             )}
 
-            {!loading && !error && contributions.length > 0 && (
+            {!activeLoading && !activeError && contributions.length > 0 && (
               <>
               {/* Mobile card view */}
               <div className="space-y-3 md:hidden">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, Shield, Smartphone, Newspaper, X } from "lucide-react";
+import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, X } from "lucide-react";
 import { useState } from "react";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 
@@ -20,6 +20,7 @@ const primaryAdminLinks: NavItem[] = [
 
 const moreAdminLinks: NavItem[] = [
   { href: "/admin/categories", label: "Departments", icon: FolderOpen },
+  { href: "/admin/groups", label: "Groups", icon: UserRound },
   { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
   { href: "/admin/c2b-transactions", label: "C2B / Pay Bill", icon: Smartphone },
   { href: "/admin/content", label: "Content", icon: Newspaper },
@@ -42,6 +43,7 @@ export function AdminBottomNav() {
     "/admin/members": "members",
     "/admin/reports": "reports",
     "/admin/categories": "categories",
+    "/admin/groups": "groups",
     "/admin/category-admins": "category-admins",
     "/admin/c2b-transactions": "c2b-transactions",
     "/admin/content": "content",

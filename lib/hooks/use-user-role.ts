@@ -16,8 +16,10 @@ const GET_CURRENT_USER_ROLE = gql`
       isAuthenticated
       isStaff
       isCategoryAdmin
+      isGroupAdmin
       isContentAdmin
       adminCategoryIds
+      adminGroupNames
       adminCategories {
         id
         name
@@ -39,8 +41,10 @@ interface UserRoleInfo {
   isAuthenticated: boolean;
   isStaff: boolean;
   isCategoryAdmin: boolean;
+  isGroupAdmin: boolean;
   isContentAdmin: boolean;
   adminCategoryIds: string[];
+  adminGroupNames: string[];
   adminCategories: Category[];
 }
 
@@ -74,10 +78,11 @@ export function useUserRole() {
     // Role flags
     isStaff: roleInfo?.isStaff ?? false,
     isCategoryAdmin: roleInfo?.isCategoryAdmin ?? false,
+    isGroupAdmin: roleInfo?.isGroupAdmin ?? false,
     isContentAdmin: roleInfo?.isContentAdmin ?? false,
 
     // Combined check: can access admin panel
-    canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin || roleInfo?.isContentAdmin) ?? false,
+    canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin || roleInfo?.isGroupAdmin || roleInfo?.isContentAdmin) ?? false,
 
     // Can access content management
     canAccessContent: (roleInfo?.isStaff || roleInfo?.isContentAdmin) ?? false,
@@ -87,10 +92,11 @@ export function useUserRole() {
 
     // Category admin specific data
     adminCategoryIds: roleInfo?.adminCategoryIds ?? [],
+    adminGroupNames: roleInfo?.adminGroupNames ?? [],
     adminCategories: roleInfo?.adminCategories ?? [],
 
     // Helper: check if user can access a specific admin feature
-    canAccessFeature: (feature: "members" | "reports" | "category-admins" | "categories" | "contributions" | "overview" | "c2b-transactions" | "content") => {
+    canAccessFeature: (feature: "members" | "reports" | "category-admins" | "categories" | "groups" | "contributions" | "overview" | "c2b-transactions" | "content") => {
       if (!roleInfo) return false;
 
       // Full staff can access everything
@@ -103,6 +109,11 @@ export function useUserRole() {
 
       // Category admins can only access overview and contributions
       if (roleInfo.isCategoryAdmin) {
+        return feature === "overview" || feature === "contributions";
+      }
+
+      // Group admins can access overview and their scoped contributions
+      if (roleInfo.isGroupAdmin) {
         return feature === "overview" || feature === "contributions";
       }
 

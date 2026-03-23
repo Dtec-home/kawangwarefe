@@ -23,6 +23,7 @@ import {
   Shield,
   FolderKey,
   FolderOpen,
+  UserRound,
   Smartphone,
   Newspaper,
 } from "lucide-react";
@@ -34,7 +35,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-type FeatureType = "overview" | "contributions" | "members" | "categories" | "category-admins" | "reports" | "c2b-transactions" | "content";
+type FeatureType = "overview" | "contributions" | "members" | "categories" | "groups" | "category-admins" | "reports" | "c2b-transactions" | "content";
 
 interface NavItem {
   name: string;
@@ -47,7 +48,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isStaff, isCategoryAdmin, isContentAdmin, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -62,6 +63,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Contributions", href: "/admin/contributions", icon: DollarSign, feature: "contributions" },
     { name: "Members", href: "/admin/members", icon: Users, feature: "members" },
     { name: "Departments", href: "/admin/categories", icon: FolderOpen, feature: "categories" },
+    { name: "Groups", href: "/admin/groups", icon: UserRound, feature: "groups" },
     { name: "Department Admins", href: "/admin/category-admins", icon: Shield, feature: "category-admins" },
     { name: "Reports", href: "/admin/reports", icon: FileText, feature: "reports" },
     { name: "C2B / Pay Bill", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
@@ -81,6 +83,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
     if (isCategoryAdmin) {
       return { text: "Department Admin", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" };
+    }
+    if (isGroupAdmin) {
+      return { text: "Group Admin", color: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100" };
     }
     return null;
   };

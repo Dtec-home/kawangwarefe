@@ -24,8 +24,10 @@ const GET_CURRENT_USER_ROLE = gql`
       isAuthenticated
       isStaff
       isCategoryAdmin
+      isGroupAdmin
       isContentAdmin
       adminCategoryIds
+      adminGroupNames
       adminCategories {
         id
         name
@@ -54,8 +56,10 @@ const staffRoleMock = {
         isAuthenticated: true,
         isStaff: true,
         isCategoryAdmin: false,
+        isGroupAdmin: false,
         isContentAdmin: false,
         adminCategoryIds: [],
+        adminGroupNames: [],
         adminCategories: [],
       },
     },
@@ -70,8 +74,10 @@ const contentAdminMock = {
         isAuthenticated: true,
         isStaff: false,
         isCategoryAdmin: false,
+        isGroupAdmin: false,
         isContentAdmin: true,
         adminCategoryIds: [],
+        adminGroupNames: [],
         adminCategories: [],
       },
     },
@@ -86,8 +92,10 @@ const categoryAdminMock = {
         isAuthenticated: true,
         isStaff: false,
         isCategoryAdmin: true,
+        isGroupAdmin: false,
         isContentAdmin: false,
         adminCategoryIds: ['cat-1'],
+        adminGroupNames: [],
         adminCategories: [{ id: 'cat-1', name: 'Tithe', code: 'TITHE', description: '' }],
       },
     },
@@ -102,8 +110,28 @@ const unauthMock = {
         isAuthenticated: false,
         isStaff: false,
         isCategoryAdmin: false,
+        isGroupAdmin: false,
         isContentAdmin: false,
         adminCategoryIds: [],
+        adminGroupNames: [],
+        adminCategories: [],
+      },
+    },
+  },
+}
+
+const groupAdminMock = {
+  request: { query: GET_CURRENT_USER_ROLE },
+  result: {
+    data: {
+      currentUserRole: {
+        isAuthenticated: true,
+        isStaff: false,
+        isCategoryAdmin: false,
+        isGroupAdmin: true,
+        isContentAdmin: false,
+        adminCategoryIds: [],
+        adminGroupNames: ['Youth'],
         adminCategories: [],
       },
     },
@@ -327,6 +355,39 @@ describe('useUserRole', () => {
       await waitFor(() => expect(result.current.loading).toBe(false))
       expect(result.current.adminCategories).toHaveLength(1)
       expect(result.current.adminCategories[0].name).toBe('Tithe')
+    })
+  })
+
+  // ── Group Admin ────────────────────────────────────────────────────────────
+  describe('group admin user', () => {
+    it('sets isGroupAdmin=true', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([groupAdminMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.isGroupAdmin).toBe(true)
+    })
+
+    it('can access contributions and overview only', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([groupAdminMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.canAccessFeature('overview')).toBe(true)
+      expect(result.current.canAccessFeature('contributions')).toBe(true)
+      expect(result.current.canAccessFeature('members')).toBe(false)
+      expect(result.current.canAccessFeature('reports')).toBe(false)
+      expect(result.current.canAccessFeature('categories')).toBe(false)
+      expect(result.current.canAccessFeature('groups')).toBe(false)
+      expect(result.current.canAccessFeature('content')).toBe(false)
+    })
+
+    it('returns adminGroupNames for scoped UI selection', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([groupAdminMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.adminGroupNames).toEqual(['Youth'])
     })
   })
 

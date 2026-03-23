@@ -14,7 +14,7 @@
 
 import { Page } from "@playwright/test";
 
-type Role = "staff" | "category-admin" | "content-admin" | "member";
+type Role = "staff" | "category-admin" | "group-admin" | "content-admin" | "member";
 
 interface SessionOptions {
   userId?: number;
@@ -58,9 +58,11 @@ function buildRoleResponse(role: Role) {
         isAuthenticated: true,
         isStaff: role === "staff",
         isCategoryAdmin: role === "category-admin",
+        isGroupAdmin: role === "group-admin",
         isContentAdmin: role === "content-admin",
         adminCategoryIds: [],
         adminCategories: [],
+        adminGroupNames: role === "group-admin" ? ["Youth"] : [],
       },
     },
   };
@@ -128,6 +130,60 @@ export async function injectSession(
             status: 200,
             contentType: "application/json",
             body: roleResponse,
+          });
+          return;
+        }
+
+        if (
+          role === "group-admin" &&
+          postData &&
+          typeof postData.query === "string" &&
+          postData.query.includes("myGroupNames")
+        ) {
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ data: { myGroupNames: ["Youth"] } }),
+          });
+          return;
+        }
+
+        if (
+          role === "group-admin" &&
+          postData &&
+          typeof postData.query === "string" &&
+          postData.query.includes("groupContributions")
+        ) {
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+              data: {
+                groupContributions: [
+                  {
+                    id: "gc-1",
+                    amount: "1000.00",
+                    status: "completed",
+                    transactionDate: new Date().toISOString(),
+                    notes: "",
+                    routedGroupName: "Youth",
+                    purposeName: null,
+                    member: {
+                      id: "m-1",
+                      fullName: "Youth Member",
+                      phoneNumber: "254700000001",
+                      memberNumber: "M-001",
+                    },
+                    category: {
+                      id: "c-1",
+                      name: "Offering",
+                      code: "OFFER",
+                    },
+                    mpesaTransaction: null,
+                  },
+                ],
+              },
+            }),
           });
           return;
         }
