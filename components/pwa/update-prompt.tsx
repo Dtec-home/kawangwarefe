@@ -114,13 +114,14 @@ export function UpdatePrompt() {
     setIsUpdating(true);
 
     if (swRegistration?.waiting) {
-      // Tell the waiting SW to skip its waiting phase and activate immediately.
-      swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
-
-      // Once the new SW has claimed all clients, reload.
+      // Register listener FIRST to avoid race condition where SW activates
+      // before we attach the handler.
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         globalThis.location.reload();
       });
+
+      // Now tell the waiting SW to skip its waiting phase and activate.
+      swRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
     } else {
       // No waiting SW (version-poll triggered). A hard reload will fetch the
       // latest HTML and the new SW will install on the next visit.
