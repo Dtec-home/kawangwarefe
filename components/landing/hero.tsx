@@ -21,7 +21,7 @@ export function Hero() {
             {/* Main Heading */}
             <div className="space-y-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-                <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-foreground via-foreground/80 to-foreground bg-clip-text text-transparent">
                   Seventh-Day
                 </span>
                 <br />
@@ -32,14 +32,14 @@ export function Hero() {
 
               <div className="flex items-center justify-center lg:justify-start gap-2">
                 <div className="h-1 w-12 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full" />
-                <h2 className="text-2xl md:text-3xl font-semibold text-gray-700">
+                <h2 className="text-2xl md:text-3xl font-semibold text-muted-foreground">
                   Kawangware
                 </h2>
               </div>
             </div>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-gray-600 max-w-2xl animate-slide-up" style={{ animationDelay: '400ms' }}>
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl animate-slide-up" style={{ animationDelay: '400ms' }}>
               A community of faith, hope, and love. Join us as we worship together and grow in Christ.
             </p>
 
@@ -73,7 +73,7 @@ export function Hero() {
             {/* Service Times Card */}
             <div className="animate-slide-up" style={{ animationDelay: '800ms' }}>
               <div className="bg-white/80 backdrop-blur-sm border-2 border-teal-100 rounded-2xl p-6 shadow-xl">
-                <p className="text-sm text-gray-600 mb-4 flex items-center gap-2 font-medium">
+                <p className="text-sm text-muted-foreground mb-4 flex items-center gap-2 font-medium">
                   <Calendar className="w-4 h-4 text-teal-600" />
                   Join us for worship
                 </p>
@@ -83,27 +83,27 @@ export function Hero() {
                       S
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">Sabbath Service</div>
-                      <div className="text-gray-600">Saturday 9:00 AM - 12:00 PM</div>
+                      <div className="font-semibold text-foreground">Sabbath Service</div>
+                      <div className="text-muted-foreground">Saturday 9:00 AM - 12:00 PM</div>
                     </div>
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-2 text-gray-700">
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="grid sm:grid-cols-2 gap-2 text-foreground">
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                       <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs">
                         W
                       </div>
                       <div className="text-xs">
                         <div className="font-semibold">Midweek Vespers</div>
-                        <div className="text-gray-600">Wed 5:00 PM</div>
+                        <div className="text-muted-foreground">Wed 5:00 PM</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                       <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs">
                         F
                       </div>
                       <div className="text-xs">
                         <div className="font-semibold">Friday Vespers</div>
-                        <div className="text-gray-600">Fri 5:00 PM</div>
+                        <div className="text-muted-foreground">Fri 5:00 PM</div>
                       </div>
                     </div>
                   </div>

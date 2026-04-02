@@ -140,7 +140,7 @@ export function UpdatePrompt() {
       style={{ backgroundColor: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
     >
       <div
-        className="relative mx-4 max-w-sm w-full rounded-2xl bg-white dark:bg-slate-900 shadow-2xl overflow-hidden"
+        className="relative mx-4 max-w-sm w-full rounded-2xl bg-card shadow-2xl overflow-hidden"
         style={{ border: "1px solid rgba(255,255,255,0.12)" }}
       >
         {/* Accent bar */}
@@ -156,10 +156,10 @@ export function UpdatePrompt() {
 
           {/* Heading */}
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl font-bold text-foreground">
               New Version Available
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               A new version of the app has been deployed. Please update now to
               continue — this ensures you always have the latest features and
               security fixes.
@@ -182,7 +182,7 @@ export function UpdatePrompt() {
             {isUpdating ? "Updating…" : "Update Now"}
           </button>
 
-          <p className="text-xs text-slate-400 dark:text-slate-600">
+          <p className="text-xs text-muted-foreground">
             The page will reload automatically after the update.
           </p>
         </div>

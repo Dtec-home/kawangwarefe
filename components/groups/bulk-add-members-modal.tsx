@@ -164,7 +164,7 @@ export function BulkAddMembersModal({ open, onOpenChange, groupId, groupName }: 
             </div>
           ) : (
             <>
-              <div className="flex items-center space-x-2 pb-2 mb-2 border-b px-2 sticky top-0 bg-white z-10">
+              <div className="flex items-center space-x-2 pb-2 mb-2 border-b px-2 sticky top-0 bg-card z-10">
                 <Checkbox 
                   id="select-all" 
                   checked={members.length > 0 && selectedIds.size === members.length}
@@ -175,7 +175,7 @@ export function BulkAddMembersModal({ open, onOpenChange, groupId, groupName }: 
                 </Label>
               </div>
               {members.map(member => (
-                <div key={member.id} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-slate-50 rounded">
+                <div key={member.id} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded">
                   <Checkbox 
                     id={`member-${member.id}`} 
                     checked={selectedIds.has(member.id)}

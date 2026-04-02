@@ -107,21 +107,22 @@ export default function RootLayout({
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: '#363636',
-                  color: '#fff',
+                  background: 'var(--popover)',
+                  color: 'var(--popover-foreground)',
+                  border: '1px solid var(--border)',
                 },
                 success: {
                   duration: 3000,
                   iconTheme: {
                     primary: '#10b981',
-                    secondary: '#fff',
+                    secondary: 'var(--popover)',
                   },
                 },
                 error: {
                   duration: 4000,
                   iconTheme: {
                     primary: '#ef4444',
-                    secondary: '#fff',
+                    secondary: 'var(--popover)',
                   },
                 },
               }}
