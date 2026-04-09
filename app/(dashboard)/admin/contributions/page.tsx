@@ -137,7 +137,14 @@ export default function ContributionsPage() {
     },
   });
 
-  const effectiveGroupName = selectedGroup === "all" ? groupNames[0] : selectedGroup;
+  // Determine which group to view - use first available group if "all" is selected
+  // This ensures we always have a valid group name for group-scoped queries
+  let effectiveGroupName: string | undefined;
+  if (selectedGroup === "all") {
+    effectiveGroupName = groupNames.length > 0 ? groupNames[0] : undefined;
+  } else {
+    effectiveGroupName = selectedGroup;
+  }
   const { data: groupData, loading: groupLoading, error: groupError } = useQuery<GroupContributionsData>(GET_GROUP_CONTRIBUTIONS, {
     skip: !isGroupScopedView || !effectiveGroupName,
     variables: {
