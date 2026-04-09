@@ -100,8 +100,13 @@ function VerifyOtpContent() {
       const result = await login(phoneNumber, code);
 
       if (result.success) {
-        toast.success("Login successful!");
-        router.push(redirectTo);
+        if (result.isNewMember) {
+          toast.success("Phone verified! Complete your registration.");
+          router.push("/register");
+        } else {
+          toast.success("Login successful!");
+          router.push(redirectTo);
+        }
       } else {
         toast.error(result.message);
         // Clear OTP on error

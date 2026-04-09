@@ -180,9 +180,11 @@ function LoginContent() {
                 </Button>
               </form>
 
-              <div className="mt-6 text-center text-sm text-muted-foreground space-y-1">
-                <p>Don&apos;t have an account?</p>
-                <p>Contact church admin to register</p>
+              <div className="mt-6 text-center text-sm text-muted-foreground">
+                <p>
+                  Don&apos;t have an account? Enter your phone number above
+                  to register.
+                </p>
               </div>
             </CardContent>
           </Card>

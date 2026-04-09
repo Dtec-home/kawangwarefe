@@ -33,6 +33,53 @@ export const VERIFY_OTP = gql`
       memberId
       phoneNumber
       fullName
+      isNewMember
+    }
+  }
+`;
+
+/**
+ * Complete self-registration (name, department, group)
+ */
+export const COMPLETE_REGISTRATION = gql`
+  mutation CompleteRegistration(
+    $firstName: String!
+    $lastName: String!
+    $departmentId: ID
+    $groupId: ID
+  ) {
+    completeRegistration(
+      firstName: $firstName
+      lastName: $lastName
+      departmentId: $departmentId
+      groupId: $groupId
+    ) {
+      success
+      message
+      member {
+        id
+        firstName
+        lastName
+        fullName
+        isGuest
+      }
+    }
+  }
+`;
+
+/**
+ * Fetch departments and groups for registration form
+ */
+export const REGISTRATION_OPTIONS = gql`
+  query RegistrationOptions {
+    registrationDepartments {
+      id
+      name
+      description
+    }
+    registrationGroups {
+      id
+      name
     }
   }
 `;

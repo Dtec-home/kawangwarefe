@@ -24,7 +24,7 @@ interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phoneNumber: string, otpCode: string) => Promise<{ success: boolean; message: string }>;
+  login: (phoneNumber: string, otpCode: string) => Promise<{ success: boolean; message: string; isNewMember?: boolean }>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
 }
@@ -74,6 +74,7 @@ interface VerifyOtpPayload {
   phoneNumber?: string;
   fullName?: string;
   message: string;
+  isNewMember?: boolean;
 }
 
 interface RefreshTokenPayload {
@@ -217,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Login function
   const login = useCallback(
-    async (phoneNumber: string, otpCode: string): Promise<{ success: boolean; message: string }> => {
+    async (phoneNumber: string, otpCode: string): Promise<{ success: boolean; message: string; isNewMember?: boolean }> => {
       try {
         const { data } = await verifyOtpMutation({
           variables: { phoneNumber, otpCode },
@@ -248,7 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userData);
           setSessionCookie(true);
 
-          return { success: true, message: result.message };
+          return { success: true, message: result.message, isNewMember: result.isNewMember ?? false };
         } else {
           return { success: false, message: result.message };
         }
