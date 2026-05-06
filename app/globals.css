@@ -218,7 +218,7 @@
 
 /* Bottom nav spacing - add to main content areas that have a bottom nav */
 .has-bottom-nav {
-  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
 }
 
 @supports (padding: max(0px)) {
@@ -226,7 +226,7 @@
     padding-bottom: max(0px, env(safe-area-inset-bottom));
   }
   .has-bottom-nav {
-    padding-bottom: max(3.5rem, calc(3.5rem + env(safe-area-inset-bottom)));
+    padding-bottom: max(4rem, calc(4rem + env(safe-area-inset-bottom)));
   }
 }
 

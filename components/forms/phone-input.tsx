@@ -62,7 +62,7 @@ export function PhoneInput({
       {error && (
         <p className="text-sm text-destructive">{error.message}</p>
       )}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Enter your 9-digit M-Pesa number (e.g., 797030300)
       </p>
     </div>

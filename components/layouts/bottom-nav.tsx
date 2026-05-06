@@ -58,7 +58,7 @@ export function BottomNav() {
       {/* More menu overlay */}
       {moreOpen && (
         <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setMoreOpen(false)}>
-          <div className="absolute bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-card border-t border-border shadow-lg rounded-t-2xl p-4 space-y-1"
+          <div className="absolute bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-card border-t border-border shadow-lg rounded-t-2xl p-4 space-y-1"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-2">
@@ -121,7 +121,7 @@ export function BottomNav() {
 
       {/* Bottom nav bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card border-t border-border safe-area-bottom">
-        <div className="flex items-center justify-around h-16 sm:h-14">
+        <div className="flex items-center justify-around h-16">
           {primaryLinks.map((link) => {
             const Icon = link.icon;
             const isMoreButton = link.label === "More";
@@ -131,12 +131,16 @@ export function BottomNav() {
                 <button
                   key={link.label}
                   onClick={() => setMoreOpen(!moreOpen)}
-                  className={`flex flex-col items-center justify-center min-w-[3rem] py-2 px-3 transition-colors flex-1 h-full ${
+                  className={`flex flex-col items-center justify-center min-w-[3rem] py-1.5 px-2 transition-colors flex-1 h-full gap-0.5 ${
                     moreOpen ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
-                  <Icon className="h-6 w-6" />
-                  <span className="text-[10px] mt-0.5 font-medium">More</span>
+                  <span className={`flex items-center justify-center w-10 h-6 rounded-full transition-all duration-200 ${
+                    moreOpen ? "bg-primary/15" : ""
+                  }`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-xs font-medium leading-none">More</span>
                 </button>
               );
             }
@@ -144,14 +148,16 @@ export function BottomNav() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex flex-col items-center justify-center min-w-[3rem] py-2 px-3 transition-colors flex-1 h-full ${
-                  active
-                    ? "text-primary"
-                    : "text-muted-foreground"
+                className={`flex flex-col items-center justify-center min-w-[3rem] py-1.5 px-2 transition-colors flex-1 h-full gap-0.5 ${
+                  active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <Icon className={`h-6 w-6 ${active ? "stroke-[2.5]" : ""}`} />
-                <span className="text-[10px] mt-0.5 font-medium">{link.label}</span>
+                <span className={`flex items-center justify-center w-10 h-6 rounded-full transition-all duration-200 ${
+                  active ? "bg-primary/15" : ""
+                }`}>
+                  <Icon className={`h-5 w-5 ${active ? "stroke-[2.5]" : ""}`} />
+                </span>
+                <span className="text-xs font-medium leading-none">{link.label}</span>
               </Link>
             );
           })}

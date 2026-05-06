@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,7 +19,7 @@ import { MultiCategorySelector, CategoryAmount } from "./multi-category-selector
 import { ContributionSummary } from "./contribution-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowRight, CheckCircle2, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { GET_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
 
@@ -360,9 +360,50 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     setStep("input");
   };
 
+  const FORM_STEPS = [
+    { id: "input" as const,   label: "Details" },
+    { id: "summary" as const, label: "Review"  },
+    { id: "waiting" as const, label: "Payment" },
+  ];
+  const stepIndex = FORM_STEPS.findIndex(s => s.id === step);
+
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-6 px-2">
+      {FORM_STEPS.map((s, i) => {
+        const isCompleted = i < stepIndex;
+        const isCurrent = i === stepIndex;
+        return (
+          <Fragment key={s.id}>
+            <div className="flex flex-col items-center gap-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                isCompleted
+                  ? "bg-emerald-600 text-white"
+                  : isCurrent
+                  ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                  : "bg-muted text-muted-foreground"
+              }`}>
+                {isCompleted ? <Check className="h-4 w-4" /> : i + 1}
+              </div>
+              <span className={`text-xs font-medium ${isCurrent ? "text-primary" : "text-muted-foreground"}`}>
+                {s.label}
+              </span>
+            </div>
+            {i < FORM_STEPS.length - 1 && (
+              <div className={`flex-1 h-0.5 mx-2 mb-5 rounded-full ${
+                i < stepIndex ? "bg-emerald-600" : "bg-muted"
+              }`} />
+            )}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+
   // Input Step
   if (step === "input") {
     return (
+      <div className="w-full space-y-0">
+      <StepIndicator />
       <Card className="w-full shadow-lg border border-emerald-200/30 dark:border-emerald-800/30">
         <CardHeader data-tour="contribution-header" className="space-y-2 border-b border-emerald-100/50 dark:border-emerald-900/30 pb-4">
           <CardTitle className="text-2xl md:text-3xl bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent">
@@ -431,12 +472,15 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
           </form>
         </CardContent>
       </Card>
+      </div>
     );
   }
 
   // Summary Step
   if (step === "summary") {
     return (
+      <div className="w-full space-y-0">
+      <StepIndicator />
       <ContributionSummary
         phoneNumber={`254${phoneNumber}`}
         contributions={contributionItems}
@@ -445,18 +489,22 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
         onConfirm={handleConfirmSubmit}
         isLoading={false}
       />
+      </div>
     );
   }
 
   // Processing Step
   if (step === "processing") {
+    const formattedPhone = `0${phoneNumber}`.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
     return (
       <Card className="w-full shadow-lg">
         <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <h3 className="text-xl font-semibold">Processing Your Contribution</h3>
-          <p className="text-muted-foreground text-center">
-            Sending M-Pesa prompt to your phone...
+          <h3 className="text-xl font-semibold text-center">Sending M-Pesa Request</h3>
+          <p className="text-muted-foreground text-center text-sm">
+            Sending prompt to{" "}
+            <span className="font-semibold text-foreground">{formattedPhone}</span>
+            {" "}— please wait...
           </p>
         </CardContent>
       </Card>
@@ -465,49 +513,59 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
 
   // Waiting for Payment Step
   if (step === "waiting" && contributionDetails) {
+    const waitingPhone = contributionDetails.phoneNumber
+      .replace(/^254/, "0")
+      .replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
     return (
+      <div className="w-full space-y-0">
+      <StepIndicator />
       <Card className="w-full shadow-lg">
-        <CardContent className="flex flex-col items-center py-12 space-y-6">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <CardContent className="flex flex-col items-center py-10 space-y-6">
+          <Loader2 className="h-14 w-14 animate-spin text-primary" />
 
-          <div className="text-center space-y-2">
-            <h3 className="text-2xl font-bold">Waiting for Payment Confirmation</h3>
-            <p className="text-muted-foreground max-w-md">
-              Please complete the payment on your phone{" "}
-              <span className="font-semibold">
-                ({contributionDetails.phoneNumber.replace(/^254/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3')})
-              </span>
+          <div className="text-center space-y-1.5">
+            <h3 className="text-xl font-bold">Waiting for M-Pesa</h3>
+            <p className="text-muted-foreground text-sm">
+              Check your phone{" "}
+              <span className="font-semibold text-foreground">{waitingPhone}</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              Enter your M-Pesa PIN to confirm the payment
+              Enter your M-Pesa PIN to complete the payment
             </p>
           </div>
 
-          <div className="w-full max-w-md space-y-4">
-            {/* Total Amount */}
-            <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg border">
-              <span className="font-semibold">Total Amount:</span>
+          <div className="w-full max-w-sm space-y-4">
+            <div className="flex justify-between items-center p-4 bg-primary/5 rounded-xl border">
+              <span className="font-medium text-sm">Total Amount</span>
               <span className="text-xl font-bold text-primary">
                 KES {parseFloat(contributionDetails.totalAmount).toLocaleString("en-KE")}
               </span>
             </div>
 
-            {/* Polling indicator */}
-            <div className="text-center text-sm text-muted-foreground">
-              <p>Checking payment status... ({pollingAttempts}/30)</p>
-              <p className="text-xs mt-1">This may take up to 60 seconds</p>
+            {/* Progress bar replaces the raw counter */}
+            <div>
+              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-primary h-full rounded-full transition-all duration-[2000ms] ease-linear"
+                  style={{ width: `${Math.min(Math.round((pollingAttempts / 30) * 100), 95)}%` }}
+                />
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                Waiting for confirmation — do not close this page
+              </p>
             </div>
           </div>
 
           <Button
             variant="outline"
+            size="mobile"
             onClick={handleCancelWaiting}
-            className="mt-4 h-11 sm:h-10"
           >
             Cancel
           </Button>
         </CardContent>
       </Card>
+      </div>
     );
   }
 

@@ -50,6 +50,11 @@ interface NavItem {
   feature: FeatureType;
 }
 
+interface NavGroup {
+  label?: string;
+  items: NavItem[];
+}
+
 interface MeAvatarData {
   me: { id: string; avatarUrl: string | null } | null;
 }
@@ -74,23 +79,44 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     router.push("/login");
   };
 
-  // All possible navigation items
-  const allNavigation: NavItem[] = [
-    { name: "Overview", href: "/admin", icon: LayoutDashboard, feature: "overview" },
-    { name: "Contributions", href: "/admin/contributions", icon: DollarSign, feature: "contributions" },
-    { name: "Members", href: "/admin/members", icon: Users, feature: "members" },
-    { name: "Departments", href: "/admin/categories", icon: FolderOpen, feature: "categories" },
-    { name: "Groups", href: "/admin/groups", icon: UserRound, feature: "groups" },
-    { name: "Department Admins", href: "/admin/category-admins", icon: Shield, feature: "category-admins" },
-    { name: "Reports", href: "/admin/reports", icon: FileText, feature: "reports" },
-    { name: "C2B / Pay Bill", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
-    { name: "Church Content", href: "/admin/content", icon: Newspaper, feature: "content" },
-    { name: "Bulk Messaging", href: "/admin/messaging", icon: MessageSquare, feature: "messaging" },
-    { name: "Prayer Requests", href: "/admin/prayers", icon: Heart, feature: "prayers" },
+  // Navigation grouped by function — reduces cognitive load vs flat list of 11
+  const allNavGroups: NavGroup[] = [
+    {
+      items: [
+        { name: "Overview",      href: "/admin",               icon: LayoutDashboard, feature: "overview" },
+        { name: "Contributions", href: "/admin/contributions", icon: DollarSign,      feature: "contributions" },
+        { name: "Members",       href: "/admin/members",       icon: Users,           feature: "members" },
+      ],
+    },
+    {
+      label: "Finance",
+      items: [
+        { name: "Reports",      href: "/admin/reports",          icon: FileText,  feature: "reports" },
+        { name: "C2B / M-Pesa", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
+      ],
+    },
+    {
+      label: "Organisation",
+      items: [
+        { name: "Departments",    href: "/admin/categories",     icon: FolderOpen, feature: "categories" },
+        { name: "Groups",         href: "/admin/groups",         icon: UserRound,  feature: "groups" },
+        { name: "Dept. Admins",   href: "/admin/category-admins", icon: Shield,   feature: "category-admins" },
+      ],
+    },
+    {
+      label: "Engagement",
+      items: [
+        { name: "Church Content", href: "/admin/content",   icon: Newspaper,    feature: "content" },
+        { name: "Messaging",      href: "/admin/messaging", icon: MessageSquare, feature: "messaging" },
+        { name: "Prayers",        href: "/admin/prayers",   icon: Heart,         feature: "prayers" },
+      ],
+    },
   ];
 
-  // Filter navigation based on user's role
-  const navigation = allNavigation.filter((item) => canAccessFeature(item.feature));
+  // Filter each group's items by role; drop groups with no accessible items
+  const navGroups = allNavGroups
+    .map(g => ({ ...g, items: g.items.filter(i => canAccessFeature(i.feature)) }))
+    .filter(g => g.items.length > 0);
 
   // Determine role badge
   const getRoleBadge = () => {
@@ -151,7 +177,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       >
         <div className="flex flex-col h-full">
           {/* Logo/Title */}
-          <div className="p-6 border-b border-border">
+          <div className="px-4 py-4 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative w-8 h-8">
@@ -211,35 +237,48 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           )}
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 px-3 py-4 overflow-y-auto">
             {roleLoading ? (
-              <div className="text-sm text-muted-foreground p-2">Loading...</div>
+              <div className="text-sm text-muted-foreground px-2 py-1">Loading...</div>
             ) : (
-              navigation.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Button
-                    key={item.name}
-                    variant={isActive ? "secondary" : "ghost"}
-                    className={`w-full justify-start transition-all relative ${
-                      isActive
-                        ? "bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 text-teal-900 dark:text-emerald-100 font-semibold"
-                        : "hover:bg-muted text-foreground"
-                    }`}
-                    onClick={() => {
-                      router.push(item.href);
-                      setSidebarOpen(false);
-                    }}
-                  >
-                    {isActive && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-600 to-emerald-600" />
+              <div className="space-y-5">
+                {navGroups.map((group, gi) => (
+                  <div key={gi} className="space-y-0.5">
+                    {group.label && (
+                      <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 select-none">
+                        {group.label}
+                      </p>
                     )}
-                    <Icon className={`h-4 w-4 mr-3 ${isActive ? "text-teal-600 dark:text-emerald-400" : ""}`} />
-                    {item.name}
-                  </Button>
-                );
-              })
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.href;
+                      const Icon = item.icon;
+                      return (
+                        <Button
+                          key={item.name}
+                          variant={isActive ? "secondary" : "ghost"}
+                          className={`w-full justify-start h-9 px-2 relative transition-all ${
+                            isActive
+                              ? "bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 text-teal-900 dark:text-emerald-100 font-semibold"
+                              : "hover:bg-muted text-foreground"
+                          }`}
+                          onClick={() => {
+                            router.push(item.href);
+                            setSidebarOpen(false);
+                          }}
+                        >
+                          {isActive && (
+                            <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-gradient-to-b from-teal-600 to-emerald-600 rounded-r-full" />
+                          )}
+                          <Icon className={`h-4 w-4 mr-2.5 flex-shrink-0 ${
+                            isActive ? "text-teal-600 dark:text-emerald-400" : "text-muted-foreground"
+                          }`} />
+                          <span className="text-sm">{item.name}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             )}
           </nav>
 
@@ -283,9 +322,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="lg:pl-64">
         {/* Header */}
         <header className="bg-card border-b border-border sticky top-0 z-30">
-          <div className="px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+          <div className="px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between relative">
+              {/* Left: hamburger (mobile) */}
+              <div>
                 <Button
                   variant="ghost"
                   size="icon-mobile"
@@ -294,20 +334,35 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
-                {/* Page title could go here in future */}
               </div>
 
+              {/* Centre: logo + title on mobile only */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden pointer-events-none">
+                <img src="/logo.png" className="h-6 w-6 object-contain" alt="" />
+                <span className="font-semibold text-sm">Church Admin</span>
+              </div>
+
+              {/* Right: icon-only on mobile, full text on sm+ */}
               <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon-mobile"
+                  className="sm:hidden"
+                  onClick={() => router.push('/dashboard')}
+                  aria-label="Switch to member view"
+                >
+                  <UserRound className="h-5 w-5" />
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
+                  className="hidden sm:flex"
                   onClick={() => router.push('/dashboard')}
                   aria-label="Switch to member view"
                 >
                   <UserRound className="h-4 w-4 mr-2" />
                   Switch to Member View
                 </Button>
-                {/* Header actions removed — primary navigation available via sidebar and bottom nav */}
               </div>
             </div>
           </div>

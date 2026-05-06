@@ -675,7 +675,7 @@ function MembersPageContent() {
                 </Select>
               </div>
             </div>
-            <div className="flex justify-between mt-4">
+            <div className="flex flex-wrap justify-between gap-2 mt-4">
               <Button
                 variant="outline"
                 onClick={() => { setSearchTerm(""); setStatusFilter("all"); }}

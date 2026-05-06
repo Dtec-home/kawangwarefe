@@ -176,8 +176,8 @@ export function MemberLayout({ children }: MemberLayoutProps) {
 
       <div className="lg:pl-64">
         <header className="bg-card border-b border-border sticky top-0 z-30">
-          <div className="px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
+          <div className="px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between relative">
               <Button
                 variant="ghost"
                 size="icon-mobile"
@@ -186,10 +186,17 @@ export function MemberLayout({ children }: MemberLayoutProps) {
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <div className="text-sm text-muted-foreground hidden sm:block">
-                Logged in as {user?.fullName}
+              {/* Centred logo + name on mobile — sidebar already shows this on desktop */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden pointer-events-none">
+                <Image src="/logo.png" width={22} height={22} alt="" className="object-contain" />
+                <span className="font-semibold text-sm">SDA Kawangware</span>
               </div>
-              <div className="w-10 lg:hidden" />
+              {/* Desktop: user name on right */}
+              <div className="text-sm text-muted-foreground hidden lg:block">
+                {user?.fullName}
+              </div>
+              {/* Balances hamburger width on mobile */}
+              <div className="w-11 lg:hidden" />
             </div>
           </div>
         </header>

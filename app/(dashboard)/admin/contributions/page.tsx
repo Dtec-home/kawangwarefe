@@ -120,6 +120,7 @@ export default function ContributionsPage() {
   const [dateTo, setDateTo] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(20);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
 
   // Get categories
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
@@ -232,6 +233,15 @@ export default function ContributionsPage() {
   const activeLoading = isGroupScopedView ? groupLoading : loading;
   const activeError = isGroupScopedView ? groupError : error;
 
+  const activeFilterCount = [
+    statusFilter !== "all",
+    categoryFilter !== "all",
+    purposeFilter !== "all",
+    searchTerm !== "",
+    dateFrom !== "",
+    dateTo !== "",
+  ].filter(Boolean).length;
+
   const getStatusBadgeClass = (status: string) => {
     if (status === "completed") {
       return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
@@ -326,13 +336,29 @@ export default function ContributionsPage() {
 
         {/* Filters */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Filter className="h-4 w-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-normal">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden h-8 px-3 text-sm"
+                onClick={() => setShowFilters(f => !f)}
+              >
+                {showFilters ? "Hide" : "Show"}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
+            <div className={`${showFilters ? "block" : "hidden"} md:block`}>
             <div className="grid md:grid-cols-4 gap-4">
               {/* Search */}
               <div className="space-y-2">
@@ -501,6 +527,7 @@ export default function ContributionsPage() {
                 Clear Filters
               </Button>
             </div>
+            </div>{/* end collapsible */}
           </CardContent>
         </Card>
 
