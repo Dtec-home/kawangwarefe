@@ -1163,6 +1163,7 @@ function ReportsPageContent() {
                   <div className="rounded-md border">
                     <div className="border-b px-4 py-3">
                       <p className="text-sm font-medium">By Purpose ({allPurposeBreakdown.length})</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Purpose totals include contributions auto-split to this purpose</p>
                     </div>
                     <div className="overflow-auto">
                       {allPurposeBreakdown.length === 0 ? (

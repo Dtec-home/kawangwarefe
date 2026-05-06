@@ -18,6 +18,7 @@ const GET_CURRENT_USER_ROLE = gql`
       isCategoryAdmin
       isGroupAdmin
       isContentAdmin
+      canSendBulkMessage
       adminCategoryIds
       adminGroupNames
       adminCategories {
@@ -43,6 +44,7 @@ interface UserRoleInfo {
   isCategoryAdmin: boolean;
   isGroupAdmin: boolean;
   isContentAdmin: boolean;
+  canSendBulkMessage: boolean;
   adminCategoryIds: string[];
   adminGroupNames: string[];
   adminCategories: Category[];
@@ -80,6 +82,7 @@ export function useUserRole() {
     isCategoryAdmin: roleInfo?.isCategoryAdmin ?? false,
     isGroupAdmin: roleInfo?.isGroupAdmin ?? false,
     isContentAdmin: roleInfo?.isContentAdmin ?? false,
+    canSendBulkMessage: roleInfo?.canSendBulkMessage ?? false,
 
     // Combined check: can access admin panel
     canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin || roleInfo?.isGroupAdmin || roleInfo?.isContentAdmin) ?? false,
@@ -101,6 +104,9 @@ export function useUserRole() {
 
       // Full staff can access everything
       if (roleInfo.isStaff) return true;
+
+      // Messaging: staff + dept_admin + group_admin (canSendBulkMessage covers all)
+      if (feature === "messaging") return roleInfo.canSendBulkMessage;
 
       // Content admins can access content
       if (roleInfo.isContentAdmin) {

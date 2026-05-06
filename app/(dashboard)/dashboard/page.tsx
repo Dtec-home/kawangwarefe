@@ -22,13 +22,17 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, DollarSign, Calendar, Shield, FolderKey } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface Contribution {
   id: string;
   amount: string;
   status: string;
   transactionDate: string | null;
+  contributionGroupId: string | null;
+  purposeName: string | null;
+  routedGroupName: string | null;
   category: {
     id: string;
     name: string;
@@ -39,6 +43,14 @@ interface Contribution {
     mpesaReceiptNumber: string | null;
     status: string;
   } | null;
+}
+
+interface ContributionGroup {
+  groupId: string;
+  contributions: Contribution[];
+  totalAmount: number;
+  isSplit: boolean;
+  representative: Contribution;
 }
 
 interface ContributionsData {
@@ -95,24 +107,59 @@ function DashboardContent() {
     }
   }, [isReady, contributions.length, startWelcomeTour]);
 
-  // Calculate summary stats
-  const totalContributions = contributions
-    .filter((c) => c.status === "completed")
-    .reduce((sum, c) => sum + Number.parseFloat(c.amount), 0);
+  // Group contributions by contributionGroupId
+  const contributionGroups = useMemo<ContributionGroup[]>(() => {
+    const groupMap = new Map<string, Contribution[]>();
+    for (const c of contributions) {
+      const key = c.contributionGroupId || c.id;
+      const existing = groupMap.get(key);
+      if (existing) {
+        existing.push(c);
+      } else {
+        groupMap.set(key, [c]);
+      }
+    }
+    return Array.from(groupMap.entries()).map(([groupId, items]) => {
+      const totalAmount = items.reduce((sum, c) => sum + Number.parseFloat(c.amount), 0);
+      return {
+        groupId,
+        contributions: items,
+        totalAmount,
+        isSplit: items.length > 1,
+        representative: items[0],
+      };
+    });
+  }, [contributions]);
+
+  // Expand state for split groups
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
+
+  // Stats calculated on groups to avoid double-counting split sub-contributions
+  const completedGroups = contributionGroups.filter((g) => g.representative.status === "completed");
+  const totalContributions = completedGroups.reduce((sum, g) => sum + g.totalAmount, 0);
 
   const thisMonth = new Date();
-  const monthlyContributions = contributions
-    .filter((c) => {
-      if (c.status !== "completed" || !c.transactionDate) return false;
-      const date = new Date(c.transactionDate);
+  const monthlyContributions = completedGroups
+    .filter((g) => {
+      const date = g.representative.transactionDate ? new Date(g.representative.transactionDate) : null;
+      if (!date) return false;
       return (
         date.getMonth() === thisMonth.getMonth() &&
         date.getFullYear() === thisMonth.getFullYear()
       );
     })
-    .reduce((sum, c) => sum + Number.parseFloat(c.amount), 0);
+    .reduce((sum, g) => sum + g.totalAmount, 0);
 
-  const completedCount = contributions.filter((c) => c.status === "completed").length;
+  const completedCount = completedGroups.length;
 
   return (
     <ProtectedRoute>
@@ -279,39 +326,74 @@ function DashboardContent() {
               <>
               {/* Mobile card view */}
               <div className="space-y-3 md:hidden">
-                {contributions.map((contribution) => (
-                  <div key={contribution.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold">
-                        KES {Number.parseFloat(contribution.amount).toLocaleString()}
-                      </span>
-                      <span
-                        className={`inline-block px-2 py-1 text-xs rounded-full ${
-                          contribution.status === "completed"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                            : contribution.status === "failed"
-                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
-                        }`}
+                {contributionGroups.map((group) => {
+                  const rep = group.representative;
+                  const isExpanded = expandedGroups.has(group.groupId);
+                  const statusClass =
+                    rep.status === "completed"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                      : rep.status === "failed"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
+                  return (
+                    <div key={group.groupId} className="border rounded-lg overflow-hidden">
+                      <div
+                        className={`p-3 space-y-2 ${group.isSplit ? "cursor-pointer" : ""}`}
+                        onClick={() => group.isSplit && toggleGroup(group.groupId)}
                       >
-                        {contribution.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{contribution.category.name}</span>
-                      <span>
-                        {contribution.transactionDate
-                          ? new Date(contribution.transactionDate).toLocaleDateString()
-                          : "Pending"}
-                      </span>
-                    </div>
-                    {contribution.mpesaTransaction?.mpesaReceiptNumber && (
-                      <div className="text-xs font-mono text-muted-foreground">
-                        Receipt: {contribution.mpesaTransaction.mpesaReceiptNumber}
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold">
+                            KES {group.totalAmount.toLocaleString()}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${statusClass}`}>
+                              {rep.status}
+                            </span>
+                            {group.isSplit && (
+                              isExpanded
+                                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>
+                            {rep.category.name}
+                            {group.isSplit && (
+                              <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                                ({group.contributions.length} purposes)
+                              </span>
+                            )}
+                          </span>
+                          <span>
+                            {rep.transactionDate
+                              ? new Date(rep.transactionDate).toLocaleDateString()
+                              : "Pending"}
+                          </span>
+                        </div>
+                        {rep.mpesaTransaction?.mpesaReceiptNumber && (
+                          <div className="text-xs font-mono text-muted-foreground">
+                            Receipt: {rep.mpesaTransaction.mpesaReceiptNumber}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {group.isSplit && isExpanded && (
+                        <div className="border-t bg-slate-50 dark:bg-slate-800/50 divide-y divide-slate-100 dark:divide-slate-700">
+                          {group.contributions.map((c) => (
+                            <div key={c.id} className="flex items-center justify-between px-4 py-2 text-sm">
+                              <span className="text-muted-foreground">
+                                {c.purposeName || c.category.name}
+                              </span>
+                              <span className="font-medium">
+                                KES {Number.parseFloat(c.amount).toLocaleString()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Desktop table view */}
@@ -327,35 +409,69 @@ function DashboardContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {contributions.map((contribution) => (
-                      <tr key={contribution.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-800">
-                        <td className="p-2 text-sm">
-                          {contribution.transactionDate
-                            ? new Date(contribution.transactionDate).toLocaleDateString()
-                            : "Pending"}
-                        </td>
-                        <td className="p-2 text-sm">{contribution.category.name}</td>
-                        <td className="p-2 text-sm text-right font-semibold">
-                          KES {Number.parseFloat(contribution.amount).toLocaleString()}
-                        </td>
-                        <td className="p-2 text-center">
-                          <span
-                            className={`inline-block px-2 py-1 text-xs rounded-full ${
-                              contribution.status === "completed"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                                : contribution.status === "failed"
-                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
-                            }`}
+                    {contributionGroups.map((group) => {
+                      const rep = group.representative;
+                      const isExpanded = expandedGroups.has(group.groupId);
+                      const statusClass =
+                        rep.status === "completed"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                          : rep.status === "failed"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
+                      return (
+                        <React.Fragment key={group.groupId}>
+                          <tr
+                            className={`border-b hover:bg-slate-50 dark:hover:bg-slate-800 ${group.isSplit ? "cursor-pointer" : ""}`}
+                            onClick={() => group.isSplit && toggleGroup(group.groupId)}
                           >
-                            {contribution.status}
-                          </span>
-                        </td>
-                        <td className="p-2 text-sm font-mono">
-                          {contribution.mpesaTransaction?.mpesaReceiptNumber || "-"}
-                        </td>
-                      </tr>
-                    ))}
+                            <td className="p-2 text-sm">
+                              {rep.transactionDate
+                                ? new Date(rep.transactionDate).toLocaleDateString()
+                                : "Pending"}
+                            </td>
+                            <td className="p-2 text-sm">
+                              <span>{rep.category.name}</span>
+                              {group.isSplit && (
+                                <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                                  ({group.contributions.length} purposes)
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-2 text-sm text-right font-semibold">
+                              KES {group.totalAmount.toLocaleString()}
+                            </td>
+                            <td className="p-2 text-center">
+                              <span className={`inline-block px-2 py-1 text-xs rounded-full ${statusClass}`}>
+                                {rep.status}
+                              </span>
+                            </td>
+                            <td className="p-2 text-sm font-mono">
+                              <div className="flex items-center gap-1">
+                                {rep.mpesaTransaction?.mpesaReceiptNumber || "-"}
+                                {group.isSplit && (
+                                  isExpanded
+                                    ? <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                    : <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                          {group.isSplit && isExpanded && group.contributions.map((c) => (
+                            <tr key={c.id} className="border-b bg-slate-50 dark:bg-slate-800/50">
+                              <td className="p-2 text-sm text-muted-foreground pl-6" />
+                              <td className="p-2 text-sm text-muted-foreground pl-6">
+                                ↳ {c.purposeName || c.category.name}
+                              </td>
+                              <td className="p-2 text-sm text-right text-muted-foreground">
+                                KES {Number.parseFloat(c.amount).toLocaleString()}
+                              </td>
+                              <td />
+                              <td />
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

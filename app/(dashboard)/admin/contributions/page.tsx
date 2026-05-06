@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { GET_ALL_CONTRIBUTIONS, GET_CONTRIBUTION_STATS, GET_GROUP_CONTRIBUTIONS, GET_MY_GROUP_NAMES } from "@/lib/graphql/admin-queries";
 import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { useUserRole } from "@/lib/hooks/use-user-role";
-import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus } from "lucide-react";
+import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 interface Contribution {
@@ -27,6 +27,7 @@ interface Contribution {
   status: string;
   transactionDate: string | null;
   notes: string | null;
+  contributionGroupId?: string | null;
   routedGroupName?: string | null;
   purposeName?: string | null;
   member: {
@@ -98,6 +99,14 @@ interface Purpose {
 
 interface PurposesData {
   departmentPurposes: Purpose[];
+}
+
+interface ContributionGroup {
+  groupId: string;
+  contributions: Contribution[];
+  totalAmount: number;
+  isSplit: boolean;
+  representative: Contribution;
 }
 
 export default function ContributionsPage() {
@@ -181,6 +190,38 @@ export default function ContributionsPage() {
   const contributions = isGroupScopedView
     ? (groupData?.groupContributions.items || [])
     : (data?.allContributions.items || []);
+
+  // Group by contributionGroupId so split sub-contributions collapse under a parent row
+  const contributionGroups = useMemo<ContributionGroup[]>(() => {
+    const groupMap = new Map<string, Contribution[]>();
+    for (const c of contributions) {
+      const key = c.contributionGroupId || c.id;
+      const existing = groupMap.get(key);
+      if (existing) {
+        existing.push(c);
+      } else {
+        groupMap.set(key, [c]);
+      }
+    }
+    return Array.from(groupMap.entries()).map(([groupId, items]) => ({
+      groupId,
+      contributions: items,
+      totalAmount: items.reduce((sum, c) => sum + Number.parseFloat(c.amount), 0),
+      isSplit: items.length > 1,
+      representative: items[0],
+    }));
+  }, [contributions]);
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
+
   const totalContributions = isGroupScopedView
     ? (groupData?.groupContributions.total || 0)
     : (data?.allContributions.total || 0);
@@ -494,49 +535,84 @@ export default function ContributionsPage() {
               <>
               {/* Mobile card view */}
               <div className="space-y-3 md:hidden">
-                {contributions.map((contribution) => (
-                  <div key={contribution.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold">
-                        KES {Number.parseFloat(contribution.amount).toLocaleString()}
-                      </span>
-                      <span
-                        className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(contribution.status)}`}
+                {contributionGroups.map((group) => {
+                  const rep = group.representative;
+                  const isExpanded = expandedGroups.has(group.groupId);
+                  return (
+                    <div key={group.groupId} className="border rounded-lg overflow-hidden">
+                      <div
+                        className={`p-3 space-y-2 ${group.isSplit ? "cursor-pointer" : ""}`}
+                        onClick={() => group.isSplit && toggleGroup(group.groupId)}
                       >
-                        {contribution.status}
-                      </span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="font-medium">{contribution.member.fullName}</span>
-                      {contribution.member.memberNumber && (
-                        <span className="text-xs text-muted-foreground ml-1">#{contribution.member.memberNumber}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{contribution.category.name}</span>
-                      <span>
-                        {contribution.transactionDate
-                          ? new Date(contribution.transactionDate).toLocaleDateString('en-GB', {
-                            day: '2-digit', month: 'short', year: 'numeric',
-                          })
-                          : 'Pending'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="font-mono">{contribution.member.phoneNumber}</span>
-                      {contribution.mpesaTransaction?.mpesaReceiptNumber && (
-                        <span className="font-mono">{contribution.mpesaTransaction.mpesaReceiptNumber}</span>
-                      )}
-                    </div>
-                    {(contribution.purposeName || contribution.routedGroupName) && (
-                      <div className="text-xs text-muted-foreground">
-                        {contribution.purposeName && <span>Purpose: {contribution.purposeName}</span>}
-                        {contribution.purposeName && contribution.routedGroupName && <span> • </span>}
-                        {contribution.routedGroupName && <span>Group: {contribution.routedGroupName}</span>}
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold">
+                            KES {group.totalAmount.toLocaleString()}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(rep.status)}`}>
+                              {rep.status}
+                            </span>
+                            {group.isSplit && (
+                              isExpanded
+                                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-sm">
+                          <span className="font-medium">{rep.member.fullName}</span>
+                          {rep.member.memberNumber && (
+                            <span className="text-xs text-muted-foreground ml-1">#{rep.member.memberNumber}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>
+                            {rep.category.name}
+                            {group.isSplit && (
+                              <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                                ({group.contributions.length} purposes)
+                              </span>
+                            )}
+                          </span>
+                          <span>
+                            {rep.transactionDate
+                              ? new Date(rep.transactionDate).toLocaleDateString('en-GB', {
+                                day: '2-digit', month: 'short', year: 'numeric',
+                              })
+                              : 'Pending'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="font-mono">{rep.member.phoneNumber}</span>
+                          {rep.mpesaTransaction?.mpesaReceiptNumber && (
+                            <span className="font-mono">{rep.mpesaTransaction.mpesaReceiptNumber}</span>
+                          )}
+                        </div>
+                        {!group.isSplit && (rep.purposeName || rep.routedGroupName) && (
+                          <div className="text-xs text-muted-foreground">
+                            {rep.purposeName && <span>Purpose: {rep.purposeName}</span>}
+                            {rep.purposeName && rep.routedGroupName && <span> • </span>}
+                            {rep.routedGroupName && <span>Group: {rep.routedGroupName}</span>}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {group.isSplit && isExpanded && (
+                        <div className="border-t bg-slate-50 dark:bg-slate-800/50 divide-y divide-slate-100 dark:divide-slate-700">
+                          {group.contributions.map((c) => (
+                            <div key={c.id} className="flex items-center justify-between px-4 py-2 text-sm">
+                              <span className="text-muted-foreground">
+                                {c.purposeName || c.category.name}
+                              </span>
+                              <span className="font-medium">
+                                KES {Number.parseFloat(c.amount).toLocaleString()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Desktop table view */}
@@ -556,64 +632,106 @@ export default function ContributionsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {contributions.map((contribution) => (
-                      <tr
-                        key={contribution.id}
-                        className="border-b hover:bg-slate-50 dark:hover:bg-slate-800"
-                      >
-                        <td className="p-3 text-sm">
-                          {contribution.transactionDate
-                            ? new Date(contribution.transactionDate).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                            : 'Pending'}
-                        </td>
-                        <td className="p-3 text-sm">
-                          <div>
-                            <div className="font-medium">{contribution.member.fullName}</div>
-                            {contribution.member.memberNumber && (
-                              <div className="text-xs text-muted-foreground">
-                                #{contribution.member.memberNumber}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-3 text-sm font-mono">
-                          {contribution.member.phoneNumber}
-                        </td>
-                        <td className="p-3 text-sm">
-                          <div>
-                            <div>{contribution.category.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {contribution.category.code}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3 text-sm">
-                          {contribution.purposeName || "Top-level"}
-                        </td>
-                        <td className="p-3 text-sm">
-                          {contribution.routedGroupName || "Top-level"}
-                        </td>
-                        <td className="p-3 text-sm text-right font-semibold">
-                          KES {Number.parseFloat(contribution.amount).toLocaleString()}
-                        </td>
-                        <td className="p-3 text-center">
-                          <span
-                            className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(contribution.status)}`}
+                    {contributionGroups.map((group) => {
+                      const rep = group.representative;
+                      const isExpanded = expandedGroups.has(group.groupId);
+                      return (
+                        <>
+                          <tr
+                            key={group.groupId}
+                            className={`border-b hover:bg-slate-50 dark:hover:bg-slate-800 ${group.isSplit ? "cursor-pointer" : ""}`}
+                            onClick={() => group.isSplit && toggleGroup(group.groupId)}
                           >
-                            {contribution.status}
-                          </span>
-                        </td>
-                        <td className="p-3 text-sm font-mono">
-                          {contribution.mpesaTransaction?.mpesaReceiptNumber || '-'}
-                        </td>
-                      </tr>
-                    ))}
+                            <td className="p-3 text-sm">
+                              {rep.transactionDate
+                                ? new Date(rep.transactionDate).toLocaleDateString('en-GB', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                                : 'Pending'}
+                            </td>
+                            <td className="p-3 text-sm">
+                              <div>
+                                <div className="font-medium">{rep.member.fullName}</div>
+                                {rep.member.memberNumber && (
+                                  <div className="text-xs text-muted-foreground">
+                                    #{rep.member.memberNumber}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm font-mono">
+                              {rep.member.phoneNumber}
+                            </td>
+                            <td className="p-3 text-sm">
+                              <div>
+                                <div>
+                                  {rep.category.name}
+                                  {group.isSplit && (
+                                    <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                                      ({group.contributions.length})
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {rep.category.code}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 text-sm">
+                              {group.isSplit ? (
+                                <span className="text-teal-600 dark:text-teal-400 text-xs">Auto-split</span>
+                              ) : (
+                                rep.purposeName || "Top-level"
+                              )}
+                            </td>
+                            <td className="p-3 text-sm">
+                              {rep.routedGroupName || "Top-level"}
+                            </td>
+                            <td className="p-3 text-sm text-right font-semibold">
+                              KES {group.totalAmount.toLocaleString()}
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(rep.status)}`}>
+                                {rep.status}
+                              </span>
+                            </td>
+                            <td className="p-3 text-sm font-mono">
+                              <div className="flex items-center gap-1">
+                                {rep.mpesaTransaction?.mpesaReceiptNumber || '-'}
+                                {group.isSplit && (
+                                  isExpanded
+                                    ? <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                    : <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                          {group.isSplit && isExpanded && group.contributions.map((c) => (
+                            <tr key={c.id} className="border-b bg-slate-50 dark:bg-slate-800/50">
+                              <td />
+                              <td />
+                              <td />
+                              <td className="p-3 text-sm text-muted-foreground pl-6">
+                                ↳ {c.purposeName || c.category.name}
+                              </td>
+                              <td className="p-3 text-sm text-muted-foreground">
+                                {c.purposeName || "—"}
+                              </td>
+                              <td />
+                              <td className="p-3 text-sm text-right text-muted-foreground">
+                                KES {Number.parseFloat(c.amount).toLocaleString()}
+                              </td>
+                              <td />
+                              <td />
+                            </tr>
+                          ))}
+                        </>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

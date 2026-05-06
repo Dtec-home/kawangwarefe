@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react";
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
-  requiredAccess?: "staff" | "category-admin" | "content-admin" | "any-admin";
+  requiredAccess?: "staff" | "category-admin" | "content-admin" | "any-admin" | "messaging";
 }
 
 export function AdminProtectedRoute({
@@ -25,7 +25,7 @@ export function AdminProtectedRoute({
 }: AdminProtectedRouteProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, loading: roleLoading, roleInfo } = useUserRole();
+  const { isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, loading: roleLoading, roleInfo } = useUserRole();
 
   // Treat as loading if: auth is loading, role query is loading, OR
   // role query returned loading:false but hasn't delivered data yet
@@ -41,12 +41,14 @@ export function AdminProtectedRoute({
         return isCategoryAdmin || isStaff;
       case "content-admin":
         return canAccessContent;
+      case "messaging":
+        return canSendBulkMessage;
       case "any-admin":
-        return canAccessAdmin || canAccessContent;
+        return canAccessAdmin || canAccessContent || canSendBulkMessage;
       default:
         return false;
     }
-  }, [requiredAccess, isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin]);
+  }, [requiredAccess, isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage]);
 
   // Redirect when not authenticated or not authorized
   useEffect(() => {

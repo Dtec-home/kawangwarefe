@@ -27,6 +27,8 @@ interface Contribution {
   amount: string;
   status: string;
   transactionDate: string | null;
+  purposeName: string | null;
+  contributionGroupId: string | null;
   member: {
     id: string;
     fullName: string;
@@ -216,20 +218,25 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
         )}
         <DetailRow label="Checkout Reference" value={<span className="font-mono text-xs">{checkoutRequestId}</span>} wide />
 
-        {/* Per-category breakdown */}
-        {contributions.length > 0 && (
-          <div className="col-span-2 pt-2">
-            <p className="text-sm text-muted-foreground mb-2">Breakdown</p>
-            <div className="space-y-1">
-              {contributions.map((c) => (
-                <div key={c.id} className="flex justify-between text-sm">
-                  <span>{c.category.name}</span>
-                  <span className="font-medium">KES {Number.parseFloat(c.amount).toLocaleString()}</span>
-                </div>
-              ))}
+        {/* Per-category / per-purpose breakdown */}
+        {contributions.length > 0 && (() => {
+          const categoryIds = new Set(contributions.map((c) => c.category.id));
+          const isAutoSplit = categoryIds.size === 1 && contributions.length > 1;
+          const headingLabel = isAutoSplit ? "Auto-split breakdown" : "Breakdown";
+          return (
+            <div className="col-span-2 pt-2">
+              <p className="text-sm text-muted-foreground mb-2">{headingLabel}</p>
+              <div className="space-y-1">
+                {contributions.map((c) => (
+                  <div key={c.id} className="flex justify-between text-sm">
+                    <span>{isAutoSplit ? (c.purposeName || c.category.name) : c.category.name}</span>
+                    <span className="font-medium">KES {Number.parseFloat(c.amount).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </DetailsCard>
 
       {overallStatus === "pending" && <PendingStepsCard />}

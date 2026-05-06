@@ -150,3 +150,33 @@ export const LAUNCH_CAMPAIGN = gql`
     }
   }
 `;
+
+export const GET_AVAILABLE_DEPARTMENTS = gql`
+  query GetAvailableDepartments {
+    availableDepartments {
+      id
+      name
+      code
+    }
+  }
+`;
+
+export const GET_AVAILABLE_GROUPS = gql`
+  query GetAvailableGroups {
+    availableGroups {
+      id
+      name
+    }
+  }
+`;
+
+export const MEMBER_SEARCH = gql`
+  query MemberSearch($query: String!, $limit: Int) {
+    memberSearch(query: $query, limit: $limit) {
+      id
+      fullName
+      phoneNumber
+      memberNumber
+    }
+  }
+`;

@@ -19,6 +19,7 @@ export const GET_CONTRIBUTION_CATEGORIES = gql`
       routingMode
       fallbackIfNoGroup
       audience
+      hasAutoSplit
       allowedGroups {
         id
         name
@@ -75,6 +76,9 @@ export const GET_MY_CONTRIBUTIONS = gql`
       transactionDate
       notes
       isCompleted
+      contributionGroupId
+      purposeName
+      routedGroupName
       member {
         id
         fullName
@@ -91,6 +95,24 @@ export const GET_MY_CONTRIBUTIONS = gql`
         transactionDate
         status
         resultDesc
+      }
+    }
+  }
+`;
+
+/**
+ * Get active purpose allocations for a category (auto-split configuration).
+ */
+export const GET_CATEGORY_ALLOCATIONS = gql`
+  query GetCategoryAllocations($categoryId: ID!) {
+    categoryAllocations(categoryId: $categoryId) {
+      id
+      percentage
+      isActive
+      purpose {
+        id
+        name
+        code
       }
     }
   }

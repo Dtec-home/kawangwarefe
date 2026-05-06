@@ -22,6 +22,7 @@ export const GET_ALL_CONTRIBUTIONS = gql`
         notes
         routedGroupName
         purposeName
+        contributionGroupId
         member {
           id
           fullName
@@ -200,6 +201,7 @@ export const GET_GROUP_CONTRIBUTIONS = gql`
         notes
         routedGroupName
         purposeName
+        contributionGroupId
         member {
           id
           fullName

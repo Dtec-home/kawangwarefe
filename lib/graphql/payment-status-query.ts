@@ -56,6 +56,8 @@ export const GET_CONTRIBUTIONS_BY_CHECKOUT_ID = gql`
       amount
       status
       transactionDate
+      purposeName
+      contributionGroupId
       member {
         id
         fullName

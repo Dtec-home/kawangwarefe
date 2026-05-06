@@ -14,7 +14,7 @@
 
 import { Page } from "@playwright/test";
 
-type Role = "staff" | "category-admin" | "group-admin" | "content-admin" | "member";
+type Role = "staff" | "category-admin" | "group-admin" | "content-admin" | "department-admin" | "messaging-admin" | "member";
 
 interface SessionOptions {
   userId?: number;
@@ -52,17 +52,27 @@ function makeFakeJwt(payload: Record<string, unknown>): string {
  * Build a mock response for the `currentUserRole` GraphQL query.
  */
 function buildRoleResponse(role: Role) {
+  const isStaff = role === "staff";
+  const isCategoryAdmin = role === "category-admin";
+  const isGroupAdmin = role === "group-admin";
+  const isContentAdmin = role === "content-admin";
+  const isDeptAdmin = role === "department-admin";
+  const isMessagingAdmin = role === "messaging-admin";
+  const canSendBulkMessage =
+    isStaff || isDeptAdmin || isGroupAdmin || isMessagingAdmin;
+
   return {
     data: {
       currentUserRole: {
         isAuthenticated: true,
-        isStaff: role === "staff",
-        isCategoryAdmin: role === "category-admin",
-        isGroupAdmin: role === "group-admin",
-        isContentAdmin: role === "content-admin",
+        isStaff,
+        isCategoryAdmin,
+        isGroupAdmin,
+        isContentAdmin,
+        canSendBulkMessage,
         adminCategoryIds: [],
         adminCategories: [],
-        adminGroupNames: role === "group-admin" ? ["Youth"] : [],
+        adminGroupNames: isGroupAdmin ? ["Youth"] : [],
       },
     },
   };
@@ -114,8 +124,8 @@ export async function injectSession(
   const user = JSON.stringify({ userId, memberId, phoneNumber, fullName });
 
   // If a role is specified, intercept GraphQL requests to mock the role query.
-  // Use a regex to reliably match the GraphQL endpoint regardless of
-  // trailing slashes or port variations (e.g. localhost:8000/graphql/).
+  // NOTE: for tests that use interceptGraphQL() directly (admin-messaging.spec.ts),
+  // call injectSession without a role to avoid handler conflicts.
   if (role) {
     const roleResponse = JSON.stringify(buildRoleResponse(role));
     await page.route(/\/graphql\/?$/, async (route, request) => {

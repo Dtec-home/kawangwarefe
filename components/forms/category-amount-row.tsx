@@ -29,6 +29,7 @@ interface Category {
   code: string;
   description: string;
   routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
+  hasAutoSplit?: boolean;
 }
 
 interface DepartmentPurpose {
@@ -67,7 +68,9 @@ export function CategoryAmountRow({
   canRemove,
   errors,
 }: CategoryAmountRowProps) {
-  const requiresPurpose = selectedCategory?.routingMode === "REQUIRES_PURPOSE";
+  const requiresPurpose =
+    selectedCategory?.routingMode === "REQUIRES_PURPOSE" &&
+    !selectedCategory?.hasAutoSplit;
   const parsedAmount = Number(value.amount || 0);
   const hasPositiveAmount = Number.isFinite(parsedAmount) && parsedAmount >= 1;
 

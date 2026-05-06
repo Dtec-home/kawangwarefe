@@ -70,6 +70,7 @@ type InitiateMultiContributionResult = {
       categoryName: string;
       categoryCode: string;
       amount: string;
+      purposeName?: string | null;
     }>;
     checkoutRequestId?: string;
     transactionId?: string;
@@ -96,6 +97,7 @@ interface Category {
   description: string;
   routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
   fallbackIfNoGroup?: "TOP_LEVEL" | "REJECT";
+  hasAutoSplit?: boolean;
 }
 
 interface GetCategoriesData {
@@ -105,7 +107,7 @@ interface GetCategoriesData {
 interface ContributionDetails {
   phoneNumber: string;
   totalAmount: string;
-  contributions: Array<{ categoryName: string; categoryCode: string; amount: string }>;
+  contributions: Array<{ categoryName: string; categoryCode: string; amount: string; purposeName?: string | null }>;
   checkoutRequestId: string;
   mpesaReceiptNumber?: string;
 }
@@ -221,7 +223,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
       let hasPurposeError = false;
       contributions.forEach((contribution, index) => {
         const category = categoryMap.get(contribution.categoryId);
-        if (category?.routingMode === "REQUIRES_PURPOSE" && !contribution.purposeId) {
+        if (category?.routingMode === "REQUIRES_PURPOSE" && !category?.hasAutoSplit && !contribution.purposeId) {
           hasPurposeError = true;
           setError(`contributions.${index}.purposeId` as any, {
             type: "manual",
@@ -535,23 +537,32 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
             </div>
 
             {/* Contribution Breakdown */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-muted-foreground">
-                Contribution Breakdown:
-              </h4>
-              <div className="space-y-2">
-                {contributionDetails.contributions.map((contrib, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
-                    <span className="font-medium">{contrib.categoryName}</span>
-                    <span className="font-semibold">
-                      KES {parseFloat(contrib.amount).toLocaleString("en-KE")}
-                    </span>
+            {(() => {
+              const contribs = contributionDetails.contributions;
+              const categoryIds = new Set(contribs.map((c) => c.categoryCode));
+              const isAutoSplit = categoryIds.size === 1 && contribs.length > 1 && contribs.some((c) => c.purposeName);
+              return (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-muted-foreground">
+                    {isAutoSplit ? "Auto-split breakdown:" : "Contribution Breakdown:"}
+                  </h4>
+                  <div className="space-y-2">
+                    {contribs.map((contrib, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
+                        <span className="font-medium">
+                          {isAutoSplit ? (contrib.purposeName || contrib.categoryName) : contrib.categoryName}
+                        </span>
+                        <span className="font-semibold">
+                          KES {parseFloat(contrib.amount).toLocaleString("en-KE")}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              );
+            })()}
 
             {/* Reference ID */}
             <div className="text-center text-xs text-muted-foreground space-y-1">

@@ -45,7 +45,7 @@ import {
 } from "@/lib/graphql/profile-mutations";
 import { uploadAvatar } from "@/lib/profile/avatar-upload";
 import { useAuth } from "@/lib/auth/auth-context";
-import { UserRound, Users } from "lucide-react";
+import { Camera, UserRound, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface GroupItem {
@@ -161,6 +161,7 @@ function ProfileContent() {
   );
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [updateProfile, { loading: saving }] = useMutation<UpdateProfileData>(
     UPDATE_MEMBER_PROFILE,
@@ -233,6 +234,7 @@ function ProfileContent() {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
   };
 
@@ -315,15 +317,36 @@ function ProfileContent() {
                 className="hidden"
                 onChange={handleAvatarChange}
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {uploading ? "Uploading…" : me.avatarUrl ? "Change photo" : "Upload photo"}
-              </Button>
+              <input
+                ref={cameraInputRef}
+                id="avatar-camera"
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? "Uploading…" : me.avatarUrl ? "Change photo" : "Upload photo"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="h-4 w-4 mr-1" />
+                  Take photo
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 PNG or JPEG, up to 2 MB.
               </p>

@@ -41,6 +41,7 @@ import {
 import Link from "next/link";
 
 type Audience = "all" | "adult" | "children";
+type RoutingMode = "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
 
 interface Category {
   id: string;
@@ -48,7 +49,7 @@ interface Category {
   code: string;
   description: string;
   isActive: boolean;
-  routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
+  routingMode?: RoutingMode;
   fallbackIfNoGroup?: "TOP_LEVEL" | "REJECT";
   audience?: Audience;
   allowedGroups?: GroupItem[];
@@ -101,7 +102,7 @@ function CategoryManagementPageContent() {
   const [newName, setNewName] = useState("");
   const [newCode, setNewCode] = useState("");
   const [newDescription, setNewDescription] = useState("");
-  const [newRoutingMode, setNewRoutingMode] = useState<"AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE">("REQUIRES_PURPOSE");
+  const [newRoutingMode, setNewRoutingMode] = useState<RoutingMode>("TOP_LEVEL");
   const [newFallbackIfNoGroup, setNewFallbackIfNoGroup] = useState<"TOP_LEVEL" | "REJECT">("TOP_LEVEL");
   const [newAllowedGroupIds, setNewAllowedGroupIds] = useState<string[]>([]);
   const [newAudience, setNewAudience] = useState<Audience>("all");
@@ -110,7 +111,7 @@ function CategoryManagementPageContent() {
   const [editName, setEditName] = useState("");
   const [editCode, setEditCode] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [editRoutingMode, setEditRoutingMode] = useState<"AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE">("REQUIRES_PURPOSE");
+  const [editRoutingMode, setEditRoutingMode] = useState<RoutingMode>("TOP_LEVEL");
   const [editFallbackIfNoGroup, setEditFallbackIfNoGroup] = useState<"TOP_LEVEL" | "REJECT">("TOP_LEVEL");
   const [editAllowedGroupIds, setEditAllowedGroupIds] = useState<string[]>([]);
   const [editAudience, setEditAudience] = useState<Audience>("all");
@@ -164,7 +165,7 @@ function CategoryManagementPageContent() {
           code: newCode.trim().toUpperCase(),
           description: newDescription.trim(),
           routingMode: newRoutingMode,
-          fallbackIfNoGroup: newRoutingMode === "AUTO_MEMBER_GROUP" ? newFallbackIfNoGroup : "TOP_LEVEL",
+          fallbackIfNoGroup: newRoutingMode === "AUTO_MEMBER_GROUP" ? newFallbackIfNoGroup : undefined,
           allowedGroupIds: newRoutingMode === "AUTO_MEMBER_GROUP" ? newAllowedGroupIds : [],
           audience: newAudience,
         },
@@ -175,7 +176,7 @@ function CategoryManagementPageContent() {
         setNewName("");
         setNewCode("");
         setNewDescription("");
-        setNewRoutingMode("REQUIRES_PURPOSE");
+        setNewRoutingMode("TOP_LEVEL");
         setNewFallbackIfNoGroup("TOP_LEVEL");
         setNewAllowedGroupIds([]);
         setNewAudience("all");
@@ -194,7 +195,7 @@ function CategoryManagementPageContent() {
     setEditName(category.name);
     setEditCode(category.code);
     setEditDescription(category.description);
-    setEditRoutingMode(category.routingMode === "AUTO_MEMBER_GROUP" ? "AUTO_MEMBER_GROUP" : "REQUIRES_PURPOSE");
+    setEditRoutingMode(category.routingMode ?? "TOP_LEVEL");
     setEditFallbackIfNoGroup(category.fallbackIfNoGroup === "REJECT" ? "REJECT" : "TOP_LEVEL");
     setEditAllowedGroupIds((category.allowedGroups || []).map((group) => group.id));
     setEditAudience((category.audience as Audience) || "all");
@@ -222,7 +223,7 @@ function CategoryManagementPageContent() {
           code: editCode.trim().toUpperCase(),
           description: editDescription.trim(),
           routingMode: editRoutingMode,
-          fallbackIfNoGroup: editRoutingMode === "AUTO_MEMBER_GROUP" ? editFallbackIfNoGroup : "TOP_LEVEL",
+          fallbackIfNoGroup: editRoutingMode === "AUTO_MEMBER_GROUP" ? editFallbackIfNoGroup : undefined,
           allowedGroupIds: editRoutingMode === "AUTO_MEMBER_GROUP" ? editAllowedGroupIds : [],
           audience: editAudience,
         },
@@ -415,7 +416,7 @@ function CategoryManagementPageContent() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="routingMode">Department Type *</Label>
-                    <Select value={newRoutingMode} onValueChange={(value: "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE") => {
+                    <Select value={newRoutingMode} onValueChange={(value: RoutingMode) => {
                       setNewRoutingMode(value);
                       if (value !== "AUTO_MEMBER_GROUP") {
                         setNewAllowedGroupIds([]);
@@ -426,8 +427,10 @@ function CategoryManagementPageContent() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="REQUIRES_PURPOSE">Requires Purpose</SelectItem>
+                        <SelectItem value="TOP_LEVEL">Top-level Only</SelectItem>
                         <SelectItem value="AUTO_MEMBER_GROUP">Auto-match Member Group</SelectItem>
+                        <SelectItem value="REQUIRES_PURPOSE">Requires Purpose</SelectItem>
+                        <SelectItem value="OPTIONAL_DETAILS">Optional Details</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -550,7 +553,7 @@ function CategoryManagementPageContent() {
                         <div className="grid md:grid-cols-2 gap-3">
                           <div>
                             <Label className="text-xs">Department Type</Label>
-                            <Select value={editRoutingMode} onValueChange={(value: "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE") => {
+                            <Select value={editRoutingMode} onValueChange={(value: RoutingMode) => {
                               setEditRoutingMode(value);
                               if (value !== "AUTO_MEMBER_GROUP") {
                                 setEditAllowedGroupIds([]);
@@ -561,8 +564,10 @@ function CategoryManagementPageContent() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="REQUIRES_PURPOSE">Requires Purpose</SelectItem>
+                                <SelectItem value="TOP_LEVEL">Top-level Only</SelectItem>
                                 <SelectItem value="AUTO_MEMBER_GROUP">Auto-match Member Group</SelectItem>
+                                <SelectItem value="REQUIRES_PURPOSE">Requires Purpose</SelectItem>
+                                <SelectItem value="OPTIONAL_DETAILS">Optional Details</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -645,11 +650,17 @@ function CategoryManagementPageContent() {
                             ) : (
                               <Badge variant="secondary" className="text-xs">Inactive</Badge>
                             )}
+                            {category.routingMode === "TOP_LEVEL" && (
+                              <Badge variant="outline" className="text-xs">Top-level</Badge>
+                            )}
                             {category.routingMode === "REQUIRES_PURPOSE" && (
                               <Badge variant="outline" className="text-xs">Requires Purpose</Badge>
                             )}
                             {category.routingMode === "AUTO_MEMBER_GROUP" && (
                               <Badge variant="outline" className="text-xs">Auto Group Match</Badge>
+                            )}
+                            {category.routingMode === "OPTIONAL_DETAILS" && (
+                              <Badge variant="outline" className="text-xs">Optional Details</Badge>
                             )}
                             {category.routingMode === "AUTO_MEMBER_GROUP" && (category.allowedGroups?.length || 0) > 0 && (
                               <Badge variant="secondary" className="text-xs">

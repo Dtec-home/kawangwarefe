@@ -58,7 +58,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Errors ignored — the sidebar falls back to the user-initial icon if the
   // authenticated member can't be loaded.
@@ -120,6 +120,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         text: "Group Admin",
         color: "bg-gradient-to-r from-teal-50 to-emerald-100 text-teal-800 dark:from-teal-900 dark:to-emerald-800 dark:text-teal-100",
         icon: "bg-gradient-to-r from-teal-600 to-emerald-600"
+      };
+    }
+    if (canSendBulkMessage) {
+      return {
+        text: "Messaging Admin",
+        color: "bg-gradient-to-r from-violet-50 to-violet-100 text-violet-800 dark:from-violet-900 dark:to-violet-800 dark:text-violet-100",
+        icon: "bg-violet-600"
       };
     }
     return null;
