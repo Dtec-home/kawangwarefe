@@ -348,7 +348,7 @@ function ProfileContent() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                PNG or JPEG, up to 2 MB.
+                PNG or JPEG — automatically resized.
               </p>
             </div>
           </div>
