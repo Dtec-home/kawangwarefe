@@ -9,6 +9,7 @@ export interface AudienceFilter {
   memberIds: string[];
   includeGuests: boolean;
   includeMinors: boolean;
+  extraPhoneNumbers: string[];
 }
 
 const EMPTY: AudienceFilter = {
@@ -18,6 +19,7 @@ const EMPTY: AudienceFilter = {
   memberIds: [],
   includeGuests: false,
   includeMinors: true,
+  extraPhoneNumbers: [],
 };
 
 export function useAudienceFilter() {
@@ -41,6 +43,9 @@ export function useAudienceFilter() {
   const setIncludeMinors = useCallback((v: boolean) =>
     setFilter(f => ({ ...f, includeMinors: v })), []);
 
+  const setExtraPhoneNumbers = useCallback((phones: string[]) =>
+    setFilter(f => ({ ...f, extraPhoneNumbers: phones })), []);
+
   const reset = useCallback(() => setFilter(EMPTY), []);
 
   /** Serialises to the JSON string expected by the GraphQL mutations. */
@@ -52,6 +57,7 @@ export function useAudienceFilter() {
     if (filter.memberIds.length) out.member_ids = filter.memberIds.map(Number);
     if (filter.includeGuests) out.include_guests = true;
     if (!filter.includeMinors) out.include_minors = false;
+    if (filter.extraPhoneNumbers.length) out.extra_phone_numbers = filter.extraPhoneNumbers;
     return JSON.stringify(out);
   }, [filter]);
 
@@ -64,6 +70,7 @@ export function useAudienceFilter() {
     setMemberIds,
     setIncludeGuests,
     setIncludeMinors,
+    setExtraPhoneNumbers,
     reset,
   };
 }

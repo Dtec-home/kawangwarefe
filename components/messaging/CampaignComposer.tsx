@@ -141,6 +141,7 @@ export function CampaignComposer({ onLaunched }: { onLaunched?: () => void }) {
           onMemberIdsChange={audience.setMemberIds}
           onIncludeGuestsChange={audience.setIncludeGuests}
           onIncludeMinorsChange={audience.setIncludeMinors}
+          onExtraPhoneNumbersChange={audience.setExtraPhoneNumbers}
         />
       )}
 

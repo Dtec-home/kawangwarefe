@@ -5,9 +5,6 @@
 
 import { gql } from "@apollo/client";
 
-/**
- * Get C2B transactions with filters and pagination
- */
 export const GET_C2B_TRANSACTIONS = gql`
   query GetC2BTransactions(
     $status: String
@@ -43,9 +40,6 @@ export const GET_C2B_TRANSACTIONS = gql`
   }
 `;
 
-/**
- * Get aggregate statistics for C2B transactions
- */
 export const GET_C2B_TRANSACTION_STATS = gql`
   query GetC2BTransactionStats($dateFrom: DateTime, $dateTo: DateTime) {
     c2bTransactionStats(dateFrom: $dateFrom, dateTo: $dateTo) {
@@ -59,18 +53,20 @@ export const GET_C2B_TRANSACTION_STATS = gql`
 `;
 
 /**
- * Resolve an unmatched C2B transaction by assigning a category
+ * Resolve an unmatched C2B transaction by splitting the amount across
+ * one or more departments/purposes.  All allocation amounts must sum
+ * exactly to the transaction total.
  */
 export const RESOLVE_UNMATCHED_C2B = gql`
   mutation ResolveUnmatchedC2b(
     $transactionId: ID!
-    $categoryId: ID!
-    $purposeId: ID
+    $allocations: [C2BAllocationInput!]!
+    $memberId: ID
   ) {
     resolveUnmatchedC2b(
       transactionId: $transactionId
-      categoryId: $categoryId
-      purposeId: $purposeId
+      allocations: $allocations
+      memberId: $memberId
     ) {
       success
       message
@@ -80,7 +76,7 @@ export const RESOLVE_UNMATCHED_C2B = gql`
         matchedCategoryCode
         matchMethod
       }
-      contribution {
+      contributions {
         id
         amount
         status

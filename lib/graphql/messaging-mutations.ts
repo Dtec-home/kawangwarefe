@@ -151,6 +151,20 @@ export const LAUNCH_CAMPAIGN = gql`
   }
 `;
 
+export const LAUNCH_QUICK_CAMPAIGN = gql`
+  mutation LaunchQuickCampaign($body: String!, $recipientFilterJson: String) {
+    launchQuickCampaign(body: $body, recipientFilterJson: $recipientFilterJson) {
+      success
+      message
+      campaign {
+        id
+        status
+        recipientCount
+      }
+    }
+  }
+`;
+
 export const GET_AVAILABLE_DEPARTMENTS = gql`
   query GetAvailableDepartments {
     availableDepartments {

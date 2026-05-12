@@ -22,6 +22,12 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       include: ['components/**', 'lib/**', 'app/**'],
       exclude: ['**/*.d.ts', '**/__tests__/**', '**/node_modules/**'],
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        branches: 60,
+        statements: 60,
+      },
     },
   },
 })
