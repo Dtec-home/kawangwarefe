@@ -106,7 +106,20 @@ interface ContributionGroup {
   contributions: Contribution[];
   totalAmount: number;
   isSplit: boolean;
+  isMultiCategory: boolean;
   representative: Contribution;
+}
+
+function groupCategoryLabel(group: ContributionGroup): { name: string; code: string } {
+  if (!group.isMultiCategory) {
+    return { name: group.representative.category.name, code: group.representative.category.code };
+  }
+  const unique = Array.from(
+    new Map(group.contributions.map(c => [c.category.id, c.category])).values()
+  );
+  const names = unique.slice(0, 2).map(c => c.name).join(' + ');
+  const suffix = unique.length > 2 ? ` +${unique.length - 2}` : '';
+  return { name: names + suffix, code: unique.map(c => c.code).join(',') };
 }
 
 export default function ContributionsPage() {
@@ -204,13 +217,17 @@ export default function ContributionsPage() {
         groupMap.set(key, [c]);
       }
     }
-    return Array.from(groupMap.entries()).map(([groupId, items]) => ({
-      groupId,
-      contributions: items,
-      totalAmount: items.reduce((sum, c) => sum + Number.parseFloat(c.amount), 0),
-      isSplit: items.length > 1,
-      representative: items[0],
-    }));
+    return Array.from(groupMap.entries()).map(([groupId, items]) => {
+      const uniqueCategoryIds = new Set(items.map(c => c.category.id));
+      return {
+        groupId,
+        contributions: items,
+        totalAmount: items.reduce((sum, c) => sum + Number.parseFloat(c.amount), 0),
+        isSplit: items.length > 1,
+        isMultiCategory: uniqueCategoryIds.size > 1,
+        representative: items[0],
+      };
+    });
   }, [contributions]);
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -594,10 +611,10 @@ export default function ContributionsPage() {
                         </div>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>
-                            {rep.category.name}
+                            {groupCategoryLabel(group).name}
                             {group.isSplit && (
                               <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
-                                ({group.contributions.length} purposes)
+                                ({group.contributions.length})
                               </span>
                             )}
                           </span>
@@ -696,7 +713,7 @@ export default function ContributionsPage() {
                             <td className="p-3 text-sm">
                               <div>
                                 <div>
-                                  {rep.category.name}
+                                  {groupCategoryLabel(group).name}
                                   {group.isSplit && (
                                     <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
                                       ({group.contributions.length})
@@ -704,7 +721,7 @@ export default function ContributionsPage() {
                                   )}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  {rep.category.code}
+                                  {groupCategoryLabel(group).code}
                                 </div>
                               </div>
                             </td>
@@ -743,10 +760,10 @@ export default function ContributionsPage() {
                               <td />
                               <td />
                               <td className="p-3 text-sm text-muted-foreground pl-6">
-                                ↳ {c.purposeName || c.category.name}
+                                ↳ {group.isMultiCategory && !c.purposeName ? c.category.name : (c.purposeName || c.category.name)}
                               </td>
                               <td className="p-3 text-sm text-muted-foreground">
-                                {c.purposeName || "—"}
+                                {c.purposeName || (group.isMultiCategory ? c.category.name : "—")}
                               </td>
                               <td />
                               <td className="p-3 text-sm text-right text-muted-foreground">

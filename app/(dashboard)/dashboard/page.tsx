@@ -50,7 +50,18 @@ interface ContributionGroup {
   contributions: Contribution[];
   totalAmount: number;
   isSplit: boolean;
+  isMultiCategory: boolean;
   representative: Contribution;
+}
+
+function groupCategoryLabel(group: ContributionGroup): string {
+  if (!group.isMultiCategory) return group.representative.category.name;
+  const unique = Array.from(
+    new Map(group.contributions.map(c => [c.category.id, c.category])).values()
+  );
+  const names = unique.slice(0, 2).map(c => c.name).join(' + ');
+  const suffix = unique.length > 2 ? ` +${unique.length - 2}` : '';
+  return names + suffix;
 }
 
 interface ContributionsData {
@@ -120,12 +131,13 @@ function DashboardContent() {
       }
     }
     return Array.from(groupMap.entries()).map(([groupId, items]) => {
-      const totalAmount = items.reduce((sum, c) => sum + Number.parseFloat(c.amount), 0);
+      const uniqueCategoryIds = new Set(items.map(c => c.category.id));
       return {
         groupId,
         contributions: items,
-        totalAmount,
+        totalAmount: items.reduce((sum, c) => sum + Number.parseFloat(c.amount), 0),
         isSplit: items.length > 1,
+        isMultiCategory: uniqueCategoryIds.size > 1,
         representative: items[0],
       };
     });
@@ -358,7 +370,7 @@ function DashboardContent() {
                         </div>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>
-                            {rep.category.name}
+                            {groupCategoryLabel(group)}
                             {group.isSplit && (
                               <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
                                 ({group.contributions.length} purposes)
@@ -430,7 +442,7 @@ function DashboardContent() {
                                 : "Pending"}
                             </td>
                             <td className="p-2 text-sm">
-                              <span>{rep.category.name}</span>
+                              <span>{groupCategoryLabel(group)}</span>
                               {group.isSplit && (
                                 <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
                                   ({group.contributions.length} purposes)
