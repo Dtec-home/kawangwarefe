@@ -112,6 +112,11 @@ function fmtAmount(amount: string) {
   return `KES ${Number.parseFloat(amount).toLocaleString()}`;
 }
 
+function fmtMsisdn(msisdn: string) {
+  if (!msisdn) return "—";
+  return msisdn.length > 12 ? `${msisdn.slice(0, 8)}…` : msisdn;
+}
+
 function newRow(defaultAmount = ""): AllocationRow {
   return { rowId: crypto.randomUUID(), categoryId: "", purposeId: "", amount: defaultAmount };
 }
@@ -335,11 +340,11 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Customer</span>
-              <span>{transaction.customerName || transaction.msisdn}</span>
+              <span>{transaction.customerName || fmtMsisdn(transaction.msisdn)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Phone</span>
-              <span className="font-mono">{transaction.msisdn}</span>
+              <span className="font-mono" title={transaction.msisdn}>{fmtMsisdn(transaction.msisdn)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Reference</span>
@@ -636,7 +641,7 @@ export default function C2BTransactionsPage() {
                         )}
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="font-mono">{tx.msisdn}</span>
+                        <span className="font-mono" title={tx.msisdn}>{fmtMsisdn(tx.msisdn)}</span>
                         <span>{fmtDate(tx.transTime)}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -692,7 +697,7 @@ export default function C2BTransactionsPage() {
                               <span className="text-muted-foreground italic">Unknown</span>
                             )}
                           </td>
-                          <td className="p-3 font-mono">{tx.msisdn}</td>
+                          <td className="p-3 font-mono" title={tx.msisdn}>{fmtMsisdn(tx.msisdn)}</td>
                           <td className="p-3 font-mono text-xs">
                             {tx.billRefNumber || <span className="text-muted-foreground">—</span>}
                           </td>
