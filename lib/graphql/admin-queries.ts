@@ -231,3 +231,75 @@ export const GET_MY_GROUP_NAMES = gql`
     myGroupNames
   }
 `;
+
+/**
+ * Member contribution progress report — per-member history with running totals,
+ * broken down by purpose and group within each member row.
+ */
+export const GET_MEMBER_PROGRESS_REPORT = gql`
+  query GetMemberProgressReport(
+    $categoryId: ID!
+    $purposeId: ID
+    $groupId: ID
+    $dateFrom: DateTime
+    $dateTo: DateTime
+    $memberId: ID
+    $breakdownBy: String
+    $timeBucket: String
+    $limit: Int
+  ) {
+    memberProgressReport(
+      categoryId: $categoryId
+      purposeId: $purposeId
+      groupId: $groupId
+      dateFrom: $dateFrom
+      dateTo: $dateTo
+      memberId: $memberId
+      breakdownBy: $breakdownBy
+      timeBucket: $timeBucket
+      limit: $limit
+    ) {
+      departmentId
+      departmentName
+      departmentCode
+      purposeName
+      groupName
+      dateFrom
+      dateTo
+      breakdownBy
+      totalAmount
+      contributingMemberCount
+      members {
+        memberId
+        memberName
+        memberNumber
+        phoneNumber
+        grandTotal
+        contributionCount
+        byPurpose {
+          purposeId
+          purposeName
+          totalAmount
+          contributionCount
+        }
+        byGroup {
+          groupId
+          groupName
+          totalAmount
+          contributionCount
+        }
+        contributions {
+          contributionId
+          transactionDate
+          amount
+          entryType
+          purposeId
+          purposeName
+          groupId
+          groupName
+          runningTotal
+        }
+      }
+    }
+  }
+`;

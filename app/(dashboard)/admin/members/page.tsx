@@ -54,6 +54,7 @@ import {
   ChevronRight,
   Plus,
   Shield,
+  TrendingUp,
   UsersRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -833,6 +834,11 @@ function MembersPageContent() {
                                   <Button size="sm" variant="ghost" onClick={() => handleDelete(member)} title="Delete">
                                     <Trash2 className="h-3 w-3 text-red-600" />
                                   </Button>
+                                  <Link href={`/admin/reports?mode=progress&member=${member.id}`} title="View contribution progress">
+                                    <Button size="sm" variant="ghost" asChild>
+                                      <span><TrendingUp className="h-3 w-3 text-blue-600" /></span>
+                                    </Button>
+                                  </Link>
                                 </div>
                               </td>
                             </>
