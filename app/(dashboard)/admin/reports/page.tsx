@@ -1663,12 +1663,12 @@ function ReportsPageContent() {
 
                 {/* Date range */}
                 <div className="space-y-1">
-                  <Label>Date from</Label>
-                  <Input type="date" value={progressDateFrom} onChange={(e) => setProgressDateFrom(e.target.value)} />
+                  <Label htmlFor="progress-date-from">Date from</Label>
+                  <Input id="progress-date-from" type="date" value={progressDateFrom} onChange={(e) => setProgressDateFrom(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Date to</Label>
-                  <Input type="date" value={progressDateTo} onChange={(e) => setProgressDateTo(e.target.value)} />
+                  <Label htmlFor="progress-date-to">Date to</Label>
+                  <Input id="progress-date-to" type="date" value={progressDateTo} onChange={(e) => setProgressDateTo(e.target.value)} />
                 </div>
 
                 {/* Time bucket */}
