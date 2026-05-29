@@ -6,8 +6,12 @@ export const IMPORT_MEMBERS = gql`
       success
       message
       importedCount
+      createdCount
+      updatedCount
       skippedCount
       errorCount
+      identifiersCreated
+      identifiersUpdated
       errors
       duplicates
     }

@@ -18,6 +18,9 @@ interface Category {
   code: string;
   description: string;
   routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
+  tracksMemberIdentifier?: boolean;
+  identifierLabel?: string;
+  identifierFormat?: string;
 }
 
 interface GetCategoriesData {
@@ -28,13 +31,15 @@ export interface CategoryAmount {
   categoryId: string;
   amount: string;
   purposeId?: string;
+  memberIdentifier?: string;
 }
 
 interface MultiCategorySelectorProps {
   contributions: CategoryAmount[];
   onChange: (contributions: CategoryAmount[]) => void;
-  errors?: Array<{ categoryId?: string; amount?: string; purposeId?: string }>;
+  errors?: Array<{ categoryId?: string; amount?: string; purposeId?: string; memberIdentifier?: string }>;
   maxCategories?: number;
+  phoneNumber?: string;
 }
 
 export function MultiCategorySelector({
@@ -42,6 +47,7 @@ export function MultiCategorySelector({
   onChange,
   errors = [],
   maxCategories = 10,
+  phoneNumber,
 }: MultiCategorySelectorProps) {
   const { data, loading } = useQuery<GetCategoriesData>(
     GET_CONTRIBUTION_CATEGORIES
@@ -55,15 +61,16 @@ export function MultiCategorySelector({
 
   const handleChange = (
     index: number,
-    field: "categoryId" | "amount" | "purposeId",
+    field: "categoryId" | "amount" | "purposeId" | "memberIdentifier",
     value: string
   ) => {
     const updated = [...contributions];
     updated[index] = { ...updated[index], [field]: value };
 
-    // Reset purpose if department changes.
+    // Reset purpose and identifier if department changes.
     if (field === "categoryId") {
       updated[index].purposeId = "";
+      updated[index].memberIdentifier = "";
     }
 
     onChange(updated);
@@ -105,6 +112,7 @@ export function MultiCategorySelector({
             selectedCategory={allCategories.find((c) => c.id === contribution.categoryId)}
             canRemove={contributions.length > 1}
             errors={errors && errors[index] ? errors[index] : undefined}
+            phoneNumber={phoneNumber}
           />
         ))}
       </div>

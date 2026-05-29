@@ -16,6 +16,13 @@ const MEMBER_FIELDS = gql`
       id
       name
     }
+    departmentIdentifiers {
+      identifier
+      category {
+        id
+        name
+      }
+    }
   }
 `;
 
@@ -124,6 +131,32 @@ export const SET_MEMBER_GROUPS = gql`
   ${MEMBER_FIELDS}
   mutation SetMemberGroups($memberId: ID!, $groupIds: [ID!]!) {
     setMemberGroups(memberId: $memberId, groupIds: $groupIds) {
+      success
+      message
+      member {
+        ...MemberFields
+      }
+    }
+  }
+`;
+
+export const SET_MEMBER_DEPARTMENT_IDENTIFIER = gql`
+  ${MEMBER_FIELDS}
+  mutation SetMemberDepartmentIdentifier($memberId: ID!, $categoryId: ID!, $identifier: String!) {
+    setMemberDepartmentIdentifier(memberId: $memberId, categoryId: $categoryId, identifier: $identifier) {
+      success
+      message
+      member {
+        ...MemberFields
+      }
+    }
+  }
+`;
+
+export const REMOVE_MEMBER_DEPARTMENT_IDENTIFIER = gql`
+  ${MEMBER_FIELDS}
+  mutation RemoveMemberDepartmentIdentifier($memberId: ID!, $categoryId: ID!) {
+    removeMemberDepartmentIdentifier(memberId: $memberId, categoryId: $categoryId) {
       success
       message
       member {

@@ -52,6 +52,9 @@ interface Category {
   routingMode?: RoutingMode;
   fallbackIfNoGroup?: "TOP_LEVEL" | "REJECT";
   audience?: Audience;
+  tracksMemberIdentifier?: boolean;
+  identifierLabel?: string;
+  identifierFormat?: string;
   allowedGroups?: GroupItem[];
 }
 
@@ -106,6 +109,9 @@ function CategoryManagementPageContent() {
   const [newFallbackIfNoGroup, setNewFallbackIfNoGroup] = useState<"TOP_LEVEL" | "REJECT">("TOP_LEVEL");
   const [newAllowedGroupIds, setNewAllowedGroupIds] = useState<string[]>([]);
   const [newAudience, setNewAudience] = useState<Audience>("all");
+  const [newTracksIdentifier, setNewTracksIdentifier] = useState(false);
+  const [newIdentifierLabel, setNewIdentifierLabel] = useState("");
+  const [newIdentifierFormat, setNewIdentifierFormat] = useState("");
 
   // Edit form state
   const [editName, setEditName] = useState("");
@@ -115,6 +121,9 @@ function CategoryManagementPageContent() {
   const [editFallbackIfNoGroup, setEditFallbackIfNoGroup] = useState<"TOP_LEVEL" | "REJECT">("TOP_LEVEL");
   const [editAllowedGroupIds, setEditAllowedGroupIds] = useState<string[]>([]);
   const [editAudience, setEditAudience] = useState<Audience>("all");
+  const [editTracksIdentifier, setEditTracksIdentifier] = useState(false);
+  const [editIdentifierLabel, setEditIdentifierLabel] = useState("");
+  const [editIdentifierFormat, setEditIdentifierFormat] = useState("");
 
   const { data, loading, refetch } = useQuery<GetCategoriesData>(GET_ALL_CATEGORIES);
   const categories = data?.contributionCategories || [];
@@ -168,6 +177,9 @@ function CategoryManagementPageContent() {
           fallbackIfNoGroup: newRoutingMode === "AUTO_MEMBER_GROUP" ? newFallbackIfNoGroup : undefined,
           allowedGroupIds: newRoutingMode === "AUTO_MEMBER_GROUP" ? newAllowedGroupIds : [],
           audience: newAudience,
+          tracksMemberIdentifier: newTracksIdentifier,
+          identifierLabel: newTracksIdentifier ? newIdentifierLabel.trim() : "",
+          identifierFormat: newTracksIdentifier ? newIdentifierFormat.trim() : "",
         },
       });
 
@@ -180,6 +192,9 @@ function CategoryManagementPageContent() {
         setNewFallbackIfNoGroup("TOP_LEVEL");
         setNewAllowedGroupIds([]);
         setNewAudience("all");
+        setNewTracksIdentifier(false);
+        setNewIdentifierLabel("");
+        setNewIdentifierFormat("");
         setShowCreateForm(false);
         refetch();
       } else {
@@ -199,6 +214,9 @@ function CategoryManagementPageContent() {
     setEditFallbackIfNoGroup(category.fallbackIfNoGroup === "REJECT" ? "REJECT" : "TOP_LEVEL");
     setEditAllowedGroupIds((category.allowedGroups || []).map((group) => group.id));
     setEditAudience((category.audience as Audience) || "all");
+    setEditTracksIdentifier(category.tracksMemberIdentifier ?? false);
+    setEditIdentifierLabel(category.identifierLabel ?? "");
+    setEditIdentifierFormat(category.identifierFormat ?? "");
     clearMessages();
   };
 
@@ -226,6 +244,9 @@ function CategoryManagementPageContent() {
           fallbackIfNoGroup: editRoutingMode === "AUTO_MEMBER_GROUP" ? editFallbackIfNoGroup : undefined,
           allowedGroupIds: editRoutingMode === "AUTO_MEMBER_GROUP" ? editAllowedGroupIds : [],
           audience: editAudience,
+          tracksMemberIdentifier: editTracksIdentifier,
+          identifierLabel: editTracksIdentifier ? editIdentifierLabel.trim() : "",
+          identifierFormat: editTracksIdentifier ? editIdentifierFormat.trim() : "",
         },
       });
 
@@ -484,6 +505,45 @@ function CategoryManagementPageContent() {
                     </div>
                   )}
                 </div>
+                <div className="space-y-3 rounded-md border p-3">
+                  <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                    <Checkbox
+                      checked={newTracksIdentifier}
+                      onCheckedChange={(v) => setNewTracksIdentifier(v === true)}
+                    />
+                    Track a per-member number for this department (e.g. Welfare number)
+                  </label>
+                  {newTracksIdentifier && (
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="identifierLabel">Number label</Label>
+                        <Input
+                          id="identifierLabel"
+                          placeholder="e.g., Welfare ID"
+                          value={newIdentifierLabel}
+                          onChange={(e) => setNewIdentifierLabel(e.target.value)}
+                          maxLength={50}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Shown to members and admins next to the number.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="identifierFormat">Format (optional regex)</Label>
+                        <Input
+                          id="identifierFormat"
+                          placeholder="e.g., ^[0-9]{1,6}$"
+                          value={newIdentifierFormat}
+                          onChange={(e) => setNewIdentifierFormat(e.target.value)}
+                          maxLength={200}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Leave blank to accept any value. Carried on the M-Pesa reference.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button type="submit" disabled={creating}>
                     {creating ? "Creating..." : "Create Department"}
@@ -621,6 +681,37 @@ function CategoryManagementPageContent() {
                             </div>
                           )}
                         </div>
+                        <div className="space-y-3 rounded-md border p-3">
+                          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                            <Checkbox
+                              checked={editTracksIdentifier}
+                              onCheckedChange={(v) => setEditTracksIdentifier(v === true)}
+                            />
+                            Track a per-member number (e.g. Welfare number)
+                          </label>
+                          {editTracksIdentifier && (
+                            <div className="grid md:grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs">Number label</Label>
+                                <Input
+                                  placeholder="e.g., Welfare ID"
+                                  value={editIdentifierLabel}
+                                  onChange={(e) => setEditIdentifierLabel(e.target.value)}
+                                  maxLength={50}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Format (optional regex)</Label>
+                                <Input
+                                  placeholder="e.g., ^[0-9]{1,6}$"
+                                  value={editIdentifierFormat}
+                                  onChange={(e) => setEditIdentifierFormat(e.target.value)}
+                                  maxLength={200}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -672,6 +763,11 @@ function CategoryManagementPageContent() {
                             )}
                             {category.audience === "children" && (
                               <Badge className="bg-blue-100 text-blue-800 text-xs">Children</Badge>
+                            )}
+                            {category.tracksMemberIdentifier && (
+                              <Badge className="bg-purple-100 text-purple-800 text-xs">
+                                {category.identifierLabel?.trim() || "Member #"}
+                              </Badge>
                             )}
                           </div>
                           {category.routingMode === "REQUIRES_PURPOSE" && (

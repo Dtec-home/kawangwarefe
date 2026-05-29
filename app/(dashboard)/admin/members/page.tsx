@@ -17,7 +17,10 @@ import {
   ASSIGN_ROLE,
   REMOVE_ROLE,
   SET_MEMBER_GROUPS,
+  SET_MEMBER_DEPARTMENT_IDENTIFIER,
+  REMOVE_MEMBER_DEPARTMENT_IDENTIFIER,
 } from "@/lib/graphql/member-mutations";
+import { GET_ALL_CATEGORIES } from "@/lib/graphql/category-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +59,7 @@ import {
   Shield,
   TrendingUp,
   UsersRound,
+  Hash,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -75,6 +79,18 @@ interface GroupItem {
   name: string;
 }
 
+interface DepartmentIdentifier {
+  identifier: string;
+  category: { id: string; name: string };
+}
+
+interface TrackingCategory {
+  id: string;
+  name: string;
+  tracksMemberIdentifier?: boolean;
+  identifierLabel?: string;
+}
+
 interface Member {
   id: string;
   fullName: string;
@@ -87,6 +103,11 @@ interface Member {
   createdAt: string;
   roles: string[];
   groups: GroupItem[];
+  departmentIdentifiers?: DepartmentIdentifier[];
+}
+
+interface CategoriesData {
+  contributionCategories: TrackingCategory[];
 }
 
 interface MutationResult {
@@ -480,6 +501,133 @@ function ManageGroupsDialog({
   );
 }
 
+// ─── Manage Department IDs Dialog ──────────────────────────────────
+
+function ManageDepartmentIdsDialog({
+  member,
+  trackingCategories,
+  onSuccess,
+}: {
+  member: Member;
+  trackingCategories: TrackingCategory[];
+  onSuccess: (msg: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+  const [setIdentifier] = useMutation<MemberMutationData>(SET_MEMBER_DEPARTMENT_IDENTIFIER);
+  const [removeIdentifier] = useMutation<MemberMutationData>(REMOVE_MEMBER_DEPARTMENT_IDENTIFIER);
+  const [saving, setSaving] = useState(false);
+
+  const currentByCategoryId = (member.departmentIdentifiers || []).reduce<Record<string, string>>(
+    (acc, di) => { acc[di.category.id] = di.identifier; return acc; },
+    {},
+  );
+
+  const handleOpen = (isOpen: boolean) => {
+    if (isOpen) {
+      setValues(
+        trackingCategories.reduce<Record<string, string>>((acc, cat) => {
+          acc[cat.id] = currentByCategoryId[cat.id] || "";
+          return acc;
+        }, {}),
+      );
+    }
+    setOpen(isOpen);
+    setError("");
+  };
+
+  const handleSave = async () => {
+    setError("");
+    setSaving(true);
+    try {
+      for (const cat of trackingCategories) {
+        const next = (values[cat.id] || "").trim();
+        const prev = (currentByCategoryId[cat.id] || "").trim();
+        if (next === prev) continue;
+
+        if (next) {
+          const { data } = await setIdentifier({
+            variables: { memberId: member.id, categoryId: cat.id, identifier: next },
+          });
+          const res = data?.setMemberDepartmentIdentifier;
+          if (!res?.success) {
+            setError(res?.message || `Failed to set ${cat.identifierLabel || "identifier"}`);
+            setSaving(false);
+            return;
+          }
+        } else {
+          const { data } = await removeIdentifier({
+            variables: { memberId: member.id, categoryId: cat.id },
+          });
+          const res = data?.removeMemberDepartmentIdentifier;
+          if (!res?.success) {
+            setError(res?.message || "Failed to remove identifier");
+            setSaving(false);
+            return;
+          }
+        }
+      }
+      onSuccess(`Department numbers updated for ${member.fullName}`);
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error updating department numbers");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" title="Department numbers">
+          <Hash className="h-3 w-3" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Department numbers: {member.fullName}</DialogTitle>
+          <DialogDescription>
+            Set this member&apos;s number for departments that track one (e.g. Welfare).
+          </DialogDescription>
+        </DialogHeader>
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {trackingCategories.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No departments track member numbers yet. Enable it on a department first.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {trackingCategories.map((cat) => (
+              <div key={cat.id} className="space-y-1">
+                <Label className="text-xs">{cat.identifierLabel?.trim() || cat.name}</Label>
+                <Input
+                  value={values[cat.id] ?? ""}
+                  onChange={(e) => setValues({ ...values, [cat.id]: e.target.value })}
+                  placeholder={`${cat.name} number`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button onClick={handleSave} disabled={saving || trackingCategories.length === 0}>
+            {saving ? "Saving..." : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Main Members Page ─────────────────────────────────────────────
 
 function MembersPageContent() {
@@ -504,6 +652,10 @@ function MembersPageContent() {
 
   const { data: groupsData } = useQuery<GroupsData>(GET_GROUPS_LIST);
   const allGroups: GroupItem[] = groupsData?.groupsList || [];
+
+  const { data: categoriesData } = useQuery<CategoriesData>(GET_ALL_CATEGORIES);
+  const trackingCategories: TrackingCategory[] = (categoriesData?.contributionCategories || [])
+    .filter((c) => c.tracksMemberIdentifier);
 
   const [updateMember, { loading: updating }] = useMutation<MemberMutationData>(UPDATE_MEMBER);
   const [toggleStatus] = useMutation<MemberMutationData>(TOGGLE_MEMBER_STATUS);
@@ -754,6 +906,9 @@ function MembersPageContent() {
                             </Button>
                             <ManageRolesDialog member={member} onSuccess={showSuccess} />
                             <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                            {trackingCategories.length > 0 && (
+                              <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
+                            )}
                             <Button size="sm" variant="outline" onClick={() => handleToggleStatus(member)}>
                               {member.isActive ? <UserX className="h-4 w-4 text-yellow-600" /> : <UserCheck className="h-4 w-4 text-green-600" />}
                             </Button>
@@ -828,6 +983,9 @@ function MembersPageContent() {
                                   </Button>
                                   <ManageRolesDialog member={member} onSuccess={showSuccess} />
                                   <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                                  {trackingCategories.length > 0 && (
+                                    <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
+                                  )}
                                   <Button size="sm" variant="ghost" onClick={() => handleToggleStatus(member)} title={member.isActive ? "Deactivate" : "Activate"}>
                                     {member.isActive ? <UserX className="h-3 w-3 text-yellow-600" /> : <UserCheck className="h-3 w-3 text-green-600" />}
                                   </Button>

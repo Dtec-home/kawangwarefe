@@ -22,6 +22,7 @@ export const GET_ALL_CONTRIBUTIONS = gql`
         notes
         routedGroupName
         purposeName
+        departmentMemberIdentifier
         contributionGroupId
         member {
           id
@@ -115,6 +116,13 @@ export const GET_MEMBERS_LIST = gql`
           id
           name
         }
+        departmentIdentifiers {
+          identifier
+          category {
+            id
+            name
+          }
+        }
       }
       total
       hasMore
@@ -201,6 +209,7 @@ export const GET_GROUP_CONTRIBUTIONS = gql`
         notes
         routedGroupName
         purposeName
+        departmentMemberIdentifier
         contributionGroupId
         member {
           id

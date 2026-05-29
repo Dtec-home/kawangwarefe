@@ -30,6 +30,7 @@ interface Contribution {
   contributionGroupId?: string | null;
   routedGroupName?: string | null;
   purposeName?: string | null;
+  departmentMemberIdentifier?: string | null;
   member: {
     id: string;
     fullName: string;
@@ -229,6 +230,12 @@ export default function ContributionsPage() {
       };
     });
   }, [contributions]);
+
+  // Show the "Dept. Member #" column only when at least one row carries one.
+  const showDeptMemberColumn = useMemo(
+    () => contributions.some((c) => (c.departmentMemberIdentifier || "").trim() !== ""),
+    [contributions],
+  );
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const toggleGroup = (groupId: string) => {
@@ -639,6 +646,13 @@ export default function ContributionsPage() {
                             {rep.routedGroupName && <span>Group: {rep.routedGroupName}</span>}
                           </div>
                         )}
+                        {rep.departmentMemberIdentifier && (
+                          <div className="text-xs">
+                            <span className="inline-block rounded bg-purple-100 px-2 py-0.5 font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+                              {rep.category.name} #{rep.departmentMemberIdentifier}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       {group.isSplit && isExpanded && (
                         <div className="border-t bg-slate-50 dark:bg-slate-800/50 divide-y divide-slate-100 dark:divide-slate-700">
@@ -667,6 +681,9 @@ export default function ContributionsPage() {
                       <th className="text-left p-3 font-medium">Date</th>
                       <th className="text-left p-3 font-medium">Member</th>
                       <th className="text-left p-3 font-medium">Phone</th>
+                      {showDeptMemberColumn && (
+                        <th className="text-left p-3 font-medium">Dept. Member #</th>
+                      )}
                       <th className="text-left p-3 font-medium">Department</th>
                       <th className="text-left p-3 font-medium">Purpose</th>
                       <th className="text-left p-3 font-medium">Group</th>
@@ -710,6 +727,17 @@ export default function ContributionsPage() {
                             <td className="p-3 text-sm font-mono">
                               {rep.member.phoneNumber}
                             </td>
+                            {showDeptMemberColumn && (
+                              <td className="p-3 text-sm font-mono">
+                                {rep.departmentMemberIdentifier ? (
+                                  <span className="inline-block rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+                                    {rep.departmentMemberIdentifier}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                            )}
                             <td className="p-3 text-sm">
                               <div>
                                 <div>
@@ -759,6 +787,11 @@ export default function ContributionsPage() {
                               <td />
                               <td />
                               <td />
+                              {showDeptMemberColumn && (
+                                <td className="p-3 text-sm font-mono text-muted-foreground">
+                                  {c.departmentMemberIdentifier || ""}
+                                </td>
+                              )}
                               <td className="p-3 text-sm text-muted-foreground pl-6">
                                 ↳ {group.isMultiCategory && !c.purposeName ? c.category.name : (c.purposeName || c.category.name)}
                               </td>

@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import {
   GET_DEPARTMENT_PURPOSES,
   GET_PAYBILL_INSTRUCTION_MESSAGE,
+  GET_MEMBER_DEPARTMENT_IDENTIFIER,
 } from "@/lib/graphql/queries";
 import {
   Select,
@@ -30,6 +31,18 @@ interface Category {
   description: string;
   routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
   hasAutoSplit?: boolean;
+  tracksMemberIdentifier?: boolean;
+  identifierLabel?: string;
+  identifierFormat?: string;
+}
+
+interface MemberDepartmentIdentifierData {
+  memberDepartmentIdentifier: {
+    tracksIdentifier: boolean;
+    label: string;
+    found: boolean;
+    identifier: string | null;
+  };
 }
 
 interface DepartmentPurpose {
@@ -49,13 +62,14 @@ interface PaybillInstructionMessageData {
 
 interface CategoryAmountRowProps {
   index: number;
-  value: { categoryId: string; amount: string; purposeId?: string };
-  onChange: (index: number, field: "categoryId" | "amount" | "purposeId", value: string) => void;
+  value: { categoryId: string; amount: string; purposeId?: string; memberIdentifier?: string };
+  onChange: (index: number, field: "categoryId" | "amount" | "purposeId" | "memberIdentifier", value: string) => void;
   onRemove: (index: number) => void;
   availableCategories: Category[];
   selectedCategory?: Category;
   canRemove: boolean;
-  errors?: { categoryId?: string; amount?: string; purposeId?: string };
+  errors?: { categoryId?: string; amount?: string; purposeId?: string; memberIdentifier?: string };
+  phoneNumber?: string;
 }
 
 export function CategoryAmountRow({
@@ -67,12 +81,40 @@ export function CategoryAmountRow({
   selectedCategory,
   canRemove,
   errors,
+  phoneNumber,
 }: CategoryAmountRowProps) {
   const requiresPurpose =
     selectedCategory?.routingMode === "REQUIRES_PURPOSE" &&
     !selectedCategory?.hasAutoSplit;
+  const tracksIdentifier = selectedCategory?.tracksMemberIdentifier === true;
+  const identifierLabel = selectedCategory?.identifierLabel?.trim() || "Member number";
   const parsedAmount = Number(value.amount || 0);
   const hasPositiveAmount = Number.isFinite(parsedAmount) && parsedAmount >= 1;
+
+  // Auto-fill the giver's existing department number once their phone is known.
+  const normalizedPhone = (phoneNumber || "").trim();
+  const phoneReady = /^\d{9}$/.test(normalizedPhone);
+  const { data: identifierLookup } = useQuery<MemberDepartmentIdentifierData>(
+    GET_MEMBER_DEPARTMENT_IDENTIFIER,
+    {
+      variables: { phoneNumber: `254${normalizedPhone}`, categoryId: value.categoryId },
+      skip: !tracksIdentifier || !value.categoryId || !phoneReady,
+      fetchPolicy: "cache-first",
+    }
+  );
+
+  const lookedUpIdentifier = identifierLookup?.memberDepartmentIdentifier?.found
+    ? identifierLookup?.memberDepartmentIdentifier?.identifier || ""
+    : "";
+
+  // Prefill only when the field is still empty so we never clobber user input.
+  const currentIdentifier = value.memberIdentifier || "";
+  React.useEffect(() => {
+    if (tracksIdentifier && lookedUpIdentifier && !currentIdentifier) {
+      onChange(index, "memberIdentifier", lookedUpIdentifier);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lookedUpIdentifier, tracksIdentifier]);
 
   const { data: purposeData } = useQuery<DepartmentPurposesData>(
     GET_DEPARTMENT_PURPOSES,
@@ -215,6 +257,31 @@ export function CategoryAmountRow({
           </Button>
         )}
       </div>
+
+      {/* Department member number (only for departments that track one) */}
+      {tracksIdentifier && (
+        <div className="space-y-1">
+          <Label htmlFor={`identifier-${index}`} className="text-sm">
+            {identifierLabel}
+          </Label>
+          <Input
+            id={`identifier-${index}`}
+            value={currentIdentifier}
+            onChange={(e) => onChange(index, "memberIdentifier", e.target.value)}
+            placeholder={`Your ${identifierLabel.toLowerCase()}`}
+            className={errors?.memberIdentifier ? "border-destructive" : ""}
+          />
+          {errors?.memberIdentifier ? (
+            <p className="text-xs text-destructive">{errors.memberIdentifier}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {lookedUpIdentifier
+                ? `We found your ${identifierLabel.toLowerCase()} — confirm or correct it. It's tagged on this contribution.`
+                : `Enter your ${identifierLabel.toLowerCase()} for ${selectedCategory?.name}. It will be saved and tagged on this contribution.`}
+            </p>
+          )}
+        </div>
+      )}
 
       {instructionData?.paybillInstructionMessage && (
         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">

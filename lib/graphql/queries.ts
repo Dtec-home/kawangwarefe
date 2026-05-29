@@ -20,10 +20,28 @@ export const GET_CONTRIBUTION_CATEGORIES = gql`
       fallbackIfNoGroup
       audience
       hasAutoSplit
+      tracksMemberIdentifier
+      identifierLabel
+      identifierFormat
       allowedGroups {
         id
         name
       }
+    }
+  }
+`;
+
+/**
+ * Public lookup of a giver's department member number (e.g. Welfare number)
+ * used to pre-fill / confirm on the contribute form after the phone is entered.
+ */
+export const GET_MEMBER_DEPARTMENT_IDENTIFIER = gql`
+  query GetMemberDepartmentIdentifier($phoneNumber: String!, $categoryId: ID!) {
+    memberDepartmentIdentifier(phoneNumber: $phoneNumber, categoryId: $categoryId) {
+      tracksIdentifier
+      label
+      found
+      identifier
     }
   }
 `;
@@ -130,6 +148,7 @@ export const GET_CONTRIBUTION = gql`
       transactionDate
       notes
       isCompleted
+      departmentMemberIdentifier
       member {
         id
         fullName

@@ -32,8 +32,12 @@ interface ImportResult {
   success: boolean;
   message: string;
   importedCount: number;
+  createdCount?: number;
+  updatedCount?: number;
   skippedCount: number;
   errorCount: number;
+  identifiersCreated?: number;
+  identifiersUpdated?: number;
   errors: string[];
   duplicates: string[];
 }
@@ -114,6 +118,8 @@ function MemberImportPageContent() {
         importedCount: 0,
         skippedCount: 0,
         errorCount: 1,
+        identifiersCreated: 0,
+        identifiersUpdated: 0,
         errors: [error.message || 'Unknown error occurred'],
         duplicates: [],
       });
@@ -192,6 +198,11 @@ function MemberImportPageContent() {
               <li>Download the CSV template using the button above</li>
               <li>Fill in member details (first_name, last_name, phone_number are required)</li>
               <li>Phone numbers should be in format: 0712345678 or 254712345678</li>
+              <li>
+                For departments that track a member number (e.g. Welfare), the template
+                includes a column named after the department code — fill in each member&apos;s
+                number there. Existing members are updated, never deleted; blank cells are ignored.
+              </li>
               <li>Upload the completed file below</li>
               <li>Review any errors and click Import to complete</li>
             </ol>
@@ -298,6 +309,25 @@ function MemberImportPageContent() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Department numbers set (only when any were applied) */}
+            {((importResult.identifiersCreated ?? 0) + (importResult.identifiersUpdated ?? 0)) > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Department numbers set
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {(importResult.identifiersCreated ?? 0) + (importResult.identifiersUpdated ?? 0)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {importResult.identifiersCreated ?? 0} new, {importResult.identifiersUpdated ?? 0} updated
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Errors */}
             {importResult.errors.length > 0 && (

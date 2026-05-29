@@ -33,6 +33,7 @@ const multiContributionSchema = z.object({
       z.object({
         categoryId: z.string().min(1, "Please select a department"),
         purposeId: z.string().optional(),
+        memberIdentifier: z.string().optional(),
         amount: z
           .string()
           .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 1, {
@@ -83,6 +84,7 @@ type InitiateMultiContributionVars = {
     categoryId: string;
     amount: string;
     purposeId?: string;
+    memberIdentifier?: string;
   }>;
 };
 
@@ -98,6 +100,9 @@ interface Category {
   routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
   fallbackIfNoGroup?: "TOP_LEVEL" | "REJECT";
   hasAutoSplit?: boolean;
+  tracksMemberIdentifier?: boolean;
+  identifierLabel?: string;
+  identifierFormat?: string;
 }
 
 interface GetCategoriesData {
@@ -148,7 +153,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     resolver: zodResolver(multiContributionSchema),
     defaultValues: {
       phoneNumber: getDefaultPhone(),
-      contributions: [{ categoryId: "", amount: "", purposeId: "" }],
+      contributions: [{ categoryId: "", amount: "", purposeId: "", memberIdentifier: "" }],
     },
   });
 
@@ -221,6 +226,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
       );
 
       let hasPurposeError = false;
+      let hasIdentifierError = false;
       contributions.forEach((contribution, index) => {
         const category = categoryMap.get(contribution.categoryId);
         if (category?.routingMode === "REQUIRES_PURPOSE" && !category?.hasAutoSplit && !contribution.purposeId) {
@@ -232,10 +238,25 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
         } else {
           clearErrors(`contributions.${index}.purposeId` as any);
         }
+
+        if (category?.tracksMemberIdentifier && !(contribution.memberIdentifier || "").trim()) {
+          hasIdentifierError = true;
+          setError(`contributions.${index}.memberIdentifier` as any, {
+            type: "manual",
+            message: `Please enter your ${category.identifierLabel?.trim() || "member number"}`,
+          });
+        } else {
+          clearErrors(`contributions.${index}.memberIdentifier` as any);
+        }
       });
 
       if (hasPurposeError) {
         toast.error("Please select purpose for required departments.");
+        return;
+      }
+
+      if (hasIdentifierError) {
+        toast.error("Please enter the member number for the selected department.");
         return;
       }
 
@@ -307,6 +328,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
             categoryId: c.categoryId,
             amount: c.amount,
             purposeId: c.purposeId || undefined,
+            memberIdentifier: c.memberIdentifier?.trim() || undefined,
           })),
         },
       });
@@ -427,6 +449,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
             <div data-tour="contribution-categories" className="space-y-2">
               <MultiCategorySelector
                 contributions={contributions}
+                phoneNumber={phoneNumber}
                 onChange={(newContributions) =>
                   setValue("contributions", newContributions, {
                     shouldValidate: true,
@@ -438,6 +461,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
                       categoryId: err?.categoryId?.message,
                       purposeId: (err as any)?.purposeId?.message,
                       amount: err?.amount?.message,
+                      memberIdentifier: (err as any)?.memberIdentifier?.message,
                     }))
                     : undefined
                 }

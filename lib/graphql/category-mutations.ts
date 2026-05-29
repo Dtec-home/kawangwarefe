@@ -9,6 +9,9 @@ export const CREATE_CATEGORY = gql`
     $fallbackIfNoGroup: String
     $allowedGroupIds: [ID!]
     $audience: String
+    $tracksMemberIdentifier: Boolean
+    $identifierLabel: String
+    $identifierFormat: String
   ) {
     createCategory(
       name: $name
@@ -18,6 +21,9 @@ export const CREATE_CATEGORY = gql`
       fallbackIfNoGroup: $fallbackIfNoGroup
       allowedGroupIds: $allowedGroupIds
       audience: $audience
+      tracksMemberIdentifier: $tracksMemberIdentifier
+      identifierLabel: $identifierLabel
+      identifierFormat: $identifierFormat
     ) {
       success
       message
@@ -30,6 +36,9 @@ export const CREATE_CATEGORY = gql`
         routingMode
         fallbackIfNoGroup
         audience
+        tracksMemberIdentifier
+        identifierLabel
+        identifierFormat
         allowedGroups {
           id
           name
@@ -50,6 +59,9 @@ export const UPDATE_CATEGORY = gql`
     $fallbackIfNoGroup: String
     $allowedGroupIds: [ID!]
     $audience: String
+    $tracksMemberIdentifier: Boolean
+    $identifierLabel: String
+    $identifierFormat: String
   ) {
     updateCategory(
       categoryId: $categoryId
@@ -61,6 +73,9 @@ export const UPDATE_CATEGORY = gql`
       fallbackIfNoGroup: $fallbackIfNoGroup
       allowedGroupIds: $allowedGroupIds
       audience: $audience
+      tracksMemberIdentifier: $tracksMemberIdentifier
+      identifierLabel: $identifierLabel
+      identifierFormat: $identifierFormat
     ) {
       success
       message
@@ -73,6 +88,9 @@ export const UPDATE_CATEGORY = gql`
         routingMode
         fallbackIfNoGroup
         audience
+        tracksMemberIdentifier
+        identifierLabel
+        identifierFormat
         allowedGroups {
           id
           name
@@ -102,6 +120,9 @@ export const GET_ALL_CATEGORIES = gql`
       routingMode
       fallbackIfNoGroup
       audience
+      tracksMemberIdentifier
+      identifierLabel
+      identifierFormat
       allowedGroups {
         id
         name

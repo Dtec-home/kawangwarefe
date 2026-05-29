@@ -28,6 +28,7 @@ interface Contribution {
   status: string;
   transactionDate: string | null;
   purposeName: string | null;
+  departmentMemberIdentifier?: string | null;
   contributionGroupId: string | null;
   member: {
     id: string;
@@ -132,6 +133,12 @@ function SingleContributionConfirmation({
       <DetailsCard>
         <DetailRow label="Amount" value={`KES ${Number.parseFloat(contribution.amount).toLocaleString()}`} />
         <DetailRow label="Department" value={contribution.category.name} />
+        {contribution.departmentMemberIdentifier && (
+          <DetailRow
+            label={`${contribution.category.name} member #`}
+            value={<span className="font-mono">{contribution.departmentMemberIdentifier}</span>}
+          />
+        )}
         <DetailRow label="Status" value={<span className="capitalize">{contribution.status}</span>} />
         <DetailRow
           label="Date"
@@ -229,7 +236,14 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
               <div className="space-y-1">
                 {contributions.map((c) => (
                   <div key={c.id} className="flex justify-between text-sm">
-                    <span>{isAutoSplit ? (c.purposeName || c.category.name) : c.category.name}</span>
+                    <span>
+                      {isAutoSplit ? (c.purposeName || c.category.name) : c.category.name}
+                      {c.departmentMemberIdentifier && (
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          (#{c.departmentMemberIdentifier})
+                        </span>
+                      )}
+                    </span>
                     <span className="font-medium">KES {Number.parseFloat(c.amount).toLocaleString()}</span>
                   </div>
                 ))}
