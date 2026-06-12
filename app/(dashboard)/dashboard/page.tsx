@@ -9,6 +9,7 @@
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
+import { OnboardingCarousel } from "@/components/onboarding/OnboardingCarousel";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useQuery } from "@apollo/client/react";
 import { GET_MY_CONTRIBUTIONS } from "@/lib/graphql/queries";
@@ -176,6 +177,9 @@ function DashboardContent() {
   return (
     <ProtectedRoute>
       <MemberLayout>
+        {/* First-run intro overlay; self-gates via localStorage so it
+            renders at most once per device. */}
+        <OnboardingCarousel />
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
           {/* Header */}
           <header data-tour="dashboard-header" className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">

@@ -45,7 +45,7 @@ import {
 } from "@/lib/graphql/profile-mutations";
 import { uploadAvatar } from "@/lib/profile/avatar-upload";
 import { useAuth } from "@/lib/auth/auth-context";
-import { Camera, UserRound, Users } from "lucide-react";
+import { Camera, UserRound, Users, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface GroupItem {
@@ -515,14 +515,24 @@ function ProfileContent() {
           </div>
 
           <div className="flex justify-between items-center gap-2 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/profile/family")}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Manage family
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/profile/family")}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Manage family
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/profile/notifications")}
+              >
+                <Bell className="h-4 w-4 mr-2" />
+                Notifications
+              </Button>
+            </div>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving…" : "Save changes"}
             </Button>
