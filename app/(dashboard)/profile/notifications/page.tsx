@@ -12,6 +12,7 @@
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import toast from "react-hot-toast";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -38,12 +39,19 @@ function NotificationPreferencesContent() {
 
   // The hook reads stored prefs via a lazy initialiser, so `preferences` is
   // already correct on first client render — seed the form directly.
-  const { control, handleSubmit, formState } = useForm<NotificationPreferences>(
-    {
-      resolver: zodResolver(notificationPreferencesSchema),
-      defaultValues: preferences,
-    }
-  );
+  //
+  // The schema's `.default(true)` channels make the resolver's *input* type
+  // (field values) optional while its *output* type (submitted values) stays
+  // required, so useForm is given both: input as the field-values type and
+  // NotificationPreferences as the transformed-values type.
+  const { control, handleSubmit, formState } = useForm<
+    z.input<typeof notificationPreferencesSchema>,
+    unknown,
+    NotificationPreferences
+  >({
+    resolver: zodResolver(notificationPreferencesSchema),
+    defaultValues: preferences,
+  });
 
   const onSubmit = (values: NotificationPreferences) => {
     save(values);
