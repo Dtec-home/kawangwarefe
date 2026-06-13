@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -57,11 +57,16 @@ export default function RegisterPage() {
     };
   }>(COMPLETE_REGISTRATION);
 
-  // Redirect unauthenticated users to login
-  if (!authLoading && !isAuthenticated) {
-    router.replace("/login");
-    return null;
-  }
+  // Redirect unauthenticated users to login. This must run in an effect, not
+  // during render: this is a static-prerendered client page, and on the server
+  // `isAuthenticated` is always false, so a render-time `router.replace` fires
+  // during prerendering and throws "location is not defined". Mirrors the
+  // pattern used by <ProtectedRoute />.
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +117,13 @@ export default function RegisterPage() {
 
   const departments = options?.registrationDepartments || [];
   const groups = options?.registrationGroups || [];
+
+  // While auth is resolving, or for unauthenticated visitors (who the effect
+  // above is redirecting to /login), render nothing rather than flashing the
+  // registration form.
+  if (authLoading || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
