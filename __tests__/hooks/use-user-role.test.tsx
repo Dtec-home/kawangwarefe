@@ -26,6 +26,7 @@ const GET_CURRENT_USER_ROLE = gql`
       isCategoryAdmin
       isGroupAdmin
       isContentAdmin
+      canSendBulkMessage
       adminCategoryIds
       adminGroupNames
       adminCategories {
@@ -58,6 +59,7 @@ const staffRoleMock = {
         isCategoryAdmin: false,
         isGroupAdmin: false,
         isContentAdmin: false,
+        canSendBulkMessage: true,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -76,6 +78,7 @@ const contentAdminMock = {
         isCategoryAdmin: false,
         isGroupAdmin: false,
         isContentAdmin: true,
+        canSendBulkMessage: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -94,6 +97,7 @@ const categoryAdminMock = {
         isCategoryAdmin: true,
         isGroupAdmin: false,
         isContentAdmin: false,
+        canSendBulkMessage: false,
         adminCategoryIds: ['cat-1'],
         adminGroupNames: [],
         adminCategories: [{ id: 'cat-1', name: 'Tithe', code: 'TITHE', description: '' }],
@@ -112,6 +116,7 @@ const unauthMock = {
         isCategoryAdmin: false,
         isGroupAdmin: false,
         isContentAdmin: false,
+        canSendBulkMessage: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -130,6 +135,7 @@ const groupAdminMock = {
         isCategoryAdmin: false,
         isGroupAdmin: true,
         isContentAdmin: false,
+        canSendBulkMessage: true,
         adminCategoryIds: [],
         adminGroupNames: ['Youth'],
         adminCategories: [],

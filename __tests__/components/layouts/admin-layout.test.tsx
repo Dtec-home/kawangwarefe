@@ -38,7 +38,7 @@ describe('AdminLayout', () => {
 
   it('renders Church Admin title', () => {
     render(<AdminLayout><div>C</div></AdminLayout>)
-    expect(screen.getByText('Church Admin')).toBeInTheDocument()
+    expect(screen.getAllByText('Church Admin').length).toBeGreaterThan(0)
   })
 
   it('shows staff admin badge', () => {

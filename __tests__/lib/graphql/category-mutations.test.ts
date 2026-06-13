@@ -46,4 +46,10 @@ describe('category-mutations', () => {
     const body = (GET_ALL_CATEGORIES as any).loc?.source?.body || ''
     expect(body).toContain('contributionCategories')
   })
+
+  it('GET_ALL_CATEGORIES accepts and passes includeInactive so admins see inactive departments', () => {
+    const body = (GET_ALL_CATEGORIES as any).loc?.source?.body || ''
+    expect(body).toContain('$includeInactive: Boolean')
+    expect(body).toContain('includeInactive: $includeInactive')
+  })
 })

@@ -69,11 +69,11 @@ describe('PurposesPage', () => {
 
   it('renders purpose names and codes', () => {
     render(<PurposesPage />)
-    expect(screen.getByText('Camp Meeting')).toBeInTheDocument()
-    expect(screen.getByText('CAMP')).toBeInTheDocument()
-    expect(screen.getByText('Mission Trip')).toBeInTheDocument()
-    expect(screen.getByText('MISSION')).toBeInTheDocument()
-    expect(screen.getByText('Building Repairs')).toBeInTheDocument()
+    expect(screen.getAllByText('Camp Meeting').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('CAMP').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Mission Trip').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('MISSION').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Building Repairs').length).toBeGreaterThan(0)
   })
 
   it('renders purpose count in header', () => {

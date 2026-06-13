@@ -37,6 +37,7 @@ vi.mock('@apollo/client/react', () => ({
     refetch: vi.fn(),
   })),
   useMutation: () => [vi.fn(), { loading: false }],
+  useLazyQuery: () => [vi.fn(), { data: undefined, loading: false, error: null }],
 }))
 
 // Mock auth

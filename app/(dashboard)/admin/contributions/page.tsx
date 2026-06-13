@@ -8,18 +8,21 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_ALL_CONTRIBUTIONS, GET_CONTRIBUTION_STATS, GET_GROUP_CONTRIBUTIONS, GET_MY_GROUP_NAMES } from "@/lib/graphql/admin-queries";
+import { ATTACH_BOOK_RECEIPT_NUMBER } from "@/lib/graphql/manual-contribution-mutations";
 import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { useUserRole } from "@/lib/hooks/use-user-role";
-import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 interface Contribution {
   id: string;
@@ -27,6 +30,7 @@ interface Contribution {
   status: string;
   transactionDate: string | null;
   notes: string | null;
+  manualReceiptNumber?: string | null;
   contributionGroupId?: string | null;
   routedGroupName?: string | null;
   purposeName?: string | null;
@@ -123,6 +127,101 @@ function groupCategoryLabel(group: ContributionGroup): { name: string; code: str
   return { name: names + suffix, code: unique.map(c => c.code).join(',') };
 }
 
+interface AttachBookReceiptData {
+  attachBookReceiptNumber: {
+    success: boolean;
+    message: string;
+    contribution: { id: string; manualReceiptNumber: string | null } | null;
+  };
+}
+
+/**
+ * Dialog to attach/update the church's physical book receipt number on a
+ * contribution (Ticket 8). Calls attachBookReceiptNumber and refetches the list.
+ */
+function BookReceiptDialog({
+  contribution,
+  open,
+  onOpenChange,
+  onSaved,
+}: {
+  contribution: Contribution | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState<string>("");
+  const [attach, { loading }] = useMutation<AttachBookReceiptData>(ATTACH_BOOK_RECEIPT_NUMBER);
+
+  // Sync the input with the selected contribution whenever the dialog opens.
+  const initial = contribution?.manualReceiptNumber || "";
+  const [lastId, setLastId] = useState<string | null>(null);
+  if (open && contribution && contribution.id !== lastId) {
+    setLastId(contribution.id);
+    setValue(initial);
+  }
+
+  const handleSave = async () => {
+    if (!contribution) return;
+    const trimmed = value.trim();
+    if (!trimmed) {
+      toast.error("Receipt number is required");
+      return;
+    }
+    try {
+      const { data } = await attach({
+        variables: { contributionId: contribution.id, receiptNumber: trimmed },
+      });
+      if (data?.attachBookReceiptNumber.success) {
+        toast.success("Book receipt number saved");
+        onSaved();
+        onOpenChange(false);
+      } else {
+        toast.error(data?.attachBookReceiptNumber.message || "Failed to save");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setLastId(null); onOpenChange(v); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Book Receipt Number</DialogTitle>
+          <DialogDescription>
+            Record the church's physical book receipt number for reconciling
+            against paper records.
+            {contribution?.mpesaTransaction?.mpesaReceiptNumber && (
+              <span className="block mt-1">
+                M-Pesa: <span className="font-mono">{contribution.mpesaTransaction.mpesaReceiptNumber}</span>
+              </span>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="bookReceipt">Book Receipt #</Label>
+          <Input
+            id="bookReceipt"
+            value={value}
+            placeholder="e.g. MB-1003"
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={loading}>
+            {loading ? "Saving..." : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ContributionsPage() {
   const { isStaff, isCategoryAdmin, isGroupAdmin } = useUserRole();
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -135,6 +234,7 @@ export default function ContributionsPage() {
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(20);
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [bookReceiptTarget, setBookReceiptTarget] = useState<Contribution | null>(null);
 
   // Get categories
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
@@ -171,7 +271,7 @@ export default function ContributionsPage() {
   });
   const stats = statsData?.contributionStats;
 
-  const { data, loading, error } = useQuery<ContributionsData>(GET_ALL_CONTRIBUTIONS, {
+  const { data, loading, error, refetch } = useQuery<ContributionsData>(GET_ALL_CONTRIBUTIONS, {
     skip: isGroupScopedView,
     variables: {
       filters,
@@ -190,7 +290,7 @@ export default function ContributionsPage() {
   } else {
     effectiveGroupName = selectedGroup;
   }
-  const { data: groupData, loading: groupLoading, error: groupError } = useQuery<GroupContributionsData>(GET_GROUP_CONTRIBUTIONS, {
+  const { data: groupData, loading: groupLoading, error: groupError, refetch: refetchGroup } = useQuery<GroupContributionsData>(GET_GROUP_CONTRIBUTIONS, {
     skip: !isGroupScopedView || !effectiveGroupName,
     variables: {
       groupName: effectiveGroupName,
@@ -256,6 +356,7 @@ export default function ContributionsPage() {
   const totalPages = Math.max(1, Math.ceil(totalContributions / pageSize));
   const activeLoading = isGroupScopedView ? groupLoading : loading;
   const activeError = isGroupScopedView ? groupError : error;
+  const refetchActive = () => { void (isGroupScopedView ? refetchGroup() : refetch()); };
 
   const activeFilterCount = [
     statusFilter !== "all",
@@ -639,6 +740,26 @@ export default function ContributionsPage() {
                             <span className="font-mono">{rep.mpesaTransaction.mpesaReceiptNumber}</span>
                           )}
                         </div>
+                        <div
+                          className="flex items-center justify-between text-xs text-muted-foreground"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span>
+                            Book #:{" "}
+                            {rep.manualReceiptNumber
+                              ? <span className="font-mono">{rep.manualReceiptNumber}</span>
+                              : <span>—</span>}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2"
+                            aria-label={rep.manualReceiptNumber ? "Edit book receipt number" : "Add book receipt number"}
+                            onClick={() => setBookReceiptTarget(rep)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </div>
                         {!group.isSplit && (rep.purposeName || rep.routedGroupName) && (
                           <div className="text-xs text-muted-foreground">
                             {rep.purposeName && <span>Purpose: {rep.purposeName}</span>}
@@ -690,6 +811,7 @@ export default function ContributionsPage() {
                       <th className="text-right p-3 font-medium">Amount</th>
                       <th className="text-center p-3 font-medium">Status</th>
                       <th className="text-left p-3 font-medium">Receipt</th>
+                      <th className="text-left p-3 font-medium">Book Receipt #</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -781,6 +903,24 @@ export default function ContributionsPage() {
                                 )}
                               </div>
                             </td>
+                            <td className="p-3 text-sm" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center gap-1">
+                                {rep.manualReceiptNumber ? (
+                                  <span className="font-mono">{rep.manualReceiptNumber}</span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2"
+                                  aria-label={rep.manualReceiptNumber ? "Edit book receipt number" : "Add book receipt number"}
+                                  onClick={() => setBookReceiptTarget(rep)}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </td>
                           </tr>
                           {group.isSplit && isExpanded && group.contributions.map((c) => (
                             <tr key={c.id} className="border-b bg-slate-50 dark:bg-slate-800/50">
@@ -802,6 +942,7 @@ export default function ContributionsPage() {
                               <td className="p-3 text-sm text-right text-muted-foreground">
                                 KES {Number.parseFloat(c.amount).toLocaleString()}
                               </td>
+                              <td />
                               <td />
                               <td />
                             </tr>
@@ -841,6 +982,13 @@ export default function ContributionsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <BookReceiptDialog
+        contribution={bookReceiptTarget}
+        open={bookReceiptTarget !== null}
+        onOpenChange={(v) => { if (!v) setBookReceiptTarget(null); }}
+        onSaved={refetchActive}
+      />
     </AdminLayout>
   );
 }

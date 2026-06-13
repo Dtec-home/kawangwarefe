@@ -1,0 +1,40 @@
+name: Frontend BDD
+
+# Focused, always-on BDD job. The full Vitest/Playwright workflows in this repo
+# are currently *.yml.disabled (see Sprint 0); this runs only the Gherkin
+# parity scenarios so cross-platform BDD has live CI coverage regardless.
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'church-funds-ui/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'church-funds-ui/**'
+
+defaults:
+  run:
+    working-directory: church-funds-ui
+
+jobs:
+  bdd:
+    name: BDD parity scenarios
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: church-funds-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run BDD scenarios
+        run: npm run test:bdd

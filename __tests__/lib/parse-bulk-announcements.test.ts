@@ -71,6 +71,54 @@ describe("parseBulkAnnouncements — tabular mode", () => {
   });
 });
 
+describe("parseBulkAnnouncements — forced modes", () => {
+  it("forces tabular parsing even when the text looks like paragraphs", () => {
+    // No tabs/commas, so auto-detect would pick paragraph; "tabular" overrides.
+    const text = "Sunday Service\nYouth Meet";
+    const r = parseBulkAnnouncements(text, "tabular");
+    expect(r.mode).toBe("tabular");
+    // Falls back to comma delimiter when no tab present.
+    expect(r.delimiter).toBe(",");
+  });
+
+  it("forces tabular with a tab delimiter when tabs are present but undetected", () => {
+    const r = parseBulkAnnouncements("Solo\tRow", "tabular");
+    expect(r.mode).toBe("tabular");
+    expect(r.delimiter).toBe("\t");
+  });
+
+  it("forces paragraph parsing even when the text is clearly tabular", () => {
+    const text = "title\tcontent\nSunday\tJoin us";
+    const r = parseBulkAnnouncements(text, "paragraph");
+    expect(r.mode).toBe("paragraph");
+    // Whole thing treated as one block since there is no blank-line separator.
+    expect(r.items).toHaveLength(1);
+  });
+});
+
+describe("parseBulkAnnouncements — field coercion", () => {
+  it("clamps negative priorities to zero and truncates decimals", () => {
+    const text = "title\tcontent\tpriority\nA\tok\t-5\nB\tok\t2.9";
+    const r = parseBulkAnnouncements(text);
+    expect(r.items[0].priority).toBe(0);
+    expect(r.items[1].priority).toBe(2);
+  });
+
+  it("coerces truthy and falsy active flags", () => {
+    const text = [
+      "title\tcontent\tactive",
+      "A\tok\tyes",
+      "B\tok\tno",
+      "C\tok\tmaybe",
+    ].join("\n");
+    const r = parseBulkAnnouncements(text);
+    expect(r.items[0].isActive).toBe(true);
+    expect(r.items[1].isActive).toBe(false);
+    expect(r.items[2].isActive).toBeUndefined();
+    expect(r.items[2].errors.some((e) => e.includes("active flag"))).toBe(true);
+  });
+});
+
 describe("parseBulkAnnouncements — empty input", () => {
   it("returns no items for blank text", () => {
     expect(parseBulkAnnouncements("   \n\n").items).toEqual([]);

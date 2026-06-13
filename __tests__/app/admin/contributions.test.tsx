@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+
+const attachMutation = vi.fn().mockResolvedValue({
+  data: { attachBookReceiptNumber: { success: true, message: 'ok', contribution: { id: 'c1', manualReceiptNumber: 'MB-1003' } } },
+})
+const refetchSpy = vi.fn()
 
 // Mock Apollo
 vi.mock('@apollo/client/react', () => ({
@@ -26,6 +31,7 @@ vi.mock('@apollo/client/react', () => ({
             status: 'completed',
             transactionDate: '2025-03-20T10:30:00Z',
             notes: null,
+            manualReceiptNumber: null,
             member: { id: 'm1', fullName: 'John Kamau', phoneNumber: '254712345678', memberNumber: 'MEM001' },
             category: { id: '1', name: 'Tithe', code: 'TITHE' },
             mpesaTransaction: { id: 't1', mpesaReceiptNumber: 'RCT001ABC', status: 'completed', resultDesc: null },
@@ -36,6 +42,7 @@ vi.mock('@apollo/client/react', () => ({
             status: 'pending',
             transactionDate: null,
             notes: 'Pending verification',
+            manualReceiptNumber: 'MB-2001',
             member: { id: 'm2', fullName: 'Jane Wanjiku', phoneNumber: '254798765432', memberNumber: null },
             category: { id: '2', name: 'Offering', code: 'OFFER' },
             mpesaTransaction: null,
@@ -46,6 +53,7 @@ vi.mock('@apollo/client/react', () => ({
             status: 'failed',
             transactionDate: '2025-03-18T14:00:00Z',
             notes: null,
+            manualReceiptNumber: null,
             member: { id: 'm3', fullName: 'Peter Odhiambo', phoneNumber: '254700111222', memberNumber: 'MEM003' },
             category: { id: '1', name: 'Tithe', code: 'TITHE' },
             mpesaTransaction: { id: 't3', mpesaReceiptNumber: null, status: 'failed', resultDesc: 'Insufficient funds' },
@@ -59,9 +67,9 @@ vi.mock('@apollo/client/react', () => ({
     },
     loading: false,
     error: null,
-    refetch: vi.fn(),
+    refetch: refetchSpy,
   })),
-  useMutation: () => [vi.fn(), { loading: false }],
+  useMutation: () => [attachMutation, { loading: false }],
 }))
 
 // Mock auth
@@ -101,6 +109,11 @@ vi.mock('next/link', () => ({
   default: ({ href, children, ...props }: any) => <a href={href} {...props}>{children}</a>,
 }))
 
+// Mock react-hot-toast
+vi.mock('react-hot-toast', () => ({
+  default: { success: vi.fn(), error: vi.fn() },
+}))
+
 import ContributionsPage from '@/app/(dashboard)/admin/contributions/page'
 
 describe('ContributionsPage', () => {
@@ -138,5 +151,34 @@ describe('ContributionsPage', () => {
     render(<ContributionsPage />)
     expect(screen.getByText('Filters')).toBeInTheDocument()
     expect(screen.getByText('Clear Filters')).toBeInTheDocument()
+  })
+
+  it('renders the Book Receipt # column with existing book numbers', () => {
+    render(<ContributionsPage />)
+    expect(screen.getAllByText('Book Receipt #').length).toBeGreaterThan(0)
+    // Jane's contribution has both an M-Pesa-less row and a book number set
+    expect(screen.getAllByText('MB-2001').length).toBeGreaterThan(0)
+  })
+
+  it('attaches a book receipt number via the edit dialog and refetches', async () => {
+    attachMutation.mockClear()
+    refetchSpy.mockClear()
+    render(<ContributionsPage />)
+
+    // Open the dialog for the first row (desktop table edit button)
+    const editButtons = screen.getAllByLabelText(/book receipt number/i)
+    fireEvent.click(editButtons[0])
+
+    const dialog = await screen.findByRole('dialog')
+    const input = within(dialog).getByLabelText('Book Receipt #')
+    fireEvent.change(input, { target: { value: 'MB-1003' } })
+    fireEvent.click(within(dialog).getByText('Save'))
+
+    await waitFor(() => {
+      expect(attachMutation).toHaveBeenCalledWith({
+        variables: { contributionId: 'c1', receiptNumber: 'MB-1003' },
+      })
+    })
+    await waitFor(() => expect(refetchSpy).toHaveBeenCalled())
   })
 })

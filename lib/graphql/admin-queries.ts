@@ -20,6 +20,7 @@ export const GET_ALL_CONTRIBUTIONS = gql`
         status
         transactionDate
         notes
+        manualReceiptNumber
         routedGroupName
         purposeName
         departmentMemberIdentifier
@@ -207,6 +208,7 @@ export const GET_GROUP_CONTRIBUTIONS = gql`
         status
         transactionDate
         notes
+        manualReceiptNumber
         routedGroupName
         purposeName
         departmentMemberIdentifier

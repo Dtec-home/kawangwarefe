@@ -209,6 +209,21 @@ function MemberImportPageContent() {
           </CardContent>
         </Card>
 
+        {/* Department-identifier column note */}
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Department number columns (e.g. &quot;Welfare Number&quot;)</AlertTitle>
+          <AlertDescription>
+            A per-department member-number column (such as Welfare Number, using the
+            department code <code>WELFARE</code> as its header) only appears in the
+            downloaded template for departments that have the member-identifier
+            feature switched on. Enable it under{" "}
+            <strong>Admin → Categories → edit → &quot;Tracks member identifier&quot;</strong>,
+            then download the template again. Once the column is present you can bulk-import
+            existing numbers (for example, Kamau → 0001).
+          </AlertDescription>
+        </Alert>
+
         {/* File Upload */}
         <Card>
           <CardHeader>

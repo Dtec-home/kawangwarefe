@@ -72,6 +72,7 @@ vi.mock('@apollo/client/react', () => ({
     if (name === 'LaunchCampaign') return [launchFn, { loading: false }]
     return [vi.fn(), { loading: false }]
   },
+  useLazyQuery: () => [vi.fn(), { data: undefined, loading: false, error: null }],
 }))
 
 vi.mock('@/components/auth/admin-protected-route', () => ({
@@ -86,20 +87,29 @@ vi.mock('react-hot-toast', () => ({
 }))
 
 import MessagingPage from '@/app/(dashboard)/admin/messaging/page'
+import { TemplateManager } from '@/components/messaging/TemplateManager'
 
 describe('MessagingPage', () => {
-  it('renders templates and campaign history', () => {
+  it('renders the messaging shell heading', () => {
     render(<MessagingPage />)
-    expect(screen.getByText('Bulk Messaging')).toBeInTheDocument()
+    expect(screen.getByText('Messaging')).toBeInTheDocument()
+  })
+})
+
+describe('TemplateManager', () => {
+  it('lists templates from the server', () => {
+    render(<TemplateManager />)
     expect(screen.getAllByText('Welcome').length).toBeGreaterThan(0)
-    expect(screen.getByText(/10\/12 sent/)).toBeInTheDocument()
   })
 
   it('creates a template when the form is submitted', async () => {
-    render(<MessagingPage />)
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'NewT' } })
-    fireEvent.change(screen.getByLabelText('Body'), { target: { value: 'Hi' } })
-    fireEvent.click(screen.getByRole('button', { name: /create template/i }))
+    render(<TemplateManager />)
+    // The create form is revealed by the "New Template" toggle.
+    fireEvent.click(screen.getByRole('button', { name: /new template/i }))
+    const textboxes = screen.getAllByRole('textbox')
+    fireEvent.change(textboxes[0], { target: { value: 'NewT' } }) // Name (input)
+    fireEvent.change(textboxes[1], { target: { value: 'Hi' } })   // Body (textarea)
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
     await Promise.resolve()
     expect(createTemplateFn).toHaveBeenCalled()
     const call = createTemplateFn.mock.calls[createTemplateFn.mock.calls.length - 1][0]

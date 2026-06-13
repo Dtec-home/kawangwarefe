@@ -110,8 +110,8 @@ export const DELETE_CATEGORY = gql`
 `;
 
 export const GET_ALL_CATEGORIES = gql`
-  query GetAllCategories($audience: String) {
-    contributionCategories(audience: $audience) {
+  query GetAllCategories($audience: String, $includeInactive: Boolean) {
+    contributionCategories(audience: $audience, includeInactive: $includeInactive) {
       id
       name
       code

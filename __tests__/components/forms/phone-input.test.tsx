@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { PhoneInput } from '@/components/forms/phone-input'
 import { useForm } from 'react-hook-form'
 import { FieldError } from 'react-hook-form'
@@ -89,5 +89,26 @@ describe('PhoneInput', () => {
     render(<PhoneInputWrapper />)
     const input = screen.getByRole('textbox')
     expect(input).toHaveAttribute('maxLength', '9')
+  })
+
+  it('strips non-digit characters on input', () => {
+    render(<PhoneInputWrapper />)
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '79a7-03 0300' } })
+    expect(input.value).toBe('797030300')
+  })
+
+  it('drops a leading zero (local format) on input', () => {
+    render(<PhoneInputWrapper />)
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '0797030300' } })
+    expect(input.value).toBe('797030300')
+  })
+
+  it('truncates to nine digits on input', () => {
+    render(<PhoneInputWrapper />)
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '7970303001234' } })
+    expect(input.value).toBe('797030300')
   })
 })

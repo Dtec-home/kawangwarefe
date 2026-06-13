@@ -125,7 +125,9 @@ function CategoryManagementPageContent() {
   const [editIdentifierLabel, setEditIdentifierLabel] = useState("");
   const [editIdentifierFormat, setEditIdentifierFormat] = useState("");
 
-  const { data, loading, refetch } = useQuery<GetCategoriesData>(GET_ALL_CATEGORIES);
+  const { data, loading, refetch } = useQuery<GetCategoriesData>(GET_ALL_CATEGORIES, {
+    variables: { includeInactive: true },
+  });
   const categories = data?.contributionCategories || [];
   const { data: groupsData } = useQuery<GetGroupsData>(GET_GROUPS_LIST);
   const groups = groupsData?.groupsList || [];
@@ -483,7 +485,29 @@ function CategoryManagementPageContent() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Allowed Groups for Auto Route</Label>
+                        <div className="flex items-center justify-between gap-2">
+                          <Label>Allowed Groups for Auto Route</Label>
+                          {groups.length > 0 && (
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setNewAllowedGroupIds(groups.map((g) => g.id))}
+                              >
+                                Select all
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setNewAllowedGroupIds([])}
+                              >
+                                Clear all
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                         <div className="max-h-40 overflow-y-auto rounded-md border p-3 space-y-2">
                           {groups.length === 0 ? (
                             <p className="text-xs text-muted-foreground">No groups available.</p>
@@ -659,7 +683,29 @@ function CategoryManagementPageContent() {
                                 </Select>
                               </div>
                               <div>
-                                <Label className="text-xs">Allowed Groups for Auto Route</Label>
+                                <div className="flex items-center justify-between gap-2">
+                                  <Label className="text-xs">Allowed Groups for Auto Route</Label>
+                                  {groups.length > 0 && (
+                                    <div className="flex gap-1">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setEditAllowedGroupIds(groups.map((g) => g.id))}
+                                      >
+                                        Select all
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setEditAllowedGroupIds([])}
+                                      >
+                                        Clear all
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
                                 <div className="max-h-36 overflow-y-auto rounded-md border p-3 space-y-2">
                                   {groups.length === 0 ? (
                                     <p className="text-xs text-muted-foreground">No groups available.</p>
