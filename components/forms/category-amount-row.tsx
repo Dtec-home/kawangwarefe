@@ -24,6 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Quick-amount preset chips for faster entry on mobile.
+const QUICK_AMOUNTS = [50, 100, 200, 500, 1000] as const;
+
 interface Category {
   id: string;
   name: string;
@@ -237,6 +240,27 @@ export function CategoryAmountRow({
               onChange={(e) => onChange(index, "amount", e.target.value)}
               className={`pl-14 ${errors?.amount ? "border-destructive" : ""}`}
             />
+          </div>
+          {/* Quick-amount preset chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_AMOUNTS.map((preset) => {
+              const isActive = parsedAmount === preset;
+              return (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => onChange(index, "amount", String(preset))}
+                  className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                    isActive
+                      ? "border-emerald-500 bg-emerald-600 text-white"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
+                  }`}
+                  aria-label={`Set amount to KES ${preset}`}
+                >
+                  {preset.toLocaleString("en-KE")}
+                </button>
+              );
+            })}
           </div>
           {errors?.amount && (
             <p className="text-xs text-destructive">{errors.amount}</p>

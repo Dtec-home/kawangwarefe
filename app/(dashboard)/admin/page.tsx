@@ -13,7 +13,7 @@ import { useTour } from "@/hooks/use-tour";
 import { ADMIN_DASHBOARD_TOUR_CONFIG } from "@/lib/tours/tour-configs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
-import { DollarSign, TrendingUp, Users, Calendar, Loader2, HelpCircle } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Calendar, Loader2, HelpCircle, Wallet, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 
@@ -31,6 +31,8 @@ interface DashboardStats {
   previousDayTotal?: string;
   previousWeekTotal?: string;
   previousMonthTotal?: string;
+  totalExpenses?: string | null;
+  netBalance?: string | null;
 }
 
 interface Contribution {
@@ -212,6 +214,26 @@ function AdminDashboardContent() {
           subtitle={`${stats?.totalCount || 0} contributions`}
         />
       </div>
+
+      {/* Current Balance — only shown when at least one fund opts into expense tracking (W1.5) */}
+      {stats?.netBalance != null && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Current Balance"
+            value={`KES ${Number.parseFloat(stats.netBalance).toLocaleString()}`}
+            icon={Wallet}
+            color="emerald"
+            subtitle="Net of recorded expenses"
+          />
+          <StatCard
+            title="Total Out"
+            value={`KES ${Number.parseFloat(stats.totalExpenses ?? "0").toLocaleString()}`}
+            icon={Receipt}
+            color="blue"
+            subtitle="Approved & paid expenses"
+          />
+        </div>
+      )}
 
       {/* Recent Contributions */}
       <Card>

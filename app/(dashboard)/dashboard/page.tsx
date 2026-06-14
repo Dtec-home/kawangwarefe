@@ -19,6 +19,7 @@ import { useUserRole } from "@/lib/hooks/use-user-role";
 import { useTour } from "@/hooks/use-tour";
 import { WELCOME_TOUR_CONFIG } from "@/lib/tours/tour-configs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, DollarSign, Calendar, Shield, FolderKey } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -180,7 +181,7 @@ function DashboardContent() {
         {/* First-run intro overlay; self-gates via localStorage so it
             renders at most once per device. */}
         <OnboardingCarousel />
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="-m-4 sm:-m-6 lg:-m-8 min-h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
           {/* Header */}
           <header data-tour="dashboard-header" className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -219,50 +220,32 @@ function DashboardContent() {
           </CardContent>
         </Card>
 
-        {/* Summary Cards */}
-        <div data-tour="dashboard-stats" className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contributions</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                KES {totalContributions.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {completedCount} completed transactions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                KES {monthlyContributions.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {thisMonth.toLocaleString("default", { month: "long", year: "numeric" })}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Status</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">Active</div>
-              <p className="text-xs text-muted-foreground">
-                Member since {new Date().getFullYear()}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Summary Cards — compact density (W6.2) so key stats fit above the fold */}
+        <div data-tour="dashboard-stats" className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+          <StatCard
+            compact
+            color="teal"
+            icon={DollarSign}
+            title="Total Contributions"
+            value={`KES ${totalContributions.toLocaleString()}`}
+            subtitle={`${completedCount} completed transactions`}
+          />
+          <StatCard
+            compact
+            color="blue"
+            icon={Calendar}
+            title="This Month"
+            value={`KES ${monthlyContributions.toLocaleString()}`}
+            subtitle={thisMonth.toLocaleString("default", { month: "long", year: "numeric" })}
+          />
+          <StatCard
+            compact
+            color="emerald"
+            icon={TrendingUp}
+            title="Status"
+            value="Active"
+            subtitle={`Member since ${new Date().getFullYear()}`}
+          />
         </div>
 
         {/* Department Admin Roles */}

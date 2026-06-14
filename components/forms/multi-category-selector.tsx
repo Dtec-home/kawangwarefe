@@ -122,10 +122,10 @@ export function MultiCategorySelector({
           type="button"
           variant="outline"
           onClick={handleAdd}
-          className="w-full"
+          className="w-full border-dashed border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Another Department
+          Add another fund
         </Button>
       )}
 

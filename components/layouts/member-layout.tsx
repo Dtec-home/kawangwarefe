@@ -62,7 +62,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-dvh overflow-hidden bg-background">
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -174,8 +174,8 @@ export function MemberLayout({ children }: MemberLayoutProps) {
         </div>
       </aside>
 
-      <div className="lg:pl-64">
-        <header className="bg-card border-b border-border sticky top-0 z-30">
+      <div className="flex h-full flex-col lg:pl-64">
+        <header className="flex-shrink-0 bg-card border-b border-border z-30">
           <div className="px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between relative">
               <Button
@@ -201,7 +201,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
           </div>
         </header>
 
-        <main className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           {children}
         </main>
       </div>

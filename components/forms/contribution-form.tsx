@@ -6,7 +6,8 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef, Fragment } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -86,6 +87,7 @@ type InitiateMultiContributionVars = {
     purposeId?: string;
     memberIdentifier?: string;
   }>;
+  eventId?: string;
 };
 
 type PaymentStatusResult = {
@@ -117,13 +119,27 @@ interface ContributionDetails {
   mpesaReceiptNumber?: string;
 }
 
-export function ContributionForm({ onSuccess }: ContributionFormProps) {
+// Wrapper provides the Suspense boundary required by useSearchParams (the
+// /contribute page renders this component directly, not inside its own boundary).
+export function ContributionForm(props: ContributionFormProps) {
+  return (
+    <Suspense fallback={<div className="h-24 bg-muted animate-pulse rounded-lg" />}>
+      <ContributionFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function ContributionFormInner({ onSuccess }: ContributionFormProps) {
   const [step, setStep] = useState<FormStep>("input");
   const [contributionDetails, setContributionDetails] = useState<ContributionDetails | null>(null);
   const [pollingAttempts, setPollingAttempts] = useState(0);
   const pollingAttemptsRef = useRef(0);
   const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null);
   const onSuccessRef = useRef(onSuccess);
+
+  // Payable-event deep-link: remember the event so we can attribute the contribution.
+  const searchParams = useSearchParams();
+  const [eventId, setEventId] = useState<string | undefined>(undefined);
 
   // Get logged-in user's phone number if available
   const { user: authUser } = useAuth();
@@ -168,6 +184,35 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
       }
     }
   }, [authUser, setValue]);
+
+  // Seed the first row from payable-event query params (categoryId/purposeId/amount/eventId).
+  const eventSeededRef = useRef(false);
+  useEffect(() => {
+    if (eventSeededRef.current || !searchParams) return;
+    const categoryId = searchParams.get("categoryId") || "";
+    const purposeId = searchParams.get("purposeId") || "";
+    const amount = searchParams.get("amount") || "";
+    const evtId = searchParams.get("eventId") || "";
+
+    if (!categoryId && !evtId) return;
+    eventSeededRef.current = true;
+
+    if (evtId) setEventId(evtId);
+    if (categoryId) {
+      setValue(
+        "contributions",
+        [
+          {
+            categoryId,
+            amount: amount && !isNaN(parseFloat(amount)) ? amount : "",
+            purposeId: purposeId || "",
+            memberIdentifier: "",
+          },
+        ],
+        { shouldValidate: false }
+      );
+    }
+  }, [searchParams, setValue]);
 
   const contributions = watch("contributions");
   const phoneNumber = watch("phoneNumber");
@@ -330,6 +375,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
             purposeId: c.purposeId || undefined,
             memberIdentifier: c.memberIdentifier?.trim() || undefined,
           })),
+          eventId: eventId || undefined,
         },
       });
 
@@ -436,7 +482,9 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
             single M-Pesa prompt for the total.
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6">
+        {/* Scrollable body: phone (compact, top) + bounded category list.
+            The total + CTA live in a sticky footer below so they stay reachable. */}
+        <CardContent className="pt-6 pb-0">
           <form className="space-y-5">
             <div data-tour="contribution-phone">
               <PhoneInput
@@ -446,7 +494,12 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
               />
             </div>
 
-            <div data-tour="contribution-categories" className="space-y-2">
+            {/* Category rows in their own bounded scroll region so adding many
+                rows never pushes the CTA off-screen (W5.1). */}
+            <div
+              data-tour="contribution-categories"
+              className="space-y-2 max-h-[42vh] sm:max-h-[48vh] overflow-y-auto overflow-x-hidden -mx-1 px-1 pb-1"
+            >
               <MultiCategorySelector
                 contributions={contributions}
                 phoneNumber={phoneNumber}
@@ -472,29 +525,32 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
                 </p>
               )}
             </div>
-
-            {/* Total Display */}
-            {parseFloat(totalAmount) > 0 && (
-              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 rounded-lg border-2 border-emerald-300/50 dark:border-emerald-700/50">
-                <span className="font-semibold text-emerald-900 dark:text-emerald-200">Total Amount:</span>
-                <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-                  KES {parseFloat(totalAmount).toLocaleString("en-KE")}
-                </span>
-              </div>
-            )}
-
-            <Button
-              type="button"
-              data-tour="contribution-review-btn"
-              className="w-full h-11 bg-gradient-to-r from-teal-600 via-emerald-600 to-blue-600 hover:from-teal-700 hover:via-emerald-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
-              onClick={handleReviewClick}
-              size="lg"
-            >
-              Review Contribution
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
           </form>
         </CardContent>
+
+        {/* Sticky footer: running total + Review CTA. Always visible / thumb-reachable
+            on mobile, including safe-area padding (W5.1). */}
+        <div className="sticky bottom-0 z-10 border-t border-emerald-100/50 dark:border-emerald-900/30 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 rounded-b-xl px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-3">
+          {parseFloat(totalAmount) > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-emerald-900 dark:text-emerald-200">Total Amount:</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                KES {parseFloat(totalAmount).toLocaleString("en-KE")}
+              </span>
+            </div>
+          )}
+
+          <Button
+            type="button"
+            data-tour="contribution-review-btn"
+            className="w-full h-11 bg-gradient-to-r from-teal-600 via-emerald-600 to-blue-600 hover:from-teal-700 hover:via-emerald-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+            onClick={handleReviewClick}
+            size="lg"
+          >
+            Review Contribution
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
       </Card>
       </div>
     );

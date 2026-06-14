@@ -43,6 +43,16 @@ export const GET_ALL_EVENTS = gql`
       location
       registrationLink
       featuredImageUrl
+      isPayable
+      suggestedAmount
+      category {
+        id
+        name
+      }
+      purpose {
+        id
+        name
+      }
     }
   }
 `;

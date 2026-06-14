@@ -39,6 +39,7 @@ export const GET_ADMIN_ANNOUNCEMENTS = gql`
         expiryDate
         isActive
         priority
+        displayOrder
         createdAt
         updatedAt
       }

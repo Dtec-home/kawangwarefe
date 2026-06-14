@@ -99,23 +99,25 @@ export function useUserRole() {
     adminCategories: roleInfo?.adminCategories ?? [],
 
     // Helper: check if user can access a specific admin feature
-    canAccessFeature: (feature: "members" | "reports" | "category-admins" | "categories" | "groups" | "contributions" | "overview" | "c2b-transactions" | "content" | "messaging" | "prayers") => {
+    canAccessFeature: (feature: "members" | "reports" | "category-admins" | "categories" | "groups" | "contributions" | "overview" | "c2b-transactions" | "content" | "messaging" | "prayers" | "expenses" | "leaders") => {
       if (!roleInfo) return false;
 
-      // Full staff can access everything
+      // Full staff can access everything (incl. expenses — treasurer/admin are staff)
       if (roleInfo.isStaff) return true;
 
       // Messaging: staff + dept_admin + group_admin (canSendBulkMessage covers all)
       if (feature === "messaging") return roleInfo.canSendBulkMessage;
 
-      // Content admins can access content
+      // Content admins can access content + the leaders/about directory
       if (roleInfo.isContentAdmin) {
-        return feature === "content";
+        return feature === "content" || feature === "leaders";
       }
 
-      // Category admins can access overview, contributions, and scoped reports
+      // Category (department) admins can access overview, contributions, scoped
+      // reports, and expenses — they raise expense requests for their own funds
+      // (approval is enforced server-side under the four-eyes rule).
       if (roleInfo.isCategoryAdmin) {
-        return feature === "overview" || feature === "contributions" || feature === "reports";
+        return feature === "overview" || feature === "contributions" || feature === "reports" || feature === "expenses";
       }
 
       // Group admins can access overview, their scoped contributions, and scoped reports

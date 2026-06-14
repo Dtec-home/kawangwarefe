@@ -33,6 +33,9 @@ interface StatCardProps {
 
   /** Optional className for additional styling */
   className?: string;
+
+  /** Compact, denser layout (smaller padding + value) for above-the-fold grids */
+  compact?: boolean;
 }
 
 // Color mapping for different stat types
@@ -90,21 +93,26 @@ export function StatCard({
   trend,
   subtitle,
   className = "",
+  compact = false,
 }: StatCardProps) {
   const config = colorConfig[color];
 
   return (
     <Card className={`border-l-4 ${config.border} ${className}`}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className={`p-2 rounded-lg ${config.bg}`}>
-          <Icon className={`h-5 w-5 ${config.text}`} />
+      <CardHeader
+        className={`flex flex-row items-center justify-between space-y-0 ${
+          compact ? "pb-1.5" : "pb-3"
+        }`}
+      >
+        <CardTitle className="text-xs sm:text-sm font-medium">{title}</CardTitle>
+        <div className={`rounded-lg ${config.bg} ${compact ? "p-1.5" : "p-2"}`}>
+          <Icon className={`${compact ? "h-4 w-4" : "h-5 w-5"} ${config.text}`} />
         </div>
       </CardHeader>
 
       <CardContent>
         {/* Main value */}
-        <div className="text-2xl font-bold">{value}</div>
+        <div className={`${compact ? "text-xl" : "text-2xl"} font-bold`}>{value}</div>
 
         {/* Trend indicator (optional) */}
         {trend && (

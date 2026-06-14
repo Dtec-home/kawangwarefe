@@ -12,7 +12,9 @@ import {
   UPDATE_ANNOUNCEMENT,
   DELETE_ANNOUNCEMENT,
   TOGGLE_ANNOUNCEMENT_ACTIVE,
+  REORDER_ANNOUNCEMENTS,
 } from "@/lib/graphql/announcement-mutations";
+import { SortableList } from "@/components/ui/sortable-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +54,7 @@ import {
   Bell,
   ArrowUp,
   ArrowDown,
+  GripVertical,
   Calendar,
   Clock,
   CalendarClock,
@@ -89,6 +92,7 @@ interface Announcement {
   expiryDate?: string | null;
   isActive: boolean;
   priority: number;
+  displayOrder?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -188,11 +192,27 @@ function AnnouncementsManagementPageContent() {
   const [updateAnnouncement, { loading: updating }] = useMutation<{ updateAnnouncement: AnnouncementMutationResponse }>(UPDATE_ANNOUNCEMENT);
   const [deleteAnnouncement, { loading: deleting }] = useMutation<{ deleteAnnouncement: AnnouncementMutationResponse }>(DELETE_ANNOUNCEMENT);
   const [toggleActive] = useMutation<{ toggleAnnouncementActive: AnnouncementMutationResponse }>(TOGGLE_ANNOUNCEMENT_ACTIVE);
+  const [reorderAnnouncements] = useMutation<{ reorderAnnouncements: { success: boolean; message: string } }>(REORDER_ANNOUNCEMENTS);
 
   const announcements: Announcement[] = data?.adminAnnouncements?.items ?? [];
   const totalForFilter = data?.adminAnnouncements?.total ?? 0;
   const hasMore = data?.adminAnnouncements?.hasMore ?? false;
-  const sortedAnnouncements = announcements;
+
+  // Optimistic local ordering applied on top of the server result. When the
+  // server data changes (refetch/pagination/filter), we fall back to its order
+  // by keying the override to the current set of ids.
+  const [orderOverride, setOrderOverride] = useState<string[] | null>(null);
+
+  const serverIdsKey = announcements.map((a) => a.id).join(",");
+  useEffect(() => {
+    setOrderOverride(null);
+  }, [serverIdsKey]);
+
+  const sortedAnnouncements: Announcement[] = orderOverride
+    ? (orderOverride
+        .map((id) => announcements.find((a) => a.id === id))
+        .filter(Boolean) as Announcement[])
+    : announcements;
 
   const counts: AnnouncementCounts = countsData?.adminAnnouncementCounts ?? {
     total: 0,
@@ -358,6 +378,40 @@ function AnnouncementsManagementPageContent() {
     } catch (err: any) {
       setError(err.message || "Error updating priority");
     }
+  };
+
+  // Persist a new ordering (from drag-drop or keyboard move). Optimistically
+  // applies locally, then calls the backend reorder mutation.
+  const persistOrder = async (newOrderedIds: string[]) => {
+    setOrderOverride(newOrderedIds);
+    clearMessages();
+    try {
+      const { data } = await reorderAnnouncements({
+        variables: { ids: newOrderedIds },
+      });
+      if (data?.reorderAnnouncements?.success) {
+        setSuccess(data.reorderAnnouncements.message || "Order updated");
+        refetchAll();
+      } else {
+        setError(data?.reorderAnnouncements?.message || "Failed to reorder announcements");
+        setOrderOverride(null);
+      }
+    } catch (err: any) {
+      setError(err.message || "Error reordering announcements");
+      setOrderOverride(null);
+    }
+  };
+
+  // Keyboard-accessible fallback: move a row up/down by one position.
+  const moveAnnouncement = (announcementId: string, direction: "up" | "down") => {
+    const ids = sortedAnnouncements.map((a) => a.id);
+    const idx = ids.indexOf(announcementId);
+    if (idx === -1) return;
+    const target = direction === "up" ? idx - 1 : idx + 1;
+    if (target < 0 || target >= ids.length) return;
+    const next = [...ids];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    persistOrder(next);
   };
 
   const handleBulkToggleActive = async () => {
@@ -617,17 +671,31 @@ function AnnouncementsManagementPageContent() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {sortedAnnouncements.map((announcement) => {
+              <SortableList
+                items={sortedAnnouncements}
+                onReorder={persistOrder}
+                className="space-y-4"
+                renderItem={(announcement, index, handle) => {
                   const expired = isExpired(announcement);
                   const scheduled = isScheduled(announcement);
                   const live = announcement.isActive && !expired && !scheduled;
 
                   return (
-                  <Card key={announcement.id} className="overflow-hidden">
+                  <Card className="overflow-hidden">
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <button
+                            type="button"
+                            ref={handle.setActivatorNodeRef}
+                            {...handle.attributes}
+                            {...handle.listeners}
+                            aria-label={`Drag to reorder "${announcement.title}"`}
+                            title="Drag to reorder"
+                            className="mt-0.5 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+                          >
+                            <GripVertical className="h-4 w-4" />
+                          </button>
                           <Checkbox
                             checked={selectedAnnouncements.has(announcement.id)}
                             onCheckedChange={() => toggleAnnouncementSelection(announcement.id)}
@@ -709,32 +777,59 @@ function AnnouncementsManagementPageContent() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 mt-3">
-                              <span className="text-xs text-muted-foreground">Priority:</span>
-                              <span className="text-sm font-medium">{announcement.priority}</span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  handleChangePriority(announcement.id, announcement.priority + 1)
-                                }
-                                title="Increase priority"
-                              >
-                                <ArrowUp className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  handleChangePriority(
-                                    announcement.id,
-                                    Math.max(0, announcement.priority - 1)
-                                  )
-                                }
-                                title="Decrease priority"
-                              >
-                                <ArrowDown className="h-4 w-4" />
-                              </Button>
+                            <div className="flex flex-wrap items-center gap-3 mt-3">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground">Order:</span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={index === 0}
+                                  onClick={() => moveAnnouncement(announcement.id, "up")}
+                                  aria-label={`Move "${announcement.title}" up`}
+                                  title="Move up (keyboard fallback)"
+                                >
+                                  <ArrowUp className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={index === sortedAnnouncements.length - 1}
+                                  onClick={() => moveAnnouncement(announcement.id, "down")}
+                                  aria-label={`Move "${announcement.title}" down`}
+                                  title="Move down (keyboard fallback)"
+                                >
+                                  <ArrowDown className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground">Priority:</span>
+                                <span className="text-sm font-medium">{announcement.priority}</span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleChangePriority(announcement.id, announcement.priority + 1)
+                                  }
+                                  title="Increase priority"
+                                  aria-label={`Increase priority of "${announcement.title}"`}
+                                >
+                                  <ArrowUp className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleChangePriority(
+                                      announcement.id,
+                                      Math.max(0, announcement.priority - 1)
+                                    )
+                                  }
+                                  title="Decrease priority"
+                                  aria-label={`Decrease priority of "${announcement.title}"`}
+                                >
+                                  <ArrowDown className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -770,8 +865,8 @@ function AnnouncementsManagementPageContent() {
                     </CardHeader>
                   </Card>
                   );
-                })}
-              </div>
+                }}
+              />
             )}
 
             {totalForFilter > 0 && (

@@ -102,6 +102,15 @@ export const BULK_CREATE_ANNOUNCEMENTS = gql`
   }
 `;
 
+export const REORDER_ANNOUNCEMENTS = gql`
+  mutation ReorderAnnouncements($ids: [ID!]!) {
+    reorderAnnouncements(ids: $ids) {
+      success
+      message
+    }
+  }
+`;
+
 export const TOGGLE_ANNOUNCEMENT_ACTIVE = gql`
   mutation ToggleAnnouncementActive($announcementId: ID!) {
     toggleAnnouncementActive(announcementId: $announcementId) {

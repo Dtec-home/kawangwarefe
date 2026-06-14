@@ -15,6 +15,7 @@ import {
   DELETE_CATEGORY,
 } from "@/lib/graphql/category-mutations";
 import { GET_GROUPS_LIST } from "@/lib/graphql/group-management";
+import { GET_FUNDS_WITH_EXPENSE_SETTINGS, UPDATE_FUND_EXPENSE_SETTINGS } from "@/lib/graphql/expenses";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { AdminLayout } from "@/components/layouts/admin-layout";
@@ -37,8 +40,10 @@ import {
   X,
   FolderOpen,
   ListChecks,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 type Audience = "all" | "adult" | "children";
 type RoutingMode = "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
@@ -94,6 +99,148 @@ interface DeleteCategoryData {
   };
 }
 
+interface FundExpenseSettings {
+  id: string;
+  name: string;
+  expenseTrackingEnabled: boolean;
+  openingBalance: string | null;
+  openingBalanceDate: string | null;
+  netBalance: string | null;
+  totalExpenses: string | null;
+}
+
+interface FundsExpenseSettingsData {
+  contributionCategories: FundExpenseSettings[];
+}
+
+interface UpdateFundExpenseSettingsData {
+  updateFundExpenseSettings: {
+    success: boolean;
+    message: string;
+  };
+}
+
+/**
+ * Dialog to configure per-fund expense tracking: enable toggle + opening
+ * balance/date. Enabling shows a live Current Balance for the fund without
+ * retroactively deducting historical contributions (backward-compatible, D1).
+ */
+function FundSettingsDialog({
+  fund,
+  open,
+  onOpenChange,
+  onSaved,
+}: {
+  fund: FundExpenseSettings | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [enabled, setEnabled] = useState(false);
+  const [openingBalance, setOpeningBalance] = useState("");
+  const [openingBalanceDate, setOpeningBalanceDate] = useState("");
+  const [lastId, setLastId] = useState<string | null>(null);
+
+  const [updateSettings, { loading }] = useMutation<UpdateFundExpenseSettingsData>(
+    UPDATE_FUND_EXPENSE_SETTINGS,
+  );
+
+  // Sync local form state when a different fund's dialog opens.
+  if (open && fund && fund.id !== lastId) {
+    setLastId(fund.id);
+    setEnabled(fund.expenseTrackingEnabled);
+    setOpeningBalance(fund.openingBalance ?? "");
+    setOpeningBalanceDate(fund.openingBalanceDate ? fund.openingBalanceDate.slice(0, 10) : "");
+  }
+
+  const handleSave = async () => {
+    if (!fund) return;
+    try {
+      const { data } = await updateSettings({
+        variables: {
+          categoryId: fund.id,
+          expenseTrackingEnabled: enabled,
+          openingBalance: enabled ? (openingBalance.trim() || "0") : null,
+          openingBalanceDate: enabled ? (openingBalanceDate || null) : null,
+        },
+      });
+      if (data?.updateFundExpenseSettings.success) {
+        toast.success(data.updateFundExpenseSettings.message || "Fund settings saved");
+        onSaved();
+        onOpenChange(false);
+      } else {
+        toast.error(data?.updateFundExpenseSettings.message || "Failed to save settings");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save settings");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setLastId(null); onOpenChange(v); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Expense Tracking{fund ? ` — ${fund.name}` : ""}</DialogTitle>
+          <DialogDescription>
+            Enabling shows a live Current Balance for this fund; historical
+            contributions are not retroactively deducted.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <Label htmlFor="expense-tracking" className="text-sm font-medium">Expense tracking</Label>
+              <p className="text-xs text-muted-foreground">Track money paid out of this fund.</p>
+            </div>
+            <Switch id="expense-tracking" checked={enabled} onCheckedChange={setEnabled} />
+          </div>
+
+          {enabled && (
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="opening-balance">Opening Balance (KES)</Label>
+                <Input
+                  id="opening-balance"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={openingBalance}
+                  onChange={(e) => setOpeningBalance(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="opening-balance-date">Opening Balance Date</Label>
+                <Input
+                  id="opening-balance-date"
+                  type="date"
+                  value={openingBalanceDate}
+                  onChange={(e) => setOpeningBalanceDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {fund?.expenseTrackingEnabled && fund.netBalance != null && (
+            <div className="rounded-md border p-3 text-sm">
+              <span className="text-muted-foreground">Current Balance: </span>
+              <span className="font-semibold">KES {Number.parseFloat(fund.netBalance).toLocaleString()}</span>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={loading}>
+            {loading ? "Saving..." : "Save Settings"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function CategoryManagementPageContent() {
   const { confirm, ConfirmDialog } = useConfirmDialog();
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -131,6 +278,16 @@ function CategoryManagementPageContent() {
   const categories = data?.contributionCategories || [];
   const { data: groupsData } = useQuery<GetGroupsData>(GET_GROUPS_LIST);
   const groups = groupsData?.groupsList || [];
+
+  // Per-fund expense-tracking settings + live balances (additive, opt-in).
+  const { data: fundSettingsData, refetch: refetchFundSettings } = useQuery<FundsExpenseSettingsData>(
+    GET_FUNDS_WITH_EXPENSE_SETTINGS,
+    { variables: { includeInactive: true } },
+  );
+  const fundSettingsById = new Map(
+    (fundSettingsData?.contributionCategories || []).map((f) => [f.id, f]),
+  );
+  const [fundSettingsTarget, setFundSettingsTarget] = useState<FundExpenseSettings | null>(null);
 
   const [createCategory, { loading: creating }] = useMutation<CreateCategoryData>(CREATE_CATEGORY);
   const [updateCategory, { loading: updating }] = useMutation<UpdateCategoryData>(UPDATE_CATEGORY);
@@ -815,6 +972,11 @@ function CategoryManagementPageContent() {
                                 {category.identifierLabel?.trim() || "Member #"}
                               </Badge>
                             )}
+                            {fundSettingsById.get(category.id)?.expenseTrackingEnabled && (
+                              <Badge className="bg-emerald-100 text-emerald-800 text-xs">
+                                Balance: KES {Number.parseFloat(fundSettingsById.get(category.id)?.netBalance ?? "0").toLocaleString()}
+                              </Badge>
+                            )}
                           </div>
                           {category.routingMode === "REQUIRES_PURPOSE" && (
                             <Link href={`/admin/categories/${category.id}/purposes`}>
@@ -828,7 +990,7 @@ function CategoryManagementPageContent() {
                             <p className="text-sm text-muted-foreground">{category.description}</p>
                           )}
                         </div>
-                        <div className="flex gap-2 shrink-0">
+                        <div className="flex gap-2 shrink-0 flex-wrap">
                           <Button
                             size="sm"
                             variant="outline"
@@ -836,6 +998,24 @@ function CategoryManagementPageContent() {
                           >
                             <Pencil className="h-3 w-3 mr-1" />
                             Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setFundSettingsTarget(
+                              fundSettingsById.get(category.id) || {
+                                id: category.id,
+                                name: category.name,
+                                expenseTrackingEnabled: false,
+                                openingBalance: null,
+                                openingBalanceDate: null,
+                                netBalance: null,
+                                totalExpenses: null,
+                              },
+                            )}
+                          >
+                            <Wallet className="h-3 w-3 mr-1" />
+                            Fund Settings
                           </Button>
                           <Button
                             size="sm"
@@ -873,6 +1053,12 @@ function CategoryManagementPageContent() {
           </CardContent>
         </Card>
       </div>
+      <FundSettingsDialog
+        fund={fundSettingsTarget}
+        open={fundSettingsTarget !== null}
+        onOpenChange={(v) => { if (!v) setFundSettingsTarget(null); }}
+        onSaved={() => void refetchFundSettings()}
+      />
       <ConfirmDialog />
     </AdminLayout>
   );

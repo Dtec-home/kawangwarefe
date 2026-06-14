@@ -82,6 +82,8 @@ export const GET_DASHBOARD_STATS = gql`
       totalCount
       totalMembers
       activeMembers
+      totalExpenses
+      netBalance
     }
   }
 `;

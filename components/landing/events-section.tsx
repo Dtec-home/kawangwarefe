@@ -2,8 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, ExternalLink, CalendarDays } from "lucide-react";
+import { Calendar, Clock, MapPin, ExternalLink, CalendarDays, HeartHandshake } from "lucide-react";
 import { format } from "date-fns";
+import Link from "next/link";
+
+interface EventRef {
+  id: string;
+  name: string;
+}
 
 interface Event {
   id: string;
@@ -14,6 +20,22 @@ interface Event {
   location: string;
   registrationLink?: string;
   featuredImageUrl?: string;
+  isPayable?: boolean;
+  suggestedAmount?: string | number | null;
+  category?: EventRef | null;
+  purpose?: EventRef | null;
+}
+
+/** Build the deep-link into the existing /contribute flow for a payable event. */
+function buildGiveHref(event: Event): string {
+  const params = new URLSearchParams();
+  if (event.category?.id) params.set("categoryId", event.category.id);
+  if (event.purpose?.id) params.set("purposeId", event.purpose.id);
+  if (event.suggestedAmount != null && `${event.suggestedAmount}` !== "") {
+    params.set("amount", `${event.suggestedAmount}`);
+  }
+  params.set("eventId", event.id);
+  return `/contribute?${params.toString()}`;
 }
 
 interface EventsSectionProps {
@@ -76,12 +98,33 @@ export function EventsSection({ events }: EventsSectionProps) {
                       </div>
                     </div>
 
-                    {event.registrationLink && (
-                      <Button variant="outline" size="sm" className="w-full mt-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors" asChild>
-                        <a href={event.registrationLink} target="_blank" rel="noopener noreferrer">
-                          Register <ExternalLink className="w-4 h-4 ml-2" />
-                        </a>
-                      </Button>
+                    {(event.isPayable || event.registrationLink) && (
+                      <div className="space-y-2 mt-4">
+                        {event.isPayable && event.category?.id && (
+                          <Button
+                            size="sm"
+                            className="w-full bg-gradient-to-r from-teal-600 via-emerald-600 to-blue-600 hover:from-teal-700 hover:via-emerald-700 hover:to-blue-700 text-white"
+                            asChild
+                          >
+                            <Link href={buildGiveHref(event)}>
+                              <HeartHandshake className="w-4 h-4 mr-2" />
+                              Give to this event
+                              {event.suggestedAmount != null && `${event.suggestedAmount}` !== "" && (
+                                <span className="ml-1 font-semibold">
+                                  (KES {Number(event.suggestedAmount).toLocaleString("en-KE")})
+                                </span>
+                              )}
+                            </Link>
+                          </Button>
+                        )}
+                        {event.registrationLink && (
+                          <Button variant="outline" size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors" asChild>
+                            <a href={event.registrationLink} target="_blank" rel="noopener noreferrer">
+                              Register <ExternalLink className="w-4 h-4 ml-2" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </CardContent>
                 </Card>

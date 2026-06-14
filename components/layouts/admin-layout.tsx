@@ -32,6 +32,8 @@ import {
   MessageSquare,
   Heart,
   UserCircle,
+  Receipt,
+  UsersRound,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminBottomNav } from "@/components/layouts/admin-bottom-nav";
@@ -41,7 +43,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-type FeatureType = "overview" | "contributions" | "members" | "categories" | "groups" | "category-admins" | "reports" | "c2b-transactions" | "content" | "messaging" | "prayers";
+type FeatureType = "overview" | "contributions" | "members" | "categories" | "groups" | "category-admins" | "reports" | "c2b-transactions" | "content" | "messaging" | "prayers" | "expenses" | "leaders";
 
 interface NavItem {
   name: string;
@@ -92,6 +94,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       label: "Finance",
       items: [
         { name: "Reports",      href: "/admin/reports",          icon: FileText,  feature: "reports" },
+        { name: "Expenses",     href: "/admin/expenses",         icon: Receipt,   feature: "expenses" },
         { name: "C2B / M-Pesa", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
       ],
     },
@@ -107,6 +110,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       label: "Engagement",
       items: [
         { name: "Church Content", href: "/admin/content",   icon: Newspaper,    feature: "content" },
+        { name: "Leaders",        href: "/admin/leaders",   icon: UsersRound,    feature: "leaders" },
         { name: "Messaging",      href: "/admin/messaging", icon: MessageSquare, feature: "messaging" },
         { name: "Prayers",        href: "/admin/prayers",   icon: Heart,         feature: "prayers" },
       ],
@@ -161,7 +165,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const roleBadge = getRoleBadge();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-dvh overflow-hidden bg-background">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -319,9 +323,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="flex h-full flex-col lg:pl-64">
         {/* Header */}
-        <header className="bg-card border-b border-border sticky top-0 z-30">
+        <header className="flex-shrink-0 bg-card border-b border-border z-30">
           <div className="px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between relative">
               {/* Left: hamburger (mobile) */}
@@ -369,7 +373,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           {children}
         </main>
       </div>

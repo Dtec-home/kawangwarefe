@@ -85,7 +85,7 @@ describe('MultiCategorySelector', () => {
     it('shows "Add Another Department" button when below maxCategories', async () => {
       renderSelector({ contributions: [makeCategoryAmount()], maxCategories: 3 })
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /add another department/i })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /add another fund/i })).toBeInTheDocument()
       })
     })
 
@@ -97,7 +97,7 @@ describe('MultiCategorySelector', () => {
       ]
       renderSelector({ contributions: contribs, maxCategories: 5 })
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /add another department/i })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /add another fund/i })).toBeInTheDocument()
       })
     })
 
@@ -105,7 +105,7 @@ describe('MultiCategorySelector', () => {
       const contribs = [makeCategoryAmount(), makeCategoryAmount(), makeCategoryAmount()]
       renderSelector({ contributions: contribs, maxCategories: 3 })
       await waitFor(() => {
-        expect(screen.queryByRole('button', { name: /add another department/i })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /add another fund/i })).not.toBeInTheDocument()
       })
     })
 
@@ -123,10 +123,10 @@ describe('MultiCategorySelector', () => {
       renderSelector({ contributions: initial, onChange, maxCategories: 5 })
 
       await waitFor(() =>
-        screen.getByRole('button', { name: /add another department/i })
+        screen.getByRole('button', { name: /add another fund/i })
       )
 
-      fireEvent.click(screen.getByRole('button', { name: /add another department/i }))
+      fireEvent.click(screen.getByRole('button', { name: /add another fund/i }))
 
       expect(onChange).toHaveBeenCalledOnce()
       const [newContribs] = onChange.mock.calls[0]

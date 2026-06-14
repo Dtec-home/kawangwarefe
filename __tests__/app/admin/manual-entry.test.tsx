@@ -123,7 +123,7 @@ describe('ManualEntryPage', () => {
     // One row initially: no remove button (canRemove is false for a single row)
     expect(screen.queryByLabelText('Remove department')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Add Another Department/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Add another fund/i }))
     // Now two department selects exist
     expect(screen.getAllByText('Department').length).toBeGreaterThanOrEqual(2)
     // And a remove button appears
