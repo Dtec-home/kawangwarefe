@@ -13,7 +13,11 @@ import { useTour } from "@/hooks/use-tour";
 import { ADMIN_DASHBOARD_TOUR_CONFIG } from "@/lib/tours/tour-configs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
-import { DollarSign, TrendingUp, Users, Calendar, Loader2, HelpCircle, Wallet, Receipt } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
+import { DollarSign, TrendingUp, Users, Calendar, HelpCircle, Wallet, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 
@@ -69,46 +73,21 @@ function calculateTrendPercentage(current: string, previous: string): { percenta
   return { percentage: 0, direction: "neutral" };
 }
 
-// Status badge component for contribution status display
-function StatusBadge({ status }: { status: string }) {
-  const statusConfig: Record<
-    string,
-    { bg: string; text: string; label: string }
-  > = {
-    completed: {
-      bg: "bg-green-100 dark:bg-green-900/30",
-      text: "text-green-800 dark:text-green-300",
-      label: "✓ Completed",
-    },
-    pending: {
-      bg: "bg-amber-100 dark:bg-amber-900/30",
-      text: "text-amber-800 dark:text-amber-300",
-      label: "⏳ Pending",
-    },
-    failed: {
-      bg: "bg-red-100 dark:bg-red-900/30",
-      text: "text-red-800 dark:text-red-300",
-      label: "✗ Failed",
-    },
-    processing: {
-      bg: "bg-blue-100 dark:bg-blue-900/30",
-      text: "text-blue-800 dark:text-blue-300",
-      label: "↻ Processing",
-    },
-  };
+// Decorated labels for contribution statuses; falls back to the raw value.
+const STATUS_LABELS: Record<string, string> = {
+  completed: "Completed",
+  pending: "Pending",
+  failed: "Failed",
+  processing: "Processing",
+};
 
-  const config = statusConfig[status.toLowerCase()] || {
-    bg: "bg-gray-100 dark:bg-gray-900/30",
-    text: "text-gray-800 dark:text-gray-300",
-    label: status,
-  };
-
+// Status badge for contribution status display — wraps the shared StatusBadge.
+function ContributionStatusBadge({ status }: { status: string }) {
+  const key = status.toLowerCase();
   return (
-    <span
-      className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full ${config.bg} ${config.text}`}
-    >
-      {config.label}
-    </span>
+    <StatusBadge variant={statusToVariant(status)}>
+      {STATUS_LABELS[key] ?? status}
+    </StatusBadge>
   );
 }
 
@@ -145,8 +124,37 @@ function AdminDashboardContent() {
 
   if (statsLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      // F4.2 — skeleton grid instead of a full-page spinner
+      <div className="space-y-8 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56 rounded-lg" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <Skeleton className="h-9 w-20 rounded-lg" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="h-28 border-l-4 border-l-muted">
+              <CardContent className="pt-6">
+                <Skeleton className="h-4 w-24 mb-3" />
+                <Skeleton className="h-7 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-44" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -157,24 +165,24 @@ function AdminDashboardContent() {
   const monthTrend = calculateTrendPercentage(stats?.monthTotal || "0", stats?.previousMonthTotal || "0");
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div data-tour="admin-header" className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
-          <p className="text-muted-foreground">
-            View statistics and recent activity
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => startAdminTour()}
-          title="View admin guide"
-        >
-          <HelpCircle className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">Tour</span>
-        </Button>
+    <div className="space-y-8 animate-fade-in">
+      {/* Page Header — F4.1 h1 for a11y/SEO */}
+      <div data-tour="admin-header">
+        <PageHeader
+          title="Dashboard Overview"
+          description="View statistics and recent activity"
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => startAdminTour()}
+              title="View admin guide"
+            >
+              <HelpCircle className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Tour</span>
+            </Button>
+          }
+        />
       </div>
 
       {/* Stats Grid - Using new StatCard component */}
@@ -243,31 +251,38 @@ function AdminDashboardContent() {
         </CardHeader>
         <CardContent data-tour="admin-contributions">
           {recentLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading recent contributions...
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
             </div>
           ) : recentContributions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No contributions yet
-            </div>
+            // F4.5 — empty state with action
+            <Empty
+              icon={DollarSign}
+              title="No contributions recorded yet"
+              action={
+                <Button size="sm" variant="outline" onClick={() => window.location.href = '/admin/contributions'}>
+                  View Contributions
+                </Button>
+              }
+            />
           ) : (
             <>
-              {/* Mobile card view */}
-              <div className="space-y-3 md:hidden">
+              {/* F4.4 — Mobile card view with proper hover feedback */}
+              <div className="space-y-2 md:hidden">
                 {recentContributions.map((contribution) => (
-                  <div key={contribution.id} className="border rounded-lg p-3 space-y-2 hover:bg-muted/50 transition-colors">
+                  <div key={contribution.id} className="border border-border rounded-lg p-3 space-y-2 hover:bg-muted/40 active:bg-muted/60 transition-colors cursor-default">
                     <div className="flex items-center justify-between">
                       <div className="font-medium text-sm">{contribution.member.fullName}</div>
-                      <StatusBadge status={contribution.status} />
+                      <ContributionStatusBadge status={contribution.status} />
                     </div>
-                    <div className="text-xs text-muted-foreground">{contribution.category.name}</div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(contribution.transactionDate).toLocaleDateString()}
-                      </div>
-                      <div className="font-semibold text-sm">
-                        KES {Number.parseFloat(contribution.amount).toLocaleString()}
-                      </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{contribution.category.name}</span>
+                      <span>{new Date(contribution.transactionDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="font-semibold text-sm text-right">
+                      KES {Number.parseFloat(contribution.amount).toLocaleString()}
                     </div>
                   </div>
                 ))}
@@ -302,7 +317,7 @@ function AdminDashboardContent() {
                           KES {Number.parseFloat(contribution.amount).toLocaleString()}
                         </td>
                         <td className="p-3 text-center">
-                          <StatusBadge status={contribution.status} />
+                          <ContributionStatusBadge status={contribution.status} />
                         </td>
                       </tr>
                     ))}
@@ -314,7 +329,7 @@ function AdminDashboardContent() {
         </CardContent>
       </Card>
 
-      {/* Member Stats */}
+      {/* Member Stats — F4.3 consistent text size */}
       <div data-tour="admin-members" className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -322,8 +337,8 @@ function AdminDashboardContent() {
             <CardDescription>Total registered members</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">{stats?.totalMembers || 0}</div>
-            <p className="text-sm text-muted-foreground mt-2">
+            <div className="text-2xl font-bold animate-count-up">{stats?.totalMembers || 0}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               {stats?.activeMembers || 0} active members
             </p>
           </CardContent>
@@ -334,18 +349,18 @@ function AdminDashboardContent() {
             <CardTitle>Quick Stats</CardTitle>
             <CardDescription>Overview</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Contributions:</span>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Total Contributions</span>
               <span className="font-semibold">{stats?.totalCount || 0}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Average/Member:</span>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Avg per Member</span>
               <span className="font-semibold">
                 KES{" "}
                 {stats?.totalMembers && stats?.totalCount
-                  ? (Number.parseFloat(stats.totalAmount) / stats.totalMembers).toFixed(2)
-                  : "0.00"}
+                  ? (Number.parseFloat(stats.totalAmount) / stats.totalMembers).toFixed(0)
+                  : "0"}
               </span>
             </div>
           </CardContent>

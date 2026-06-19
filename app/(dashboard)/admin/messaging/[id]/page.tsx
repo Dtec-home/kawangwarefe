@@ -22,9 +22,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
+import {
+  StatusBadge,
+  statusToVariant,
+  type StatusVariant,
+} from "@/components/ui/status-badge";
+import { Empty } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { GET_MESSAGE_CAMPAIGN } from "@/lib/graphql/messaging-mutations";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download, Inbox } from "lucide-react";
 
 interface Recipient {
   id: string;
@@ -54,16 +61,15 @@ interface DetailData {
   messageCampaignRecipients: Recipient[];
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  pending: "bg-slate-100 text-slate-700",
-  sent: "bg-green-100 text-green-700",
-  failed: "bg-red-100 text-red-700",
-  skipped: "bg-amber-100 text-amber-700",
-  draft: "bg-slate-100 text-slate-700",
-  queued: "bg-amber-100 text-amber-700",
-  sending: "bg-blue-100 text-blue-700",
-  completed: "bg-green-100 text-green-700",
+// Overrides for statuses the shared statusToVariant map doesn't cover.
+const STATUS_VARIANT_OVERRIDES: Record<string, StatusVariant> = {
+  skipped: "warning",
+  sending: "info",
 };
+
+function campaignStatusVariant(status: string): StatusVariant {
+  return STATUS_VARIANT_OVERRIDES[status.toLowerCase()] ?? statusToVariant(status);
+}
 
 /**
  * CSV export of failed recipients. Pure — exported for unit tests.
@@ -105,39 +111,49 @@ function CampaignDetailContent() {
   const failuresCsv = useMemo(() => buildFailuresCsv(recipients), [recipients]);
 
   if (loading && !campaign) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-72 rounded-lg" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
   }
   if (!campaign) {
     return (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Campaign not found.</p>
-        <Link href="/admin/messaging">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to messaging
-          </Button>
-        </Link>
-      </div>
+      <Empty
+        icon={Inbox}
+        title="Campaign not found"
+        description="This campaign may have been removed or never existed."
+        action={
+          <Link href="/admin/messaging">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to messaging
+            </Button>
+          </Link>
+        }
+      />
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link
-            href="/admin/messaging"
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← Back to messaging
-          </Link>
-          <h1 className="text-2xl font-bold mt-1">
-            Campaign #{campaign.id} — {campaign.template.name}
-          </h1>
-        </div>
-        <Badge className={STATUS_COLOR[campaign.status] || ""}>
-          {campaign.status}
-        </Badge>
+      <div className="space-y-1">
+        <Link
+          href="/admin/messaging"
+          className="text-sm text-muted-foreground hover:underline"
+        >
+          ← Back to messaging
+        </Link>
+        <PageHeader
+          title={`Campaign #${campaign.id} — ${campaign.template.name}`}
+          actions={
+            <StatusBadge variant={campaignStatusVariant(campaign.status)}>
+              {campaign.status}
+            </StatusBadge>
+          }
+        />
       </div>
 
       <Card>
@@ -176,7 +192,11 @@ function CampaignDetailContent() {
         </CardHeader>
         <CardContent className="overflow-x-auto">
           {recipients.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No recipients yet.</p>
+            <Empty
+              icon={Inbox}
+              title="No recipients yet"
+              description="Recipients will appear here once the campaign begins sending."
+            />
           ) : (
             <table className="w-full text-sm" aria-label="Recipients table">
               <thead>
@@ -192,12 +212,12 @@ function CampaignDetailContent() {
                   <tr key={r.id} className="border-t border-border">
                     <td className="py-2 font-mono text-xs">{r.phoneNumber || "—"}</td>
                     <td>
-                      <Badge className={STATUS_COLOR[r.status] || ""}>
+                      <StatusBadge variant={campaignStatusVariant(r.status)}>
                         {r.status}
-                      </Badge>
+                      </StatusBadge>
                     </td>
                     <td className="font-mono text-xs">{r.providerMessageId || "—"}</td>
-                    <td className="text-xs text-red-700">{r.error || "—"}</td>
+                    <td className="text-xs text-destructive">{r.error || "—"}</td>
                   </tr>
                 ))}
               </tbody>

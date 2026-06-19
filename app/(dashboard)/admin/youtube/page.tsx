@@ -18,6 +18,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PageHeader } from "@/components/ui/page-header";
+import { Empty } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import {
@@ -419,22 +423,22 @@ function YouTubeManagementPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">YouTube Videos</h1>
-            <p className="text-muted-foreground">Manage church YouTube content</p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowSyncDialog(true)} variant="outline" size="sm">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Sync from</span> YouTube
-            </Button>
-            <Button onClick={() => setShowCreateDialog(true)} size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Video
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title="YouTube Videos"
+          description="Manage church YouTube content"
+          actions={
+            <>
+              <Button onClick={() => setShowSyncDialog(true)} variant="outline" size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Sync from</span> YouTube
+              </Button>
+              <Button onClick={() => setShowCreateDialog(true)} size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Video
+              </Button>
+            </>
+          }
+        />
 
         {/* Alerts */}
         {success && (
@@ -566,17 +570,21 @@ function YouTubeManagementPageContent() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-12">Loading videos...</div>
-            ) : filteredVideos.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Youtube className="mx-auto h-12 w-12 mb-4 opacity-20" />
-                <p className="text-lg font-medium mb-2">No videos found</p>
-                <p className="text-sm">
-                  {searchQuery || categoryFilter !== "all" || sourceFilter !== "all"
-                    ? "Try adjusting your filters"
-                    : "Add your first video or sync from YouTube"}
-                </p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-72 w-full" />
+                ))}
               </div>
+            ) : filteredVideos.length === 0 ? (
+              <Empty
+                icon={Youtube}
+                title="No videos found"
+                description={
+                  searchQuery || categoryFilter !== "all" || sourceFilter !== "all"
+                    ? "Try adjusting your filters"
+                    : "Add your first video or sync from YouTube"
+                }
+              />
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredVideos.map((video) => (
@@ -591,20 +599,20 @@ function YouTubeManagementPageContent() {
                         <Checkbox
                           checked={selectedVideos.has(video.id)}
                           onCheckedChange={() => toggleVideoSelection(video.id)}
-                          className="bg-white"
+                          className="bg-card"
                         />
                       </div>
                       <div className="absolute top-2 right-2 flex gap-2">
                         {video.isFeatured && (
-                          <Badge variant="default" className="bg-yellow-500">
-                            <Star className="h-3 w-3 mr-1" />
+                          <StatusBadge variant="warning">
+                            <Star className="h-3 w-3" />
                             Featured
-                          </Badge>
+                          </StatusBadge>
                         )}
                         <Badge variant="secondary">{video.category}</Badge>
                       </div>
                       <div className="absolute bottom-2 right-2">
-                        <Badge variant="default" className="bg-black/70">
+                        <Badge variant="secondary" className="bg-foreground/70 text-background">
                           <Clock className="h-3 w-3 mr-1" />
                           {formatDuration(video.duration)}
                         </Badge>

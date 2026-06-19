@@ -17,11 +17,13 @@ import {
 import { SortableList } from "@/components/ui/sortable-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { BulkAnnouncementsDialog } from "@/components/admin/bulk-announcements-dialog";
@@ -659,17 +661,29 @@ function AnnouncementsManagementPageContent() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-12">Loading announcements...</div>
-            ) : sortedAnnouncements.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Bell className="mx-auto h-12 w-12 mb-4 opacity-20" />
-                <p className="text-lg font-medium mb-2">No announcements found</p>
-                <p className="text-sm">
-                  {searchQuery || activeFilter !== "all"
-                    ? "Try adjusting your filters"
-                    : "Create your first announcement to get started"}
-                </p>
+              <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                ))}
               </div>
+            ) : sortedAnnouncements.length === 0 ? (
+              <Empty
+                icon={Bell}
+                title="No announcements found"
+                description={
+                  searchQuery || activeFilter !== "all"
+                    ? "Try adjusting your filters"
+                    : "Create your first announcement to get started"
+                }
+                action={
+                  !searchQuery && activeFilter === "all" ? (
+                    <Button onClick={() => setShowCreateDialog(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      New Announcement
+                    </Button>
+                  ) : undefined
+                }
+              />
             ) : (
               <SortableList
                 items={sortedAnnouncements}
@@ -705,31 +719,29 @@ function AnnouncementsManagementPageContent() {
                               <CardTitle className="text-lg break-words">{announcement.title}</CardTitle>
                               <div className="flex flex-wrap gap-2">
                                 {announcement.isActive ? (
-                                  <Badge variant="default" className="bg-green-500">Active</Badge>
+                                  <StatusBadge variant="success">Active</StatusBadge>
                                 ) : (
-                                  <Badge variant="secondary">Inactive</Badge>
+                                  <StatusBadge variant="neutral">Inactive</StatusBadge>
                                 )}
                                 {live && (
-                                  <Badge variant="outline" className="border-green-500 text-green-700">
-                                    Live
-                                  </Badge>
+                                  <StatusBadge variant="success">Live</StatusBadge>
                                 )}
                                 {scheduled && (
-                                  <Badge variant="default" className="bg-blue-500">
-                                    <CalendarPlus className="h-3 w-3 mr-1" />
+                                  <StatusBadge variant="info">
+                                    <CalendarPlus className="h-3 w-3" />
                                     Scheduled
-                                  </Badge>
+                                  </StatusBadge>
                                 )}
                                 {expired && (
-                                  <Badge variant="default" className="bg-amber-500">
-                                    <CalendarClock className="h-3 w-3 mr-1" />
+                                  <StatusBadge variant="warning">
+                                    <CalendarClock className="h-3 w-3" />
                                     Expired
-                                  </Badge>
+                                  </StatusBadge>
                                 )}
                                 {announcement.priority > 0 && (
-                                  <Badge variant="default" className="bg-red-500">
+                                  <StatusBadge variant="destructive">
                                     Priority {announcement.priority}
-                                  </Badge>
+                                  </StatusBadge>
                                 )}
                               </div>
                             </div>

@@ -16,7 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PageHeader } from "@/components/ui/page-header";
+import { Empty } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import {
@@ -372,16 +375,16 @@ function DevotionalsManagementPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Devotionals</h1>
-            <p className="text-muted-foreground">Manage daily devotionals and inspirational content</p>
-          </div>
-          <Button onClick={() => setShowCreateDialog(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            New Devotional
-          </Button>
-        </div>
+        <PageHeader
+          title="Devotionals"
+          description="Manage daily devotionals and inspirational content"
+          actions={
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Devotional
+            </Button>
+          }
+        />
 
         {/* Statistics */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -532,17 +535,21 @@ function DevotionalsManagementPageContent() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-12">Loading devotionals...</div>
-            ) : filteredDevotionals.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-20" />
-                <p className="text-lg font-medium mb-2">No devotionals found</p>
-                <p className="text-sm">
-                  {searchQuery || publishedFilter !== "all" || featuredFilter !== "all"
-                    ? "Try adjusting your filters"
-                    : "Create your first devotional to get started"}
-                </p>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-28 w-full" />
+                ))}
               </div>
+            ) : filteredDevotionals.length === 0 ? (
+              <Empty
+                icon={BookOpen}
+                title="No devotionals found"
+                description={
+                  searchQuery || publishedFilter !== "all" || featuredFilter !== "all"
+                    ? "Try adjusting your filters"
+                    : "Create your first devotional to get started"
+                }
+              />
             ) : (
               <div className="space-y-4">
                 {filteredDevotionals.map((devotional) => (
@@ -559,18 +566,16 @@ function DevotionalsManagementPageContent() {
                               <CardTitle className="text-lg">{devotional.title}</CardTitle>
                               <div className="flex gap-2">
                                 {devotional.isPublished && (
-                                  <Badge variant="default" className="bg-green-500">
-                                    Published
-                                  </Badge>
+                                  <StatusBadge variant="success">Published</StatusBadge>
                                 )}
                                 {!devotional.isPublished && (
-                                  <Badge variant="secondary">Draft</Badge>
+                                  <StatusBadge variant="warning">Draft</StatusBadge>
                                 )}
                                 {devotional.isFeatured && (
-                                  <Badge variant="default" className="bg-yellow-500">
-                                    <Star className="h-3 w-3 mr-1" />
+                                  <StatusBadge variant="warning">
+                                    <Star className="h-3 w-3" />
                                     Featured
-                                  </Badge>
+                                  </StatusBadge>
                                 )}
                               </div>
                             </div>
@@ -886,14 +891,10 @@ function DevotionalsManagementPageContent() {
                 </div>
                 <div className="flex gap-2">
                   {currentDevotional.isPublished && (
-                    <Badge variant="default" className="bg-green-500">
-                      Published
-                    </Badge>
+                    <StatusBadge variant="success">Published</StatusBadge>
                   )}
                   {currentDevotional.isFeatured && (
-                    <Badge variant="default" className="bg-yellow-500">
-                      Featured
-                    </Badge>
+                    <StatusBadge variant="warning">Featured</StatusBadge>
                   )}
                 </div>
               </div>

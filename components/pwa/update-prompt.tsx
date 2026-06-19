@@ -136,21 +136,17 @@ export function UpdatePrompt() {
     <dialog
       open
       aria-label="App update required"
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-foreground/75 backdrop-blur-sm"
     >
-      <div
-        className="relative mx-4 max-w-sm w-full rounded-2xl bg-card shadow-2xl overflow-hidden"
-        style={{ border: "1px solid rgba(255,255,255,0.12)" }}
-      >
+      <div className="relative mx-4 max-w-sm w-full rounded-2xl bg-card border border-border shadow-2xl overflow-hidden">
         {/* Accent bar */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary/70" />
 
         <div className="p-8 text-center space-y-5">
           {/* Icon */}
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/30">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/12">
             <RefreshCw
-              className={`h-8 w-8 text-indigo-600 dark:text-indigo-400 ${isUpdating ? "animate-spin" : ""}`}
+              className={`h-8 w-8 text-primary ${isUpdating ? "animate-spin" : ""}`}
             />
           </div>
 
@@ -171,13 +167,7 @@ export function UpdatePrompt() {
             id="pwa-update-now-btn"
             onClick={handleUpdate}
             disabled={isUpdating}
-            className="w-full rounded-xl py-3 px-6 font-semibold text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
-            style={{
-              background: isUpdating
-                ? "#6366f1"
-                : "linear-gradient(135deg, #4f46e5, #7c3aed)",
-              boxShadow: "0 4px 15px rgba(99, 102, 241, 0.4)",
-            }}
+            className="w-full rounded-xl py-3 px-6 font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isUpdating ? "Updating…" : "Update Now"}
           </button>

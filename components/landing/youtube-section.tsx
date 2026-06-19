@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Empty } from "@/components/ui/empty";
 import { Youtube, Play, Video } from "lucide-react";
 
 interface YouTubeVideo {
@@ -39,13 +40,11 @@ export function YouTubeSection({ videos }: YouTubeSectionProps) {
             </div>
 
             {/* Empty State */}
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <Video className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">No videos available yet</p>
-              <p className="text-sm text-muted-foreground mt-2">Subscribe to our YouTube channel for upcoming content!</p>
-            </div>
+            <Empty
+              icon={Video}
+              title="No videos available yet"
+              description="Subscribe to our YouTube channel for upcoming content!"
+            />
           </div>
         </div>
       </section>

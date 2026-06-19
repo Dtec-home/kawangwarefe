@@ -252,8 +252,8 @@ export function CategoryAmountRow({
                   onClick={() => onChange(index, "amount", String(preset))}
                   className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
                     isActive
-                      ? "border-emerald-500 bg-emerald-600 text-white"
-                      : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
                   }`}
                   aria-label={`Set amount to KES ${preset}`}
                 >
@@ -308,7 +308,7 @@ export function CategoryAmountRow({
       )}
 
       {instructionData?.paybillInstructionMessage && (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+        <div className="rounded-md border border-info/30 bg-info/12 px-3 py-2 text-xs text-info">
           <p className="font-medium">Direct Paybill Instruction</p>
           <p>{instructionData.paybillInstructionMessage}</p>
         </div>

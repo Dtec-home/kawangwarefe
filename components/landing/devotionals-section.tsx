@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Empty } from "@/components/ui/empty";
 import { BookOpen, BookMarked, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -75,13 +76,11 @@ export function DevotionalsSection({ devotionals: initialDevotionals }: Devotion
             </div>
 
             {/* Empty State */}
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <BookOpen className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">No devotionals available yet</p>
-              <p className="text-sm text-muted-foreground mt-2">Stay tuned for inspiring daily readings!</p>
-            </div>
+            <Empty
+              icon={BookOpen}
+              title="No devotionals available yet"
+              description="Stay tuned for inspiring daily readings!"
+            />
           </div>
         </div>
       </section>

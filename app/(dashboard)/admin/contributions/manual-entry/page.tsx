@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AdminLayout } from "@/components/layouts/admin-layout";
+import { PageHeader } from "@/components/ui/page-header";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import {
   MultiCategorySelector,
@@ -232,12 +233,11 @@ function ManualContributionPageContent() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Manual Contribution Entry</h1>
-            <p className="text-muted-foreground">
-              Record contributions from envelopes, cash, or manual entries
-            </p>
-          </div>
+          <PageHeader
+            title="Manual Contribution Entry"
+            description="Record contributions from envelopes, cash, or manual entries"
+            className="flex-1"
+          />
         </div>
 
         {/* Success Message */}
@@ -346,7 +346,7 @@ function ManualContributionPageContent() {
                             <p className="text-sm">Member #: {member.memberNumber}</p>
                           )}
                           {isGuest && (
-                            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                            <p className="text-sm text-warning">
                               This contributor is not yet a full member. You can
                               update their details later.
                             </p>

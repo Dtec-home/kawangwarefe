@@ -20,9 +20,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { useUserRole } from "@/lib/hooks/use-user-role";
-import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight, Pencil } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
+import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight, Pencil, Receipt } from "lucide-react";
 import Link from "next/link";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface Contribution {
   id: string;
@@ -367,32 +371,22 @@ export default function ContributionsPage() {
     dateTo !== "",
   ].filter(Boolean).length;
 
-  const getStatusBadgeClass = (status: string) => {
-    if (status === "completed") {
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
-    }
-    if (status === "failed") {
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100";
-    }
-    return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
-  };
-
   return (
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Contributions</h1>
-            <p className="text-muted-foreground">View and manage all church contributions</p>
-          </div>
-          <Link href="/admin/contributions/manual-entry">
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Manual Entry
-            </Button>
-          </Link>
-        </div>
+        <PageHeader
+          title="Contributions"
+          description="View and manage all church contributions"
+          actions={
+            <Link href="/admin/contributions/manual-entry">
+              <Button className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Manual Entry
+              </Button>
+            </Link>
+          }
+        />
 
         {/* Statistics Cards */}
         {stats && !isGroupScopedView && (
@@ -415,10 +409,10 @@ export default function ContributionsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-success" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-success">
                   KES {Number.parseFloat(stats.completedAmount).toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -430,10 +424,10 @@ export default function ContributionsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                <Clock className="h-4 w-4 text-yellow-600" />
+                <Clock className="h-4 w-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
+                <div className="text-2xl font-bold text-warning">
                   KES {Number.parseFloat(stats.pendingAmount).toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -445,10 +439,10 @@ export default function ContributionsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Failed</CardTitle>
-                <XCircle className="h-4 w-4 text-red-600" />
+                <XCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-2xl font-bold text-destructive">
                   {stats.failedCount}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -666,21 +660,25 @@ export default function ContributionsPage() {
           </CardHeader>
           <CardContent>
             {activeLoading && (
-              <div className="text-center py-8 text-muted-foreground">
-                Loading contributions...
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
               </div>
             )}
 
             {activeError && (
-              <div className="text-center py-8 text-red-600">
+              <div className="text-center py-8 text-destructive">
                 Error loading contributions: {activeError.message}
               </div>
             )}
 
             {!activeLoading && !activeError && contributions.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No contributions found
-              </div>
+              <Empty
+                icon={Receipt}
+                title="No contributions found"
+                description="Try adjusting your filters, or record a contribution with a manual entry."
+              />
             )}
 
             {!activeLoading && !activeError && contributions.length > 0 && (
@@ -701,9 +699,9 @@ export default function ContributionsPage() {
                             KES {group.totalAmount.toLocaleString()}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(rep.status)}`}>
+                            <StatusBadge variant={statusToVariant(rep.status)}>
                               {rep.status}
-                            </span>
+                            </StatusBadge>
                             {group.isSplit && (
                               isExpanded
                                 ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -721,7 +719,7 @@ export default function ContributionsPage() {
                           <span>
                             {groupCategoryLabel(group).name}
                             {group.isSplit && (
-                              <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                              <span className="ml-1 text-xs text-primary">
                                 ({group.contributions.length})
                               </span>
                             )}
@@ -769,14 +767,14 @@ export default function ContributionsPage() {
                         )}
                         {rep.departmentMemberIdentifier && (
                           <div className="text-xs">
-                            <span className="inline-block rounded bg-purple-100 px-2 py-0.5 font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+                            <span className="inline-block rounded bg-[color-mix(in_oklch,var(--chart-3)_12%,transparent)] px-2 py-0.5 font-medium text-[var(--chart-3)]">
                               {rep.category.name} #{rep.departmentMemberIdentifier}
                             </span>
                           </div>
                         )}
                       </div>
                       {group.isSplit && isExpanded && (
-                        <div className="border-t bg-slate-50 dark:bg-slate-800/50 divide-y divide-slate-100 dark:divide-slate-700">
+                        <div className="border-t bg-muted divide-y divide-border">
                           {group.contributions.map((c) => (
                             <div key={c.id} className="flex items-center justify-between px-4 py-2 text-sm">
                               <span className="text-muted-foreground">
@@ -797,7 +795,7 @@ export default function ContributionsPage() {
               {/* Desktop table view */}
               <div className="overflow-x-auto hidden md:block">
                 <table className="w-full">
-                  <thead>
+                  <thead className="sticky top-0 z-10 bg-card [&_th]:bg-card [&_tr]:shadow-[inset_0_-1px_0_0_var(--border)]">
                     <tr className="border-b">
                       <th className="text-left p-3 font-medium">Date</th>
                       <th className="text-left p-3 font-medium">Member</th>
@@ -822,7 +820,7 @@ export default function ContributionsPage() {
                         <>
                           <tr
                             key={group.groupId}
-                            className={`border-b hover:bg-slate-50 dark:hover:bg-slate-800 ${group.isSplit ? "cursor-pointer" : ""}`}
+                            className={`border-b hover:bg-muted/60 ${group.isSplit ? "cursor-pointer" : ""}`}
                             onClick={() => group.isSplit && toggleGroup(group.groupId)}
                           >
                             <td className="p-3 text-sm">
@@ -852,7 +850,7 @@ export default function ContributionsPage() {
                             {showDeptMemberColumn && (
                               <td className="p-3 text-sm font-mono">
                                 {rep.departmentMemberIdentifier ? (
-                                  <span className="inline-block rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+                                  <span className="inline-block rounded bg-[color-mix(in_oklch,var(--chart-3)_12%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--chart-3)]">
                                     {rep.departmentMemberIdentifier}
                                   </span>
                                 ) : (
@@ -865,7 +863,7 @@ export default function ContributionsPage() {
                                 <div>
                                   {groupCategoryLabel(group).name}
                                   {group.isSplit && (
-                                    <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                                    <span className="ml-1 text-xs text-primary">
                                       ({group.contributions.length})
                                     </span>
                                   )}
@@ -877,7 +875,7 @@ export default function ContributionsPage() {
                             </td>
                             <td className="p-3 text-sm">
                               {group.isSplit ? (
-                                <span className="text-teal-600 dark:text-teal-400 text-xs">Auto-split</span>
+                                <span className="text-primary text-xs">Auto-split</span>
                               ) : (
                                 rep.purposeName || "Top-level"
                               )}
@@ -889,9 +887,9 @@ export default function ContributionsPage() {
                               KES {group.totalAmount.toLocaleString()}
                             </td>
                             <td className="p-3 text-center">
-                              <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(rep.status)}`}>
+                              <StatusBadge variant={statusToVariant(rep.status)}>
                                 {rep.status}
-                              </span>
+                              </StatusBadge>
                             </td>
                             <td className="p-3 text-sm font-mono">
                               <div className="flex items-center gap-1">
@@ -923,7 +921,7 @@ export default function ContributionsPage() {
                             </td>
                           </tr>
                           {group.isSplit && isExpanded && group.contributions.map((c) => (
-                            <tr key={c.id} className="border-b bg-slate-50 dark:bg-slate-800/50">
+                            <tr key={c.id} className="border-b bg-muted">
                               <td />
                               <td />
                               <td />

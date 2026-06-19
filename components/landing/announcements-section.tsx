@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty } from "@/components/ui/empty";
 import { Bell, Sparkles, X } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -110,13 +111,11 @@ export function AnnouncementsSection({ announcements }: AnnouncementsSectionProp
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <Bell className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">No announcements at this time</p>
-              <p className="text-sm text-muted-foreground mt-2">Check back soon for updates!</p>
-            </div>
+            <Empty
+              icon={Bell}
+              title="No announcements at this time"
+              description="Check back soon for updates!"
+            />
           )}
         </div>
       </div>

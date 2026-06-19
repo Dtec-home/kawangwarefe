@@ -48,7 +48,11 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge, type StatusVariant } from "@/components/ui/status-badge";
 
 /* ── Types ───────────────────────────────────────────────────── */
 
@@ -91,14 +95,14 @@ interface AllocationRow {
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 
-function statusBadge(status: C2BTransaction["status"]) {
-  const map: Record<C2BTransaction["status"], string> = {
-    received: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-    processed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-    unmatched: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
-    failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+function statusVariant(status: C2BTransaction["status"]): StatusVariant {
+  const map: Record<C2BTransaction["status"], StatusVariant> = {
+    received: "info",
+    processed: "success",
+    unmatched: "warning",
+    failed: "destructive",
   };
-  return `inline-block px-2 py-1 text-xs rounded-full ${map[status] ?? "bg-slate-100 text-slate-800"}`;
+  return map[status] ?? "neutral";
 }
 
 function fmtDate(iso: string) {
@@ -157,7 +161,7 @@ function AllocationRowItem({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_120px_auto] gap-2 items-start p-3 rounded-md border bg-slate-50 dark:bg-slate-900/50">
+    <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_120px_auto] gap-2 items-start p-3 rounded-md border border-border bg-muted">
       {/* Department */}
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">Department</Label>
@@ -202,7 +206,7 @@ function AllocationRowItem({
               </SelectContent>
             </Select>
           ) : (
-            <p className="text-xs text-yellow-600 pt-2">No purposes configured.</p>
+            <p className="text-xs text-warning pt-2">No purposes configured.</p>
           )
         ) : (
           <p className="text-xs text-muted-foreground pt-2 italic">
@@ -230,7 +234,7 @@ function AllocationRowItem({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+          className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/12"
           onClick={onRemove}
           disabled={!canRemove}
           title="Remove row"
@@ -321,9 +325,9 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-card rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 shrink-0">
+        <div className="p-6 border-b border-border shrink-0">
           <h2 className="text-lg font-semibold">Resolve Unmatched Transaction</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Split this payment across one or more departments. Amounts must total exactly{" "}
@@ -333,7 +337,7 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
 
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
           {/* Transaction summary */}
-          <div className="rounded-md bg-slate-50 dark:bg-slate-900 p-4 space-y-2 text-sm">
+          <div className="rounded-md bg-muted p-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Trans ID</span>
               <span className="font-mono font-medium">{transaction.transId}</span>
@@ -352,7 +356,7 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Amount</span>
-              <span className="font-semibold text-green-700 dark:text-green-400">
+              <span className="font-semibold text-success">
                 {fmtAmount(transaction.transAmount)}
               </span>
             </div>
@@ -387,10 +391,10 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
           <div
             className={`flex items-center justify-between rounded-md px-4 py-3 text-sm font-medium border ${
               isExact
-                ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-950/30 dark:border-green-800 dark:text-green-300"
+                ? "bg-success/12 border-success/30 text-success"
                 : isOver
-                ? "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/30 dark:border-red-800 dark:text-red-300"
-                : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-300"
+                ? "bg-destructive/12 border-destructive/30 text-destructive"
+                : "bg-warning/12 border-warning/30 text-warning"
             }`}
           >
             <span>
@@ -420,7 +424,7 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex gap-3 justify-end shrink-0">
+        <div className="p-6 border-t border-border flex gap-3 justify-end shrink-0">
           <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
@@ -482,18 +486,16 @@ export default function C2BTransactionsPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">C2B Transactions</h1>
-            <p className="text-muted-foreground">
-              M-Pesa Pay Bill payments — review and resolve unmatched transactions
-            </p>
-          </div>
-          <Button variant="outline" onClick={refetchAll} className="w-full sm:w-auto">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
+        <PageHeader
+          title="C2B Transactions"
+          description="M-Pesa Pay Bill payments — review and resolve unmatched transactions"
+          actions={
+            <Button variant="outline" onClick={refetchAll}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          }
+        />
 
         {/* Stats Cards */}
         {stats && (
@@ -512,10 +514,10 @@ export default function C2BTransactionsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Processed</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-4 w-4 text-success" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.processedCount}</div>
+                <div className="text-2xl font-bold text-success">{stats.processedCount}</div>
                 <p className="text-xs text-muted-foreground">Successfully matched</p>
               </CardContent>
             </Card>
@@ -523,10 +525,10 @@ export default function C2BTransactionsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Unmatched</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertTriangle className="h-4 w-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{stats.unmatchedCount}</div>
+                <div className="text-2xl font-bold text-warning">{stats.unmatchedCount}</div>
                 <p className="text-xs text-muted-foreground">Needs manual resolution</p>
               </CardContent>
             </Card>
@@ -534,10 +536,10 @@ export default function C2BTransactionsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Failed</CardTitle>
-                <XCircle className="h-4 w-4 text-red-600" />
+                <XCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{stats.failedCount}</div>
+                <div className="text-2xl font-bold text-destructive">{stats.failedCount}</div>
                 <p className="text-xs text-muted-foreground">Failed transactions</p>
               </CardContent>
             </Card>
@@ -546,14 +548,14 @@ export default function C2BTransactionsPage() {
 
         {/* Unmatched alert banner */}
         {stats && stats.unmatchedCount > 0 && (
-          <div className="flex items-start gap-3 p-4 rounded-md bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
+          <div className="flex items-start gap-3 p-4 rounded-md bg-warning/12 border border-warning/30">
+            <AlertTriangle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-yellow-800 dark:text-yellow-200">
+              <p className="font-medium text-warning">
                 {stats.unmatchedCount} unmatched transaction
                 {stats.unmatchedCount !== 1 ? "s" : ""} need attention
               </p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-0.5">
+              <p className="text-sm text-warning/90 mt-0.5">
                 These are Pay Bill payments where the account reference didn&apos;t match any
                 department code. Resolve them by assigning the correct department(s).
               </p>
@@ -561,7 +563,7 @@ export default function C2BTransactionsPage() {
             <Button
               size="sm"
               variant="outline"
-              className="ml-auto shrink-0 border-yellow-400 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-800"
+              className="ml-auto shrink-0 border-warning/40 text-warning hover:bg-warning/12"
               onClick={() => setStatusFilter("unmatched")}
             >
               View Unmatched
@@ -616,13 +618,21 @@ export default function C2BTransactionsPage() {
           </CardHeader>
           <CardContent>
             {loading && (
-              <div className="text-center py-8 text-muted-foreground">Loading transactions…</div>
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </div>
             )}
             {error && (
-              <div className="text-center py-8 text-red-600">Error: {error.message}</div>
+              <div className="text-center py-8 text-destructive">Error: {error.message}</div>
             )}
             {!loading && !error && transactions.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">No transactions found</div>
+              <Empty
+                icon={Smartphone}
+                title="No transactions found"
+                description="Pay Bill payments will appear here once received. Try adjusting the status filter."
+              />
             )}
 
             {!loading && !error && transactions.length > 0 && (
@@ -630,10 +640,10 @@ export default function C2BTransactionsPage() {
                 {/* Mobile card view */}
                 <div className="space-y-3 md:hidden">
                   {transactions.map((tx) => (
-                    <div key={tx.id} className="border rounded-lg p-3 space-y-2">
+                    <div key={tx.id} className="border border-border rounded-lg p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">{fmtAmount(tx.transAmount)}</span>
-                        <span className={statusBadge(tx.status)}>{tx.status}</span>
+                        <StatusBadge variant={statusVariant(tx.status)}>{tx.status}</StatusBadge>
                       </div>
                       <div className="text-sm font-medium">
                         {tx.customerName || (
@@ -652,7 +662,7 @@ export default function C2BTransactionsPage() {
                       </div>
                       {tx.matchedCategoryCode && (
                         <div className="text-xs">
-                          <span className="font-mono bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">
+                          <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
                             {tx.matchedCategoryCode}
                           </span>
                         </div>
@@ -661,7 +671,7 @@ export default function C2BTransactionsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="w-full text-yellow-700 border-yellow-400 hover:bg-yellow-50 dark:text-yellow-300 dark:hover:bg-yellow-900/30"
+                          className="w-full text-warning border-warning/40 hover:bg-warning/12"
                           onClick={() => setResolvingTx(tx)}
                         >
                           Resolve
@@ -689,7 +699,7 @@ export default function C2BTransactionsPage() {
                     </thead>
                     <tbody>
                       {transactions.map((tx) => (
-                        <tr key={tx.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <tr key={tx.id} className="border-b hover:bg-muted/60">
                           <td className="p-3 whitespace-nowrap">{fmtDate(tx.transTime)}</td>
                           <td className="p-3 font-mono text-xs">{tx.transId}</td>
                           <td className="p-3">
@@ -705,11 +715,11 @@ export default function C2BTransactionsPage() {
                             {fmtAmount(tx.transAmount)}
                           </td>
                           <td className="p-3 text-center">
-                            <span className={statusBadge(tx.status)}>{tx.status}</span>
+                            <StatusBadge variant={statusVariant(tx.status)}>{tx.status}</StatusBadge>
                           </td>
                           <td className="p-3 text-xs">
                             {tx.matchedCategoryCode ? (
-                              <span className="font-mono bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">
+                              <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
                                 {tx.matchedCategoryCode}
                               </span>
                             ) : (
@@ -726,7 +736,7 @@ export default function C2BTransactionsPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-yellow-700 border-yellow-400 hover:bg-yellow-50 dark:text-yellow-300 dark:hover:bg-yellow-900/30"
+                                className="text-warning border-warning/40 hover:bg-warning/12"
                                 onClick={() => setResolvingTx(tx)}
                               >
                                 Resolve

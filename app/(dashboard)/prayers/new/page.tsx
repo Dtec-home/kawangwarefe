@@ -11,7 +11,8 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import { Heart } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
@@ -39,6 +40,8 @@ import {
   SUBMIT_PRAYER_REQUEST,
   GET_MY_PRAYER_REQUESTS,
 } from "@/lib/graphql/prayer-mutations";
+import { Empty } from "@/components/ui/empty";
+import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
 
 type Visibility = "team" | "public" | "private";
 
@@ -189,9 +192,11 @@ function NewPrayerContent() {
         </CardHeader>
         <CardContent>
           {mine.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              You haven't submitted any requests yet.
-            </p>
+            <Empty
+              icon={Heart}
+              title="No requests yet"
+              description="You haven't submitted any requests yet."
+            />
           ) : (
             <ul className="divide-y divide-border">
               {mine.map((r) => (
@@ -202,9 +207,9 @@ function NewPrayerContent() {
                       {r.visibility} · {new Date(r.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-muted">
+                  <StatusBadge variant={statusToVariant(r.status)}>
                     {r.status}
-                  </span>
+                  </StatusBadge>
                 </li>
               ))}
             </ul>

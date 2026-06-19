@@ -10,6 +10,8 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { BarChart3 } from "lucide-react";
+import { Empty } from "@/components/ui/empty";
 
 interface MemberProgressRow {
   memberId: string;
@@ -26,9 +28,14 @@ interface Props {
   onMemberClick?: (memberId: string) => void;
 }
 
+// Theme chart tokens (defined in globals.css) so bars track the design system
+// and adapt to light/dark. Cycles through the 5 available chart slots.
 const PALETTE = [
-  "#2563eb", "#16a34a", "#d97706", "#7c3aed", "#db2777",
-  "#0891b2", "#65a30d", "#dc2626", "#9333ea", "#0d9488",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
 ];
 
 const formatKes = (value: number) =>
@@ -37,9 +44,11 @@ const formatKes = (value: number) =>
 export function DepartmentBarChart({ members, breakdownBy, onMemberClick }: Props) {
   if (members.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-        No data to display
-      </div>
+      <Empty
+        icon={BarChart3}
+        title="No data to display"
+        description="Member contribution data will appear here once available."
+      />
     );
   }
 

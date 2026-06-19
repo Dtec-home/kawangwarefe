@@ -11,7 +11,7 @@
 import { useRef, useState } from "react";
 import { useLazyQuery, useMutation } from "@apollo/client/react";
 import { Send, Search, X, Phone } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -184,7 +184,7 @@ export function QuickSendComposer({ onSent }: QuickSendComposerProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="qs-body">Message</Label>
-          <span className={`text-xs ${charsLeft < 0 ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
+          <span className={`text-xs ${charsLeft < 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
             {body.length} / {MAX_CHARS}
           </span>
         </div>
@@ -197,7 +197,7 @@ export function QuickSendComposer({ onSent }: QuickSendComposerProps) {
           className="resize-none"
         />
         {charsLeft < 0 && (
-          <p className="text-xs text-red-600">Message is too long by {Math.abs(charsLeft)} character{Math.abs(charsLeft) !== 1 ? "s" : ""}.</p>
+          <p className="text-xs text-destructive">Message is too long by {Math.abs(charsLeft)} character{Math.abs(charsLeft) !== 1 ? "s" : ""}.</p>
         )}
       </div>
 
@@ -228,11 +228,11 @@ export function QuickSendComposer({ onSent }: QuickSendComposerProps) {
           {phonesRaw.trim() && (
             <p className="text-xs">
               {extraPhones.length > 0 ? (
-                <span className="text-green-700 dark:text-green-400 font-medium">
+                <span className="text-success font-medium">
                   {extraPhones.length} valid number{extraPhones.length !== 1 ? "s" : ""}
                 </span>
               ) : (
-                <span className="text-amber-600">No valid numbers found</span>
+                <span className="text-warning">No valid numbers found</span>
               )}
             </p>
           )}

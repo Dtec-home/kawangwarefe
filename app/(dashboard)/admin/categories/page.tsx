@@ -27,6 +27,10 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge, RoleBadge } from "@/components/ui/status-badge";
+import { PageHeader } from "@/components/ui/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import {
@@ -43,7 +47,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 type Audience = "all" | "adult" | "children";
 type RoutingMode = "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
@@ -187,13 +191,13 @@ function FundSettingsDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-md border p-3">
+          <Card className="flex flex-row items-center justify-between p-3">
             <div>
               <Label htmlFor="expense-tracking" className="text-sm font-medium">Expense tracking</Label>
               <p className="text-xs text-muted-foreground">Track money paid out of this fund.</p>
             </div>
             <Switch id="expense-tracking" checked={enabled} onCheckedChange={setEnabled} />
-          </div>
+          </Card>
 
           {enabled && (
             <div className="grid sm:grid-cols-2 gap-4">
@@ -222,10 +226,10 @@ function FundSettingsDialog({
           )}
 
           {fund?.expenseTrackingEnabled && fund.netBalance != null && (
-            <div className="rounded-md border p-3 text-sm">
+            <Card className="p-3 text-sm">
               <span className="text-muted-foreground">Current Balance: </span>
               <span className="font-semibold">KES {Number.parseFloat(fund.netBalance).toLocaleString()}</span>
-            </div>
+            </Card>
           )}
         </div>
         <DialogFooter>
@@ -479,19 +483,16 @@ function CategoryManagementPageContent() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Contribution Departments</h1>
-            <p className="text-muted-foreground">
-              Manage contribution departments (e.g., Tithe, Offering, Building Fund)
-            </p>
-          </div>
-          <Button onClick={() => { setShowCreateForm(!showCreateForm); clearMessages(); }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Department
-          </Button>
-        </div>
+        <PageHeader
+          title="Contribution Departments"
+          description="Manage contribution departments (e.g., Tithe, Offering, Building Fund)"
+          actions={
+            <Button onClick={() => { setShowCreateForm(!showCreateForm); clearMessages(); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Department
+            </Button>
+          }
+        />
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -508,7 +509,7 @@ function CategoryManagementPageContent() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{activeCount}</div>
+              <div className="text-2xl font-bold text-success">{activeCount}</div>
             </CardContent>
           </Card>
           <Card>
@@ -516,7 +517,7 @@ function CategoryManagementPageContent() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Inactive</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{inactiveCount}</div>
+              <div className="text-2xl font-bold text-warning">{inactiveCount}</div>
             </CardContent>
           </Card>
         </div>
@@ -748,20 +749,29 @@ function CategoryManagementPageContent() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex items-center gap-2 py-8 justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                <span>Loading departments...</span>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20 w-full rounded-lg" />
+                ))}
               </div>
             ) : categories.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No departments found. Create one to get started.
-              </div>
+              <Empty
+                icon={FolderOpen}
+                title="No departments yet"
+                description="Create your first contribution department to get started."
+                action={
+                  <Button onClick={() => { setShowCreateForm(true); clearMessages(); }}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Department
+                  </Button>
+                }
+              />
             ) : (
               <div className="space-y-3">
                 {categories.map((category) => (
-                  <div
+                  <Card
                     key={category.id}
-                    className="border rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
                   >
                     {editingId === category.id ? (
                       /* Edit Mode */
@@ -940,9 +950,9 @@ function CategoryManagementPageContent() {
                               {category.code}
                             </Badge>
                             {category.isActive ? (
-                              <Badge className="bg-green-100 text-green-800 text-xs">Active</Badge>
+                              <StatusBadge variant="success">Active</StatusBadge>
                             ) : (
-                              <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                              <StatusBadge variant="neutral">Inactive</StatusBadge>
                             )}
                             {category.routingMode === "TOP_LEVEL" && (
                               <Badge variant="outline" className="text-xs">Top-level</Badge>
@@ -962,20 +972,20 @@ function CategoryManagementPageContent() {
                               </Badge>
                             )}
                             {category.audience === "adult" && (
-                              <Badge className="bg-slate-100 text-slate-800 text-xs">Adults</Badge>
+                              <RoleBadge tone="neutral">Adults</RoleBadge>
                             )}
                             {category.audience === "children" && (
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">Children</Badge>
+                              <RoleBadge tone="info">Children</RoleBadge>
                             )}
                             {category.tracksMemberIdentifier && (
-                              <Badge className="bg-purple-100 text-purple-800 text-xs">
+                              <Badge className="bg-[color-mix(in_oklch,var(--chart-3)_12%,transparent)] text-[var(--chart-3)] text-xs">
                                 {category.identifierLabel?.trim() || "Member #"}
                               </Badge>
                             )}
                             {fundSettingsById.get(category.id)?.expenseTrackingEnabled && (
-                              <Badge className="bg-emerald-100 text-emerald-800 text-xs">
+                              <StatusBadge variant="success">
                                 Balance: KES {Number.parseFloat(fundSettingsById.get(category.id)?.netBalance ?? "0").toLocaleString()}
-                              </Badge>
+                              </StatusBadge>
                             )}
                           </div>
                           {category.routingMode === "REQUIRES_PURPOSE" && (
@@ -1046,7 +1056,7 @@ function CategoryManagementPageContent() {
                         </div>
                       </>
                     )}
-                  </div>
+                  </Card>
                 ))}
               </div>
             )}

@@ -10,7 +10,8 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import { Users } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
@@ -26,6 +27,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ADD_CHILD, GET_MY_DEPENDENTS } from "@/lib/graphql/family-mutations";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 interface Dependent {
   id: string;
@@ -106,12 +110,18 @@ function FamilyContent() {
         </CardHeader>
         <CardContent>
           {loading && !data && (
-            <p className="text-sm text-muted-foreground">Loading dependents…</p>
+            <div className="space-y-3" aria-hidden="true">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
+            </div>
           )}
           {!loading && dependents.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              You have not added any dependents yet.
-            </p>
+            <Empty
+              icon={Users}
+              title="No dependents yet"
+              description="You have not added any dependents yet. Use the form below to add a child."
+            />
           )}
           {dependents.length > 0 && (
             <ul className="divide-y divide-border" aria-label="Dependents list">
@@ -125,9 +135,7 @@ function FamilyContent() {
                     </p>
                   </div>
                   {d.isMinor && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
-                      Minor
-                    </span>
+                    <StatusBadge variant="info">Minor</StatusBadge>
                   )}
                 </li>
               ))}

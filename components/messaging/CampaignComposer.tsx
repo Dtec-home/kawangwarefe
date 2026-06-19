@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { Eye, Send, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";

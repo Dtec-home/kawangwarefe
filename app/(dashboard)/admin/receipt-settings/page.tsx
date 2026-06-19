@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { PageHeader } from "@/components/ui/page-header";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { ArrowLeft, CheckCircle, AlertCircle, Save } from "lucide-react";
@@ -131,12 +132,10 @@ function ReceiptSettingsPageContent() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Receipt Book Settings</h1>
-            <p className="text-muted-foreground">
-              Configure the auto-incrementing manual receipt numbers
-            </p>
-          </div>
+          <PageHeader
+            title="Receipt Book Settings"
+            description="Configure the auto-incrementing manual receipt numbers"
+          />
         </div>
 
         {success && (
@@ -165,7 +164,7 @@ function ReceiptSettingsPageContent() {
           </CardHeader>
           <CardContent>
             {current && (
-              <div className="mb-4 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+              <div className="mb-4 rounded-md border border-border bg-muted px-3 py-2 text-sm">
                 Next auto-assigned number:{" "}
                 <span className="font-medium">{current.nextReceiptNumber}</span>
               </div>
@@ -220,7 +219,7 @@ function ReceiptSettingsPageContent() {
               <Button type="submit" disabled={submitting || loading}>
                 {submitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
                     Saving...
                   </>
                 ) : (

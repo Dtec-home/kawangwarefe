@@ -8,6 +8,7 @@
 import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryAmountRow } from "./category-amount-row";
 import { useQuery } from "@apollo/client/react";
 import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
@@ -93,7 +94,7 @@ export function MultiCategorySelector({
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-24 bg-muted animate-pulse rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
       </div>
     );
   }
@@ -122,7 +123,7 @@ export function MultiCategorySelector({
           type="button"
           variant="outline"
           onClick={handleAdd}
-          className="w-full border-dashed border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+          className="w-full border-dashed border-2 border-primary/40 text-primary hover:bg-primary/5 hover:text-primary"
         >
           <Plus className="mr-2 h-4 w-4" />
           Add another fund

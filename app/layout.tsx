@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "react-hot-toast";
+import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { ApolloWrapper } from "@/lib/graphql/apollo-client";
 import { AuthProvider } from "@/lib/auth/auth-context";
@@ -9,9 +9,10 @@ import { StructuredData } from "@/components/seo/structured-data";
 import { UpdatePrompt } from "@/components/pwa/update-prompt";
 import "./globals.css";
 //Because we must deploy
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -106,37 +107,13 @@ export default function RootLayout({
         <StructuredData />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${jakarta.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
           <ApolloWrapper>
             <AuthProvider>
               {children}
-              <Toaster
-              position="bottom-center"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: 'var(--popover)',
-                  color: 'var(--popover-foreground)',
-                  border: '1px solid var(--border)',
-                },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: '#10b981',
-                    secondary: 'var(--popover)',
-                  },
-                },
-                error: {
-                  duration: 4000,
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: 'var(--popover)',
-                  },
-                },
-              }}
-            />
+              <Toaster position="bottom-center" />
           </AuthProvider>
           </ApolloWrapper>
         </ThemeProvider>

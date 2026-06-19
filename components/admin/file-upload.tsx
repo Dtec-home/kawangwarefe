@@ -99,7 +99,7 @@ export function FileUpload({
           className={`border-2 border-dashed transition-colors ${isDragging
               ? "border-primary bg-primary/5"
               : error
-                ? "border-red-500 bg-red-50 dark:bg-red-950/20"
+                ? "border-destructive bg-destructive/12"
                 : "border-muted-foreground/25 hover:border-primary/50"
             }`}
           onDrop={handleDrop}
@@ -107,7 +107,7 @@ export function FileUpload({
           onDragLeave={handleDragLeave}
         >
           <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-            <Upload className={`h-12 w-12 mb-4 ${error ? "text-red-500" : "text-muted-foreground"}`} />
+            <Upload className={`h-12 w-12 mb-4 ${error ? "text-destructive" : "text-muted-foreground"}`} />
             <h3 className="font-semibold mb-2">
               {isDragging ? "Drop file here" : "Upload File"}
             </h3>
@@ -156,7 +156,7 @@ export function FileUpload({
       )}
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       )}
     </div>
   );

@@ -21,6 +21,7 @@ import { CheckCircle2, Clock, XCircle, ArrowLeft, RefreshCw } from "lucide-react
 import { LoginButton } from "@/components/auth/login-button";
 import { useAuth } from "@/lib/auth/auth-context";
 import { MemberLayout } from "@/components/layouts/member-layout";
+import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
 
 interface Contribution {
   id: string;
@@ -65,27 +66,27 @@ function getStatusConfig(status: string, resultDesc: string | null | undefined) 
     case "completed":
       return {
         icon: CheckCircle2,
-        color: "text-green-600 dark:text-green-400",
-        bgColor: "bg-green-50 dark:bg-green-950",
-        borderColor: "border-green-200 dark:border-green-800",
+        color: "text-success",
+        bgColor: "bg-success/12",
+        borderColor: "border-success/30",
         title: "Payment Successful!",
         description: "Your contribution has been received and processed.",
       };
     case "failed":
       return {
         icon: XCircle,
-        color: "text-red-600 dark:text-red-400",
-        bgColor: "bg-red-50 dark:bg-red-950",
-        borderColor: "border-red-200 dark:border-red-800",
+        color: "text-destructive",
+        bgColor: "bg-destructive/12",
+        borderColor: "border-destructive/30",
         title: "Payment Failed",
         description: resultDesc || "The payment could not be processed.",
       };
     default: // pending
       return {
         icon: Clock,
-        color: "text-yellow-600 dark:text-yellow-400",
-        bgColor: "bg-yellow-50 dark:bg-yellow-950",
-        borderColor: "border-yellow-200 dark:border-yellow-800",
+        color: "text-warning",
+        bgColor: "bg-warning/12",
+        borderColor: "border-warning/30",
         title: "Payment Pending",
         description: "Waiting for M-Pesa confirmation. Please check your phone.",
       };
@@ -139,7 +140,14 @@ function SingleContributionConfirmation({
             value={<span className="font-mono">{contribution.departmentMemberIdentifier}</span>}
           />
         )}
-        <DetailRow label="Status" value={<span className="capitalize">{contribution.status}</span>} />
+        <DetailRow
+          label="Status"
+          value={
+            <StatusBadge variant={statusToVariant(contribution.status)} className="capitalize">
+              {contribution.status}
+            </StatusBadge>
+          }
+        />
         <DetailRow
           label="Date"
           value={contribution.transactionDate ? new Date(contribution.transactionDate).toLocaleDateString() : "Pending"}
@@ -216,7 +224,14 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
 
       <DetailsCard>
         <DetailRow label="Total Amount" value={`KES ${totalAmount.toLocaleString()}`} />
-        <DetailRow label="Status" value={<span className="capitalize">{overallStatus}</span>} />
+        <DetailRow
+          label="Status"
+          value={
+            <StatusBadge variant={statusToVariant(overallStatus)} className="capitalize">
+              {overallStatus}
+            </StatusBadge>
+          }
+        />
         {firstContrib && (
           <DetailRow label="Member" value={firstContrib.member.fullName} subValue={firstContrib.member.phoneNumber} wide />
         )}
@@ -268,7 +283,7 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
 // ─── Shared UI building blocks ─────────────────────────────────────────────
 function LoadingCard() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <Card className="max-w-md w-full">
         <CardContent className="pt-6 text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
@@ -289,10 +304,10 @@ function ErrorCard({
   onBack: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <Card className="max-w-md w-full">
         <CardHeader>
-          <CardTitle className="text-red-600">Error</CardTitle>
+          <CardTitle className="text-destructive">Error</CardTitle>
           <CardDescription>{message || "Could not load contribution details"}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -313,7 +328,7 @@ function ErrorCard({
 function ConfirmationLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
+    <div className="min-h-screen bg-muted py-12 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <Button variant="ghost" onClick={() => router.push("/contribute")} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -495,10 +510,10 @@ function ConfirmationContent() {
     content = <MultiContributionConfirmation checkoutRequestId={checkoutRequestId} />;
   } else {
     content = (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <Card className="max-w-md w-full">
         <CardHeader>
-          <CardTitle className="text-red-600">Invalid Request</CardTitle>
+          <CardTitle className="text-destructive">Invalid Request</CardTitle>
           <CardDescription>No contribution information found.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -519,7 +534,7 @@ export default function ConfirmationPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-muted flex items-center justify-center px-4">
           <Card className="max-w-md w-full">
             <CardContent className="pt-6 text-center">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />

@@ -195,12 +195,12 @@ function ExternalNumbersInput({
       {(stats.valid > 0 || stats.invalid > 0) && (
         <div className="flex gap-3 text-xs">
           {stats.valid > 0 && (
-            <span className="text-green-700 dark:text-green-400 font-medium">
+            <span className="text-success font-medium">
               {stats.valid} valid number{stats.valid !== 1 ? "s" : ""}
             </span>
           )}
           {stats.invalid > 0 && (
-            <span className="text-amber-600 dark:text-amber-400">
+            <span className="text-warning">
               {stats.invalid} unrecognised (will be skipped)
             </span>
           )}

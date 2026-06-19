@@ -137,8 +137,8 @@ export function BulkAddMembersModal({ open, onOpenChange, groupId, groupName }: 
         )}
         
         {success && (
-          <Alert className="py-2 bg-green-50 text-green-800 border-green-200">
-            <Users className="h-4 w-4 text-green-600" />
+          <Alert className="py-2 bg-success/12 text-success border-success/30">
+            <Users className="h-4 w-4 text-success" />
             <AlertDescription>{success}</AlertDescription>
           </Alert>
         )}

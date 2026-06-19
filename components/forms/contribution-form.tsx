@@ -21,7 +21,8 @@ import { ContributionSummary } from "./contribution-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, ArrowRight, CheckCircle2, Check } from "lucide-react";
-import toast from "react-hot-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import { GET_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
 
 // Validation schema using Zod
@@ -123,7 +124,7 @@ interface ContributionDetails {
 // /contribute page renders this component directly, not inside its own boundary).
 export function ContributionForm(props: ContributionFormProps) {
   return (
-    <Suspense fallback={<div className="h-24 bg-muted animate-pulse rounded-lg" />}>
+    <Suspense fallback={<Skeleton className="h-24 w-full rounded-lg" />}>
       <ContributionFormInner {...props} />
     </Suspense>
   );
@@ -445,7 +446,7 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
             <div className="flex flex-col items-center gap-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
                 isCompleted
-                  ? "bg-emerald-600 text-white"
+                  ? "bg-success text-success-foreground"
                   : isCurrent
                   ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
                   : "bg-muted text-muted-foreground"
@@ -458,7 +459,7 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
             </div>
             {i < FORM_STEPS.length - 1 && (
               <div className={`flex-1 h-0.5 mx-2 mb-5 rounded-full ${
-                i < stepIndex ? "bg-emerald-600" : "bg-muted"
+                i < stepIndex ? "bg-success" : "bg-muted"
               }`} />
             )}
           </Fragment>
@@ -472,9 +473,9 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
     return (
       <div className="w-full space-y-0">
       <StepIndicator />
-      <Card className="w-full shadow-lg border border-emerald-200/30 dark:border-emerald-800/30">
-        <CardHeader data-tour="contribution-header" className="space-y-2 border-b border-emerald-100/50 dark:border-emerald-900/30 pb-4">
-          <CardTitle className="text-2xl md:text-3xl bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent">
+      <Card className="w-full shadow-lg border border-border">
+        <CardHeader data-tour="contribution-header" className="space-y-2 border-b border-border pb-4">
+          <CardTitle className="text-2xl md:text-3xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Make a Contribution
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
@@ -486,64 +487,68 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
             The total + CTA live in a sticky footer below so they stay reachable. */}
         <CardContent className="pt-6 pb-0">
           <form className="space-y-5">
-            <div data-tour="contribution-phone">
-              <PhoneInput
-                name="phoneNumber"
-                register={register}
-                error={errors.phoneNumber}
-              />
-            </div>
+              {/* F5.3 — required field note */}
+              <p className="text-xs text-muted-foreground -mb-2">
+                Fields marked <span className="text-destructive font-semibold">*</span> are required
+              </p>
+              <div data-tour="contribution-phone">
+                <PhoneInput
+                  name="phoneNumber"
+                  register={register}
+                  error={errors.phoneNumber}
+                />
+              </div>
 
-            {/* Category rows in their own bounded scroll region so adding many
-                rows never pushes the CTA off-screen (W5.1). */}
-            <div
-              data-tour="contribution-categories"
-              className="space-y-2 max-h-[42vh] sm:max-h-[48vh] overflow-y-auto overflow-x-hidden -mx-1 px-1 pb-1"
-            >
-              <MultiCategorySelector
-                contributions={contributions}
-                phoneNumber={phoneNumber}
-                onChange={(newContributions) =>
-                  setValue("contributions", newContributions, {
-                    shouldValidate: true,
-                  })
-                }
-                errors={
-                  Array.isArray(errors.contributions)
-                    ? errors.contributions.map((err) => ({
-                      categoryId: err?.categoryId?.message,
-                      purposeId: (err as any)?.purposeId?.message,
-                      amount: err?.amount?.message,
-                      memberIdentifier: (err as any)?.memberIdentifier?.message,
-                    }))
-                    : undefined
-                }
-              />
-              {errors.contributions?.message && typeof errors.contributions.message === 'string' && (
-                <p className="text-sm text-destructive">
-                  {errors.contributions.message}
-                </p>
-              )}
-            </div>
-          </form>
+              {/* F5.2 — bounded scroll using clamp + dvh so landscape mobile keeps headroom */}
+              <div
+                data-tour="contribution-categories"
+                className="space-y-2 max-h-[clamp(180px,40dvh,420px)] overflow-y-auto overflow-x-hidden -mx-1 px-1 pb-1"
+              >
+                <MultiCategorySelector
+                  contributions={contributions}
+                  phoneNumber={phoneNumber}
+                  onChange={(newContributions) =>
+                    setValue("contributions", newContributions, {
+                      shouldValidate: true,
+                    })
+                  }
+                  errors={
+                    Array.isArray(errors.contributions)
+                      ? errors.contributions.map((err) => ({
+                        categoryId: err?.categoryId?.message,
+                        purposeId: (err as any)?.purposeId?.message,
+                        amount: err?.amount?.message,
+                        memberIdentifier: (err as any)?.memberIdentifier?.message,
+                      }))
+                      : undefined
+                  }
+                />
+                {errors.contributions?.message && typeof errors.contributions.message === 'string' && (
+                  <p className="text-sm text-destructive">
+                    {errors.contributions.message}
+                  </p>
+                )}
+              </div>
+            </form>
         </CardContent>
 
         {/* Sticky footer: running total + Review CTA. Always visible / thumb-reachable
             on mobile, including safe-area padding (W5.1). */}
-        <div className="sticky bottom-0 z-10 border-t border-emerald-100/50 dark:border-emerald-900/30 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 rounded-b-xl px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-3">
+        <div className="sticky bottom-0 z-10 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 rounded-b-xl px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-3">
           {parseFloat(totalAmount) > 0 && (
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-emerald-900 dark:text-emerald-200">Total Amount:</span>
-              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+              <span className="font-semibold text-sm text-muted-foreground">Total Amount</span>
+              <span className="text-2xl font-bold text-primary">
                 KES {parseFloat(totalAmount).toLocaleString("en-KE")}
               </span>
             </div>
           )}
 
+          {/* F5.5 — plain primary button; colour comes from --primary token (brand-teal) */}
           <Button
             type="button"
             data-tour="contribution-review-btn"
-            className="w-full h-11 bg-gradient-to-r from-teal-600 via-emerald-600 to-blue-600 hover:from-teal-700 hover:via-emerald-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+            className="w-full"
             onClick={handleReviewClick}
             size="lg"
           >
@@ -654,10 +659,10 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
     return (
       <Card className="w-full shadow-lg">
         <CardContent className="flex flex-col items-center py-8 space-y-6">
-          <CheckCircle2 className="h-16 w-16 text-green-500" />
+          <CheckCircle2 className="h-16 w-16 text-success" />
 
           <div className="text-center space-y-2">
-            <h3 className="text-2xl font-bold text-green-600">
+            <h3 className="text-2xl font-bold text-success">
               Payment Completed Successfully!
             </h3>
             <p className="text-muted-foreground max-w-md">
@@ -667,9 +672,9 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
 
           <div className="w-full max-w-md space-y-4">
             {/* Total Amount */}
-            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg border-2 border-green-200">
+            <div className="flex justify-between items-center p-4 bg-success/12 rounded-lg border-2 border-success/30">
               <span className="font-semibold text-lg">Total Amount:</span>
-              <span className="text-2xl font-bold text-green-600">
+              <span className="text-2xl font-bold text-success">
                 KES {parseFloat(contributionDetails.totalAmount).toLocaleString("en-KE")}
               </span>
             </div>
@@ -705,7 +710,7 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
             {/* Reference ID */}
             <div className="text-center text-xs text-muted-foreground space-y-1">
               <p>Reference: {contributionDetails.checkoutRequestId}</p>
-              <p className="text-green-600 font-medium">✓ Payment Confirmed</p>
+              <p className="text-success font-medium">✓ Payment Confirmed</p>
             </div>
           </div>
 

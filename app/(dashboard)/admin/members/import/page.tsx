@@ -12,6 +12,7 @@ import { useMutation } from "@apollo/client/react";
 import { IMPORT_MEMBERS, GET_MEMBER_IMPORT_TEMPLATE } from "@/lib/graphql/member-import-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { AdminLayout } from "@/components/layouts/admin-layout";
@@ -165,24 +166,23 @@ function MemberImportPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Link href="/admin/members">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold">Import Members</h1>
-            </div>
-            <p className="text-muted-foreground">
-              Upload a CSV or Excel file to import members in bulk
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleDownloadTemplate} className="w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            Download Template
-          </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/members">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <PageHeader
+            className="flex-1"
+            title="Import Members"
+            description="Upload a CSV or Excel file to import members in bulk"
+            actions={
+              <Button variant="outline" onClick={handleDownloadTemplate}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Template
+              </Button>
+            }
+          />
         </div>
 
         {/* Instructions */}
@@ -292,7 +292,7 @@ function MemberImportPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-success">
                     {importResult.importedCount}
                   </div>
                 </CardContent>
@@ -305,7 +305,7 @@ function MemberImportPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">
+                  <div className="text-2xl font-bold text-warning">
                     {importResult.skippedCount}
                   </div>
                 </CardContent>
@@ -318,7 +318,7 @@ function MemberImportPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-destructive">
                     {importResult.errorCount}
                   </div>
                 </CardContent>
@@ -334,7 +334,7 @@ function MemberImportPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-2xl font-bold text-[var(--chart-3)]">
                     {(importResult.identifiersCreated ?? 0) + (importResult.identifiersUpdated ?? 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -348,7 +348,7 @@ function MemberImportPageContent() {
             {importResult.errors.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-red-600 flex items-center gap-2">
+                  <CardTitle className="text-destructive flex items-center gap-2">
                     <XCircle className="h-5 w-5" />
                     Errors ({importResult.errors.length})
                   </CardTitle>
@@ -356,7 +356,7 @@ function MemberImportPageContent() {
                 <CardContent>
                   <div className="space-y-1 max-h-60 overflow-y-auto">
                     {importResult.errors.map((error, index) => (
-                      <p key={index} className="text-sm text-red-600 dark:text-red-400">
+                      <p key={index} className="text-sm text-destructive">
                         • {error}
                       </p>
                     ))}
@@ -369,7 +369,7 @@ function MemberImportPageContent() {
             {importResult.duplicates.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-yellow-600 flex items-center gap-2">
+                  <CardTitle className="text-warning flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
                     Duplicates ({importResult.duplicates.length})
                   </CardTitle>
@@ -377,7 +377,7 @@ function MemberImportPageContent() {
                 <CardContent>
                   <div className="space-y-1 max-h-60 overflow-y-auto">
                     {importResult.duplicates.map((duplicate, index) => (
-                      <p key={index} className="text-sm text-yellow-600 dark:text-yellow-400">
+                      <p key={index} className="text-sm text-warning">
                         • {duplicate}
                       </p>
                     ))}

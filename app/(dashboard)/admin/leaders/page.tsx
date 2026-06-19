@@ -20,12 +20,15 @@ import {
 import { GET_ALL_CATEGORIES } from "@/lib/graphql/category-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import {
@@ -299,11 +302,11 @@ function SortableLeaderRow({
                 {leader.title}
               </Badge>
               {leader.isActive ? (
-                <Badge className="bg-green-100 text-green-800 text-xs">Active</Badge>
+                <StatusBadge variant="success" className="text-xs">Active</StatusBadge>
               ) : (
-                <Badge variant="secondary" className="text-xs">
+                <StatusBadge variant="neutral" className="text-xs">
                   Inactive
-                </Badge>
+                </StatusBadge>
               )}
               {leader.category?.name && (
                 <Badge variant="secondary" className="text-xs">
@@ -613,7 +616,7 @@ function LeadersManagementPageContent() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{activeCount}</div>
+              <div className="text-2xl font-bold text-success">{activeCount}</div>
             </CardContent>
           </Card>
           <Card>
@@ -621,7 +624,7 @@ function LeadersManagementPageContent() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Inactive</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{inactiveCount}</div>
+              <div className="text-2xl font-bold text-warning">{inactiveCount}</div>
             </CardContent>
           </Card>
         </div>
@@ -687,14 +690,29 @@ function LeadersManagementPageContent() {
           </CardHeader>
           <CardContent>
             {loading && orderedLeaders.length === 0 ? (
-              <div className="flex items-center gap-2 py-8 justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                <span>Loading leaders...</span>
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-lg" />
+                ))}
               </div>
             ) : orderedLeaders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No leaders found. Add one to get started.
-              </div>
+              <Empty
+                icon={Users}
+                title="No leaders yet"
+                description="Add a member of the leadership team to show them on the public About and home pages."
+                action={
+                  <Button
+                    onClick={() => {
+                      setShowCreateForm(true);
+                      setNewForm(emptyForm);
+                      clearMessages();
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Leader
+                  </Button>
+                }
+              />
             ) : (
               <DndContext
                 sensors={sensors}

@@ -9,7 +9,7 @@ import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { BottomNav } from "@/components/layouts/bottom-nav";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -66,7 +66,7 @@ export function Navigation() {
                 <Button
                   key={link.href}
                   asChild
-                  className="h-11 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="h-11 bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <Link href={link.href}>
                     <Icon className="w-4 h-4 mr-2" />
@@ -120,7 +120,7 @@ export function Navigation() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-colors bg-gradient-to-r from-teal-600 to-emerald-600 text-white"
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-colors bg-gradient-to-r from-primary to-primary/70 text-primary-foreground"
                   onClick={() => setIsOpen(false)}
                 >
                   <Icon className="w-5 h-5" />
@@ -144,7 +144,7 @@ export function Navigation() {
                   setIsOpen(false);
                   handleLogout();
                 }}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-muted rounded-md transition-colors w-full"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-destructive hover:bg-muted rounded-md transition-colors w-full"
               >
                 <LogOut className="w-4 h-4" />
                 Logout

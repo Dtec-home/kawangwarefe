@@ -32,6 +32,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
+import { RoleBadge } from "@/components/ui/status-badge";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import {
@@ -42,7 +46,7 @@ import {
   Users,
   FolderKey,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface Category {
   id: string;
@@ -218,16 +222,10 @@ function CategoryAdminsPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="h-8 w-8" />
-            Department Admins
-          </h1>
-          <p className="text-muted-foreground">
-            Assign members as administrators for specific contribution
-            departments
-          </p>
-        </div>
+        <PageHeader
+          title="Department Admins"
+          description="Assign members as administrators for specific contribution departments"
+        />
 
         {/* Statistics */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -251,10 +249,10 @@ function CategoryAdminsPageContent() {
               <CardTitle className="text-sm font-medium">
                 Department Admins
               </CardTitle>
-              <Shield className="h-4 w-4 text-blue-600" />
+              <Shield className="h-4 w-4 text-info" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-info">
                 {categoryAdmins.length}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -268,10 +266,10 @@ function CategoryAdminsPageContent() {
               <CardTitle className="text-sm font-medium">
                 Departments with Admins
               </CardTitle>
-              <Users className="h-4 w-4 text-green-600" />
+              <Users className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 {Object.keys(adminsByCategory).length}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -404,36 +402,40 @@ function CategoryAdminsPageContent() {
           </CardHeader>
           <CardContent>
             {loading && (
-              <div className="text-center py-8 text-muted-foreground">
-                Loading department admins...
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))}
               </div>
             )}
 
             {error && (
-              <div className="text-center py-8 text-red-600">
+              <div className="text-center py-8 text-destructive">
                 Error loading department admins: {error.message}
               </div>
             )}
 
             {!loading && !error && categoryAdmins.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No department admins assigned yet
-              </div>
+              <Empty
+                icon={Shield}
+                title="No department admins yet"
+                description="Assign a member as an administrator for a contribution department above."
+              />
             )}
 
             {!loading && !error && categoryAdmins.length > 0 && (
               <div className="space-y-6">
                 {Object.values(adminsByCategory).map(({ category, admins }) => (
-                  <div key={category.id} className="border rounded-lg p-4">
+                  <div key={category.id} className="border border-border rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <FolderKey className="h-5 w-5 text-blue-600" />
+                      <FolderKey className="h-5 w-5 text-info" />
                       <h3 className="font-semibold text-lg">{category.name}</h3>
                       <span className="text-sm text-muted-foreground">
                         ({category.code})
                       </span>
-                      <span className="ml-auto text-sm bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 px-2 py-1 rounded-full">
+                      <RoleBadge tone="info" className="ml-auto">
                         {admins.length} admin{admins.length !== 1 ? "s" : ""}
-                      </span>
+                      </RoleBadge>
                     </div>
                     {category.description && (
                       <p className="text-sm text-muted-foreground mb-4">
@@ -443,7 +445,7 @@ function CategoryAdminsPageContent() {
                     {/* Mobile card view */}
                     <div className="space-y-3 md:hidden">
                       {admins.map((admin) => (
-                        <div key={admin.id} className="border rounded-lg p-3 space-y-2">
+                        <div key={admin.id} className="border border-border rounded-lg p-3 space-y-2">
                           <div className="flex items-start justify-between">
                             <div>
                               <div className="font-medium">{admin.member.fullName}</div>
@@ -452,7 +454,7 @@ function CategoryAdminsPageContent() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/12"
                               onClick={() => handleRemoveAdmin(admin.id)}
                               disabled={removing}
                             >
@@ -501,7 +503,7 @@ function CategoryAdminsPageContent() {
                           {admins.map((admin) => (
                             <tr
                               key={admin.id}
-                              className="border-b hover:bg-slate-50 dark:hover:bg-slate-800"
+                              className="border-b hover:bg-muted/60"
                             >
                               <td className="p-2">
                                 <div className="font-medium">
@@ -536,7 +538,7 @@ function CategoryAdminsPageContent() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/12"
                                   onClick={() => handleRemoveAdmin(admin.id)}
                                   disabled={removing}
                                 >

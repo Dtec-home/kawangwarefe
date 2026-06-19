@@ -9,7 +9,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
@@ -20,7 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge, type StatusVariant } from "@/components/ui/status-badge";
 import {
   Select,
   SelectContent,
@@ -32,6 +33,8 @@ import {
   GET_PRAYER_REQUESTS,
   UPDATE_PRAYER_REQUEST_STATUS,
 } from "@/lib/graphql/prayer-mutations";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
 import { Heart } from "lucide-react";
 
 type PrayerStatus = "open" | "praying" | "answered" | "archived";
@@ -52,16 +55,16 @@ interface UpdateStatusData {
   updatePrayerRequestStatus: { success: boolean; message: string };
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  open: "bg-amber-100 text-amber-800",
-  praying: "bg-blue-100 text-blue-800",
-  answered: "bg-green-100 text-green-800",
-  archived: "bg-slate-100 text-slate-700",
+const STATUS_VARIANT: Record<string, StatusVariant> = {
+  open: "warning",
+  praying: "info",
+  answered: "success",
+  archived: "neutral",
 };
 
 function AdminPrayersContent() {
   const [filter, setFilter] = useState<PrayerStatus | "">("");
-  const { data, refetch } = useQuery<GetRowsData>(GET_PRAYER_REQUESTS, {
+  const { data, loading, refetch } = useQuery<GetRowsData>(GET_PRAYER_REQUESTS, {
     variables: { status: filter || null },
     fetchPolicy: "cache-and-network",
   });
@@ -90,10 +93,7 @@ function AdminPrayersContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Heart className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">Prayer Requests</h1>
-      </div>
+      <PageHeader title="Prayer Requests" />
 
       <Card>
         <CardHeader>
@@ -123,8 +123,18 @@ function AdminPrayersContent() {
           <CardTitle>Requests ({rows.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No requests to show.</p>
+          {loading && rows.length === 0 ? (
+            <div className="space-y-4" aria-hidden="true">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : rows.length === 0 ? (
+            <Empty
+              icon={Heart}
+              title="No prayer requests"
+              description="There are no prayer requests matching this filter."
+            />
           ) : (
             <ul className="divide-y divide-border" aria-label="Prayer requests">
               {rows.map((r) => (
@@ -142,9 +152,9 @@ function AdminPrayersContent() {
                         {new Date(r.createdAt).toLocaleString()}
                       </p>
                     </div>
-                    <Badge className={STATUS_COLOR[r.status] || ""}>
+                    <StatusBadge variant={STATUS_VARIANT[r.status] ?? "neutral"}>
                       {r.status}
-                    </Badge>
+                    </StatusBadge>
                   </div>
                   <p className="text-sm whitespace-pre-wrap">{r.body}</p>
                   <div className="flex gap-2 flex-wrap">

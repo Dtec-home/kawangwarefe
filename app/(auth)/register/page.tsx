@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 interface Department {

@@ -41,34 +41,34 @@ interface StatCardProps {
 // Color mapping for different stat types
 const colorConfig = {
   teal: {
-    border: "border-l-teal-600 dark:border-l-teal-400",
-    bg: "bg-teal-100 dark:bg-teal-900/30",
-    text: "text-teal-600 dark:text-teal-400",
+    border: "border-l-primary",
+    bg: "bg-[color-mix(in_oklch,var(--primary)_12%,transparent)]",
+    text: "text-primary",
   },
   emerald: {
-    border: "border-l-emerald-600 dark:border-l-emerald-400",
-    bg: "bg-emerald-100 dark:bg-emerald-900/30",
-    text: "text-emerald-600 dark:text-emerald-400",
+    border: "border-l-[var(--chart-2)]",
+    bg: "bg-[color-mix(in_oklch,var(--chart-2)_12%,transparent)]",
+    text: "text-[var(--chart-2)]",
   },
   blue: {
-    border: "border-l-blue-600 dark:border-l-blue-400",
-    bg: "bg-blue-100 dark:bg-blue-900/30",
-    text: "text-blue-600 dark:text-blue-400",
+    border: "border-l-[var(--chart-3)]",
+    bg: "bg-[color-mix(in_oklch,var(--chart-3)_12%,transparent)]",
+    text: "text-[var(--chart-3)]",
   },
   purple: {
-    border: "border-l-purple-600 dark:border-l-purple-400",
-    bg: "bg-purple-100 dark:bg-purple-900/30",
-    text: "text-purple-600 dark:text-purple-400",
+    border: "border-l-[var(--chart-4)]",
+    bg: "bg-[color-mix(in_oklch,var(--chart-4)_12%,transparent)]",
+    text: "text-[var(--chart-4)]",
   },
   red: {
-    border: "border-l-red-600 dark:border-l-red-400",
-    bg: "bg-red-100 dark:bg-red-900/30",
-    text: "text-red-600 dark:text-red-400",
+    border: "border-l-destructive",
+    bg: "bg-[color-mix(in_oklch,var(--destructive)_12%,transparent)]",
+    text: "text-destructive",
   },
   amber: {
-    border: "border-l-amber-600 dark:border-l-amber-400",
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    text: "text-amber-600 dark:text-amber-400",
+    border: "border-l-[var(--chart-5)]",
+    bg: "bg-[color-mix(in_oklch,var(--chart-5)_12%,transparent)]",
+    text: "text-[var(--chart-5)]",
   },
 };
 
@@ -76,12 +76,12 @@ const colorConfig = {
 const getTrendColor = (direction: string) => {
   switch (direction) {
     case "up":
-      return "text-green-600 dark:text-green-400";
+      return "text-[var(--chart-2)]";
     case "down":
-      return "text-red-600 dark:text-red-400";
+      return "text-destructive";
     case "neutral":
     default:
-      return "text-gray-600 dark:text-gray-400";
+      return "text-muted-foreground";
   }
 };
 

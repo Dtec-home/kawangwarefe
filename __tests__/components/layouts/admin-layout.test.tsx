@@ -60,7 +60,7 @@ describe('AdminLayout', () => {
 
   it('shows Member View button', () => {
     render(<AdminLayout><div>C</div></AdminLayout>)
-    expect(screen.getByText('Switch to Member View')).toBeInTheDocument()
+    expect(screen.getAllByText('Member View').length).toBeGreaterThan(0)
   })
 
   it('shows Logout button', () => {

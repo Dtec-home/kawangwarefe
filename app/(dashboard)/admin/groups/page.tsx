@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
 import { CheckCircle, AlertCircle, Plus, Pencil, Trash2, Save, X, Users, UserPlus } from "lucide-react";
 import { BulkAddMembersModal } from "@/components/groups/bulk-add-members-modal";
 import { GroupMembersModal } from "@/components/groups/group-members-modal";
@@ -169,10 +172,10 @@ export default function GroupsManagementPage() {
     <AdminProtectedRoute>
       <AdminLayout>
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Groups</h1>
-            <p className="text-muted-foreground">Manage church groups without Django admin access.</p>
-          </div>
+          <PageHeader
+            title="Groups"
+            description="Manage church groups without Django admin access."
+          />
 
           {success && (
             <Alert>
@@ -224,9 +227,19 @@ export default function GroupsManagementPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading && <p className="text-muted-foreground">Loading groups...</p>}
+              {loading && (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-14 w-full rounded-md" />
+                  ))}
+                </div>
+              )}
               {!loading && groups.length === 0 && (
-                <p className="text-muted-foreground">No groups yet.</p>
+                <Empty
+                  icon={Users}
+                  title="No groups yet"
+                  description="Create your first group using the form above."
+                />
               )}
 
               {!loading && groups.length > 0 && (
@@ -235,9 +248,9 @@ export default function GroupsManagementPage() {
                     const isEditing = editingId === group.id;
 
                     return (
-                      <div
+                      <Card
                         key={group.id}
-                        className="border rounded-md p-3 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between"
+                        className="p-3 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between"
                       >
                         {isEditing ? (
                           <Input
@@ -281,7 +294,7 @@ export default function GroupsManagementPage() {
                             </>
                           )}
                         </div>
-                      </div>
+                      </Card>
                     );
                   })}
                 </div>

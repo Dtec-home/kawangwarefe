@@ -12,7 +12,7 @@
 
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
@@ -46,6 +46,8 @@ import {
 import { uploadAvatar } from "@/lib/profile/avatar-upload";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Camera, UserRound, Users, Bell } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
 import { useRouter } from "next/navigation";
 
 interface GroupItem {
@@ -263,8 +265,25 @@ function ProfileContent() {
 
   if (meLoading && !meData) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">Loading your profile…</p>
+      <div className="max-w-2xl mx-auto py-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-20 h-20 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-9 w-40" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </div>
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -362,16 +381,19 @@ function ProfileContent() {
             <p className="font-medium">{me.phoneNumber}</p>
           </div>
 
-          <div id="contribution-totals" className="space-y-4 rounded-lg border p-4">
-            <div>
-              <h3 className="font-medium">My Contribution Breakdown</h3>
-              <p className="text-sm text-muted-foreground">
+          <Card id="contribution-totals" tabIndex={-1}>
+            <CardHeader>
+              <CardTitle className="text-base">My Contribution Breakdown</CardTitle>
+              <CardDescription>
                 Your completed totals by department, purpose, and group.
-              </p>
-            </div>
-
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
             {statsLoading && !stats ? (
-              <p className="text-sm text-muted-foreground">Loading your totals…</p>
+              <div className="grid gap-3 sm:grid-cols-2" aria-hidden="true">
+                <Skeleton className="h-16 w-full rounded-md" />
+                <Skeleton className="h-16 w-full rounded-md" />
+              </div>
             ) : stats ? (
               <>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -387,10 +409,14 @@ function ProfileContent() {
 
                 <div className="space-y-3">
                   {stats.byDepartment.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No completed contributions found yet.</p>
+                    <Empty
+                      icon={UserRound}
+                      title="No contributions yet"
+                      description="No completed contributions found yet."
+                    />
                   ) : (
                     stats.byDepartment.map((department) => (
-                      <div key={department.department.id} className="rounded-md border p-3 space-y-3">
+                      <Card key={department.department.id} className="gap-0 py-0 p-3 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="font-medium">{department.department.name}</p>
@@ -453,7 +479,7 @@ function ProfileContent() {
                             </div>
                           </div>
                         )}
-                      </div>
+                      </Card>
                     ))
                   )}
                 </div>
@@ -461,7 +487,8 @@ function ProfileContent() {
             ) : (
               <p className="text-sm text-muted-foreground">Your contribution totals will appear here.</p>
             )}
-          </div>
+            </CardContent>
+          </Card>
 
           <div>
             <Label htmlFor="department">Department</Label>

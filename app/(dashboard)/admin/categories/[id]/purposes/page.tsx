@@ -13,7 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, AlertCircle, Plus, Trash2, ArrowLeft, Pencil } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PageHeader } from "@/components/ui/page-header";
+import { CheckCircle, AlertCircle, Plus, Trash2, ArrowLeft, Pencil, ListChecks } from "lucide-react";
 import { GET_DEPARTMENT_PURPOSES, GET_CATEGORY_ALLOCATIONS } from "@/lib/graphql/queries";
 import {
   CREATE_DEPARTMENT_PURPOSE,
@@ -393,18 +397,18 @@ export default function DepartmentPurposesPage() {
     <AdminProtectedRoute>
       <AdminLayout>
         <div className="space-y-6">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Department Purposes</h1>
-              <p className="text-muted-foreground">Manage giving purposes for this department.</p>
-            </div>
-            <Link href="/admin/categories">
-              <Button variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to Departments
-              </Button>
-            </Link>
-          </div>
+          <PageHeader
+            title="Department Purposes"
+            description="Manage giving purposes for this department."
+            actions={
+              <Link href="/admin/categories">
+                <Button variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back to Departments
+                </Button>
+              </Link>
+            }
+          />
 
           {success && (
             <Alert>
@@ -482,18 +486,28 @@ export default function DepartmentPurposesPage() {
               <CardTitle>Current Purposes ({purposes.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              {loading && <p className="text-muted-foreground">Loading purposes...</p>}
+              {loading && (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full rounded-md" />
+                  ))}
+                </div>
+              )}
 
               {!loading && purposes.length === 0 && (
-                <p className="text-muted-foreground">No purposes yet for this department.</p>
+                <Empty
+                  icon={ListChecks}
+                  title="No purposes yet"
+                  description="No purposes yet for this department."
+                />
               )}
 
               {!loading && purposes.length > 0 && (
                 <div className="space-y-2">
                   {purposes.map((purpose) => (
-                    <div
+                    <Card
                       key={purpose.id}
-                      className="border rounded-md p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                      className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                     >
                       {editingPurposeId === purpose.id ? (
                         <div className="w-full space-y-3">
@@ -548,7 +562,9 @@ export default function DepartmentPurposesPage() {
                           <div className="font-medium">{purpose.name}</div>
                           <div className="text-sm text-muted-foreground">{purpose.code}</div>
                           {!purpose.isActive && (
-                            <div className="text-xs text-amber-600 mt-1">Inactive</div>
+                            <div className="mt-1">
+                              <StatusBadge variant="neutral">Inactive</StatusBadge>
+                            </div>
                           )}
                           {purpose.description && (
                             <div className="text-sm text-muted-foreground mt-1">{purpose.description}</div>
@@ -600,7 +616,7 @@ export default function DepartmentPurposesPage() {
                           </>
                         )}
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -635,28 +651,32 @@ export default function DepartmentPurposesPage() {
 
                 {/* Running total badge + activation status */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                    Math.abs(allocTotal - 100) < 0.01
-                      ? "bg-green-100 text-green-800"
-                      : allocTotal > 100
-                      ? "bg-red-100 text-red-800"
-                      : "bg-amber-100 text-amber-800"
-                  }`}>
+                  <StatusBadge
+                    className="px-3 py-1 text-sm"
+                    variant={
+                      Math.abs(allocTotal - 100) < 0.01
+                        ? "success"
+                        : allocTotal > 100
+                        ? "destructive"
+                        : "warning"
+                    }
+                  >
                     {Math.abs(allocTotal - 100) < 0.01
                       ? `Total: ${allocTotal.toFixed(2)}% ✓`
                       : allocTotal > 100
                       ? `Total: ${allocTotal.toFixed(2)}% — exceeds 100%`
                       : `Total: ${allocTotal.toFixed(2)}% — needs ${(100 - allocTotal).toFixed(2)}% more`}
-                  </div>
+                  </StatusBadge>
                   {(() => {
                     const activeCount = allocations.filter((a) => a.isActive).length;
                     const isReady = Math.abs(allocTotal - 100) < 0.01 && activeCount >= 2;
                     return (
-                      <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                        isReady ? "bg-teal-100 text-teal-800" : "bg-slate-100 text-slate-500"
-                      }`}>
+                      <StatusBadge
+                        className="px-3 py-1 text-sm"
+                        variant={isReady ? "success" : "neutral"}
+                      >
                         {isReady ? "Auto-split: ON" : `Auto-split: OFF${activeCount < 2 ? ` (need ≥2 active, have ${activeCount})` : ""}`}
-                      </div>
+                      </StatusBadge>
                     );
                   })()}
                 </div>
@@ -665,14 +685,14 @@ export default function DepartmentPurposesPage() {
                 {allocations.length > 0 && (
                   <div className="space-y-2">
                     {allocations.map((alloc) => (
-                      <div
+                      <Card
                         key={alloc.id}
-                        className="border rounded-md p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                        className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
                       >
-                        <div>
+                        <div className="flex items-center gap-2">
                           <span className="font-medium">{alloc.purpose.name}</span>
                           {!alloc.isActive && (
-                            <span className="ml-2 text-xs text-amber-600">(inactive)</span>
+                            <StatusBadge variant="neutral">inactive</StatusBadge>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -718,7 +738,7 @@ export default function DepartmentPurposesPage() {
                             </>
                           )}
                         </div>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 )}

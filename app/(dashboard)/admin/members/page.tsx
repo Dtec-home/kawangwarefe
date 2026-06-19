@@ -23,6 +23,10 @@ import {
 import { GET_ALL_CATEGORIES } from "@/lib/graphql/category-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge, RoleBadge, statusToVariant, type RoleTone } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -66,12 +70,12 @@ import Link from "next/link";
 const PAGE_SIZE = 100;
 const ALL_ROLES = ["admin", "treasurer", "pastor", "content_admin", "member"] as const;
 
-const ROLE_COLORS: Record<string, string> = {
-  admin: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
-  treasurer: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-  pastor: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
-  content_admin: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
-  member: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100",
+const ROLE_TONES: Record<string, RoleTone> = {
+  admin: "warning",
+  treasurer: "info",
+  pastor: "primary",
+  content_admin: "success",
+  member: "neutral",
 };
 
 interface GroupItem {
@@ -130,17 +134,11 @@ interface MemberMutationData {
 
 // ─── Reusable sub-components (DRY) ────────────────────────────────
 
-function StatusBadge({ isActive }: { isActive: boolean }) {
+function MemberStatusBadge({ isActive }: { isActive: boolean }) {
   return (
-    <span
-      className={`inline-block px-2 py-1 text-xs rounded-full ${
-        isActive
-          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-      }`}
-    >
+    <StatusBadge variant={isActive ? "success" : "destructive"}>
       {isActive ? "Active" : "Inactive"}
-    </span>
+    </StatusBadge>
   );
 }
 
@@ -149,9 +147,9 @@ function RoleBadges({ roles }: { roles: string[] }) {
   return (
     <div className="flex flex-wrap gap-1">
       {roles.map((r) => (
-        <Badge key={r} variant="secondary" className={`text-[10px] ${ROLE_COLORS[r] || ""}`}>
+        <RoleBadge key={r} tone={ROLE_TONES[r] || "neutral"} className="capitalize">
           {r.replace("_", " ")}
-        </Badge>
+        </RoleBadge>
       ))}
     </div>
   );
@@ -409,9 +407,9 @@ function ManageRolesDialog({
                   checked={hasRole}
                   onCheckedChange={() => handleToggleRole(role, hasRole)}
                 />
-                <span className={`capitalize ${ROLE_COLORS[role] ? "px-1.5 py-0.5 rounded text-xs" : ""} ${ROLE_COLORS[role] || ""}`}>
+                <RoleBadge tone={ROLE_TONES[role] || "neutral"} className="capitalize">
                   {role.replace("_", " ")}
-                </span>
+                </RoleBadge>
               </label>
             );
           })}
@@ -733,10 +731,7 @@ function MembersPageContent() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Members</h1>
-          <p className="text-muted-foreground">View and manage church members</p>
-        </div>
+        <PageHeader title="Members" description="View and manage church members" />
 
         {/* Statistics Cards */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -752,10 +747,10 @@ function MembersPageContent() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-600" />
+              <UserCheck className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 {members.filter((m) => m.isActive).length}
               </div>
               <p className="text-xs text-muted-foreground">on this page</p>
@@ -764,10 +759,10 @@ function MembersPageContent() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-              <UserX className="h-4 w-4 text-red-600" />
+              <UserX className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-destructive">
                 {members.filter((m) => !m.isActive).length}
               </div>
               <p className="text-xs text-muted-foreground">on this page</p>
@@ -857,17 +852,27 @@ function MembersPageContent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loading && <div className="text-center py-8 text-muted-foreground">Loading members...</div>}
-            {queryError && <div className="text-center py-8 text-red-600">Error: {queryError.message}</div>}
+            {loading && (
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </div>
+            )}
+            {queryError && <div className="text-center py-8 text-destructive">Error: {queryError.message}</div>}
             {!loading && !queryError && members.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">No members found</div>
+              <Empty
+                icon={Users}
+                title="No members found"
+                description="Try adjusting your search or filters, or add a new member to get started."
+              />
             )}
             {!loading && !queryError && members.length > 0 && (
               <>
                 {/* Mobile card view */}
                 <div className="space-y-3 md:hidden">
                   {members.map((member) => (
-                    <div key={member.id} className="border rounded-lg p-3 space-y-2">
+                    <div key={member.id} className="border border-border rounded-lg p-3 space-y-2">
                       {editingId === member.id ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-2">
@@ -892,7 +897,7 @@ function MembersPageContent() {
                               <div className="font-medium">{member.fullName}</div>
                               <div className="text-sm font-mono text-muted-foreground">{member.phoneNumber}</div>
                             </div>
-                            <StatusBadge isActive={member.isActive} />
+                            <MemberStatusBadge isActive={member.isActive} />
                           </div>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>{member.memberNumber ? `#${member.memberNumber}` : "No member #"}</span>
@@ -910,10 +915,10 @@ function MembersPageContent() {
                               <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                             )}
                             <Button size="sm" variant="outline" onClick={() => handleToggleStatus(member)}>
-                              {member.isActive ? <UserX className="h-4 w-4 text-yellow-600" /> : <UserCheck className="h-4 w-4 text-green-600" />}
+                              {member.isActive ? <UserX className="h-4 w-4 text-warning" /> : <UserCheck className="h-4 w-4 text-success" />}
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => handleDelete(member)}>
-                              <Trash2 className="h-4 w-4 text-red-600" />
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
                         </>
@@ -925,7 +930,7 @@ function MembersPageContent() {
                 {/* Desktop table view */}
                 <div className="overflow-x-auto hidden md:block">
                   <table className="w-full">
-                    <thead>
+                    <thead className="sticky top-0 z-10 bg-card [&_th]:bg-card [&_tr]:shadow-[inset_0_-1px_0_0_var(--border)]">
                       <tr className="border-b">
                         <th className="text-left p-3 font-medium">#</th>
                         <th className="text-left p-3 font-medium">Name</th>
@@ -938,7 +943,7 @@ function MembersPageContent() {
                     </thead>
                     <tbody>
                       {members.map((member) => (
-                        <tr key={member.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <tr key={member.id} className="border-b border-border hover:bg-muted/60">
                           {editingId === member.id ? (
                             <>
                               <td className="p-3 text-sm font-mono">{member.memberNumber || "-"}</td>
@@ -953,7 +958,7 @@ function MembersPageContent() {
                               </td>
                               <td className="p-3"><RoleBadges roles={member.roles} /></td>
                               <td className="p-3"><GroupBadges groups={member.groups} /></td>
-                              <td className="p-3 text-center"><StatusBadge isActive={member.isActive} /></td>
+                              <td className="p-3 text-center"><MemberStatusBadge isActive={member.isActive} /></td>
                               <td className="p-3 text-center">
                                 <div className="flex justify-center gap-1">
                                   <Button size="sm" variant="default" onClick={() => handleSaveEdit(member.id)} disabled={updating}>
@@ -975,7 +980,7 @@ function MembersPageContent() {
                               <td className="p-3 text-sm font-mono">{member.phoneNumber}</td>
                               <td className="p-3"><RoleBadges roles={member.roles} /></td>
                               <td className="p-3"><GroupBadges groups={member.groups} /></td>
-                              <td className="p-3 text-center"><StatusBadge isActive={member.isActive} /></td>
+                              <td className="p-3 text-center"><MemberStatusBadge isActive={member.isActive} /></td>
                               <td className="p-3 text-center">
                                 <div className="flex justify-center gap-1">
                                   <Button size="sm" variant="ghost" onClick={() => handleStartEdit(member)} title="Edit">
@@ -987,14 +992,14 @@ function MembersPageContent() {
                                     <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                                   )}
                                   <Button size="sm" variant="ghost" onClick={() => handleToggleStatus(member)} title={member.isActive ? "Deactivate" : "Activate"}>
-                                    {member.isActive ? <UserX className="h-3 w-3 text-yellow-600" /> : <UserCheck className="h-3 w-3 text-green-600" />}
+                                    {member.isActive ? <UserX className="h-3 w-3 text-warning" /> : <UserCheck className="h-3 w-3 text-success" />}
                                   </Button>
                                   <Button size="sm" variant="ghost" onClick={() => handleDelete(member)} title="Delete">
-                                    <Trash2 className="h-3 w-3 text-red-600" />
+                                    <Trash2 className="h-3 w-3 text-destructive" />
                                   </Button>
                                   <Link href={`/admin/reports?mode=progress&member=${member.id}`} title="View contribution progress">
                                     <Button size="sm" variant="ghost" asChild>
-                                      <span><TrendingUp className="h-3 w-3 text-blue-600" /></span>
+                                      <span><TrendingUp className="h-3 w-3 text-info" /></span>
                                     </Button>
                                   </Link>
                                 </div>

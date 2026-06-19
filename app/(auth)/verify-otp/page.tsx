@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 function VerifyOtpContent() {
@@ -124,7 +124,7 @@ function VerifyOtpContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-4">
         <Button
           variant="ghost"
@@ -212,7 +212,7 @@ function VerifyOtpContent() {
 export default function VerifyOtpPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center px-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6">
             <div className="flex justify-center">

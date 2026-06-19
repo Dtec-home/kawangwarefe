@@ -31,8 +31,8 @@ vi.mock('@apollo/client/react', () => ({
 
 const toastSuccess = vi.fn()
 const toastError = vi.fn()
-vi.mock('react-hot-toast', () => ({
-  default: { success: (m: string) => toastSuccess(m), error: (m: string) => toastError(m) },
+vi.mock('sonner', () => ({
+  toast: { success: (m: string) => toastSuccess(m), error: (m: string) => toastError(m) },
 }))
 
 import { TemplateManager } from '@/components/messaging/TemplateManager'

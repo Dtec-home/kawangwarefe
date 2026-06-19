@@ -31,13 +31,15 @@ import {
   Newspaper,
   MessageSquare,
   Heart,
-  UserCircle,
   Receipt,
   UsersRound,
+  Info,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminBottomNav } from "@/components/layouts/admin-bottom-nav";
-import toast from "react-hot-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RoleBadge, type RoleTone } from "@/components/ui/status-badge";
+import { toast } from "sonner";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -122,44 +124,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     .map(g => ({ ...g, items: g.items.filter(i => canAccessFeature(i.feature)) }))
     .filter(g => g.items.length > 0);
 
-  // Determine role badge
-  const getRoleBadge = () => {
-    if (isStaff) {
-      return {
-        text: "Staff Admin",
-        color: "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 dark:from-purple-900 dark:to-purple-800 dark:text-purple-100",
-        icon: "bg-purple-600"
-      };
-    }
-    if (isContentAdmin) {
-      return {
-        text: "Content Admin",
-        color: "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 dark:from-indigo-900 dark:to-indigo-800 dark:text-indigo-100",
-        icon: "bg-indigo-600"
-      };
-    }
-    if (isCategoryAdmin) {
-      return {
-        text: "Department Admin",
-        color: "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 dark:from-blue-900 dark:to-blue-800 dark:text-blue-100",
-        icon: "bg-blue-600"
-      };
-    }
-    if (isGroupAdmin) {
-      return {
-        text: "Group Admin",
-        color: "bg-gradient-to-r from-teal-50 to-emerald-100 text-teal-800 dark:from-teal-900 dark:to-emerald-800 dark:text-teal-100",
-        icon: "bg-gradient-to-r from-teal-600 to-emerald-600"
-      };
-    }
-    if (canSendBulkMessage) {
-      return {
-        text: "Messaging Admin",
-        color: "bg-gradient-to-r from-violet-50 to-violet-100 text-violet-800 dark:from-violet-900 dark:to-violet-800 dark:text-violet-100",
-        icon: "bg-violet-600"
-      };
-    }
+  // Determine role badge — tokenised tones for theme-aware contrast (F2.4)
+  const getRoleBadge = (): { text: string; tone: RoleTone } | null => {
+    if (isStaff) return { text: "Staff Admin",      tone: "primary" };
+    if (isContentAdmin) return { text: "Content Admin", tone: "info" };
+    if (isCategoryAdmin) return { text: "Dept Admin",   tone: "warning" };
+    if (isGroupAdmin)    return { text: "Group Admin",  tone: "success" };
+    if (canSendBulkMessage) return { text: "Messaging",  tone: "neutral" };
     return null;
+  };
+
+  // Avatar initials from full name (F2.2)
+  const getInitials = (name?: string | null) => {
+    if (!name) return "?";
+    return name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
   };
 
   const roleBadge = getRoleBadge();
@@ -176,12 +154,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo/Title */}
-          <div className="px-4 py-4 border-b border-border">
+          <div className="px-4 py-4 border-b border-sidebar-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative w-8 h-8">
@@ -191,51 +169,45 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     className="object-contain w-full h-full"
                   />
                 </div>
-                <h1 className="text-xl font-bold">Church Admin</h1>
+                <h1 className="text-xl font-bold text-sidebar-foreground">Church Admin</h1>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden"
+                className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 onClick={() => setSidebarOpen(false)}
               >
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            {/* Role badge */}
+            {/* Role badge — solid fill for legibility on the dark sidebar rail
+                (soft RoleBadge tints are too low-contrast here) */}
             {roleBadge && (
-              <span className={`inline-block mt-3 px-3 py-1 text-xs font-medium rounded-full ${roleBadge.color}`}>
+              <RoleBadge
+                tone={roleBadge.tone}
+                className="mt-2 font-semibold bg-sidebar-accent text-sidebar-accent-foreground"
+              >
                 {roleBadge.text}
-              </span>
+              </RoleBadge>
             )}
           </div>
 
           {/* Department Admin Scope Indicator */}
           {isCategoryAdmin && !isStaff && adminCategories.length > 0 && (
-            <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800">
-              <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300 mb-2">
+            <div className="px-4 py-3 bg-sidebar-accent/25 border-b border-sidebar-border">
+              <div className="flex items-center gap-2 text-xs text-sidebar-foreground/80 mb-2">
                 <FolderKey className="h-3 w-3" />
                 <span className="font-medium">Your Departments:</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {adminCategories.map((cat, idx) => {
-                  const colors = [
-                    { bg: 'bg-gradient-to-r from-teal-100 to-teal-50', text: 'text-teal-800', dark: 'dark:from-teal-900/30 dark:to-teal-800/20 dark:text-teal-300' },
-                    { bg: 'bg-gradient-to-r from-emerald-100 to-emerald-50', text: 'text-emerald-800', dark: 'dark:from-emerald-900/30 dark:to-emerald-800/20 dark:text-emerald-300' },
-                    { bg: 'bg-gradient-to-r from-blue-100 to-blue-50', text: 'text-blue-800', dark: 'dark:from-blue-900/30 dark:to-blue-800/20 dark:text-blue-300' },
-                    { bg: 'bg-gradient-to-r from-purple-100 to-purple-50', text: 'text-purple-800', dark: 'dark:from-purple-900/30 dark:to-purple-800/20 dark:text-purple-300' },
-                  ];
-                  const color = colors[idx % colors.length];
-
-                  return (
-                    <span
-                      key={cat.id}
-                      className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${color.bg} ${color.text} ${color.dark}`}
-                    >
-                      {cat.name}
-                    </span>
-                  );
-                })}
+                {adminCategories.map((cat) => (
+                  <span
+                    key={cat.id}
+                    className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-sidebar-accent text-sidebar-accent-foreground"
+                  >
+                    {cat.name}
+                  </span>
+                ))}
               </div>
             </div>
           )}
@@ -243,13 +215,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 overflow-y-auto">
             {roleLoading ? (
-              <div className="text-sm text-muted-foreground px-2 py-1">Loading...</div>
+              <div className="space-y-1">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-full rounded-lg bg-sidebar-accent/30" />
+                ))}
+              </div>
             ) : (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {navGroups.map((group, gi) => (
                   <div key={gi} className="space-y-0.5">
+                    {/* F2.3 — subtle separator between groups */}
+                    {gi > 0 && (
+                      <div className="h-px bg-sidebar-border mx-2 mb-3" />
+                    )}
                     {group.label && (
-                      <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 select-none">
+                      <p className="px-2 mb-1.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 select-none">
                         {group.label}
                       </p>
                     )}
@@ -259,22 +239,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       return (
                         <Button
                           key={item.name}
-                          variant={isActive ? "secondary" : "ghost"}
-                          className={`w-full justify-start h-9 px-2 relative transition-all ${
+                          variant="ghost"
+                          className={`w-full justify-start h-9 px-3 relative transition-all rounded-lg ${
                             isActive
-                              ? "bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 text-teal-900 dark:text-emerald-100 font-semibold"
-                              : "hover:bg-muted text-foreground"
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold hover:bg-sidebar-accent"
+                              : "text-sidebar-foreground/75 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
                           }`}
                           onClick={() => {
                             router.push(item.href);
                             setSidebarOpen(false);
                           }}
                         >
+                          {/* F2.5 — left accent bar for active item */}
                           {isActive && (
-                            <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-gradient-to-b from-teal-600 to-emerald-600 rounded-r-full" />
+                            <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-sidebar-primary rounded-r-full" />
                           )}
                           <Icon className={`h-4 w-4 mr-2.5 flex-shrink-0 ${
-                            isActive ? "text-teal-600 dark:text-emerald-400" : "text-muted-foreground"
+                            isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/50"
                           }`} />
                           <span className="text-sm">{item.name}</span>
                         </Button>
@@ -286,12 +267,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             )}
           </nav>
 
-          {/* User info */}
-          <div className="p-4 border-t border-border">
+          {/* User info — F2.2 initials fallback */}
+          <div className="p-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3 mb-3">
               <div
                 aria-hidden
-                className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-sidebar-primary flex items-center justify-center"
               >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -301,18 +282,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <UserCircle className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-sm font-bold text-sidebar-primary-foreground">
+                    {getInitials(user?.fullName)}
+                  </span>
                 )}
               </div>
               <div className="text-sm min-w-0">
-                <p className="font-medium truncate">{user?.fullName}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.phoneNumber}</p>
+                <p className="font-medium truncate text-sidebar-foreground">{user?.fullName}</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">{user?.phoneNumber}</p>
               </div>
             </div>
             <Button
               variant="outline"
               size="mobile-sm"
-              className="w-full"
+              className="w-full border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -346,8 +329,28 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <span className="font-semibold text-sm">Church Admin</span>
               </div>
 
-              {/* Right: icon-only on mobile, full text on sm+ */}
-              <div className="flex items-center gap-2">
+              {/* Right: ThemeToggle (F8.1) + about + member-view switch */}
+              <div className="flex items-center gap-1.5">
+                <ThemeToggle variant="button" size="icon" />
+                <Button
+                  variant="ghost"
+                  size="icon-mobile"
+                  className="sm:hidden"
+                  onClick={() => router.push('/about')}
+                  aria-label="About"
+                >
+                  <Info className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:flex"
+                  onClick={() => router.push('/about')}
+                  aria-label="About"
+                >
+                  <Info className="h-4 w-4 mr-2" />
+                  About
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon-mobile"
@@ -365,7 +368,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   aria-label="Switch to member view"
                 >
                   <UserRound className="h-4 w-4 mr-2" />
-                  Switch to Member View
+                  Member View
                 </Button>
               </div>
             </div>

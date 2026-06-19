@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Heart, Calendar, Video, MoreHorizontal, BookOpen, Bell, LogIn, LayoutDashboard, UserRound, X, LogOut, Users } from "lucide-react";
+import { Home, HandCoins, Calendar, Video, MoreHorizontal, BookOpen, Bell, LogIn, LayoutDashboard, UserRound, X, LogOut, Users, Heart } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -26,14 +26,14 @@ export function BottomNav() {
 
   const guestPrimaryLinks = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/contribute", label: "Give", icon: Heart },
+    { href: "/contribute", label: "Give", icon: HandCoins },
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/sermons", label: "Sermons", icon: Video },
   ];
 
   const memberPrimaryLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/contribute", label: "Give", icon: Heart },
+    { href: "/contribute", label: "Give", icon: HandCoins },
     { href: "/profile", label: "Profile", icon: UserRound },
     { href: "#more", label: "More", icon: MoreHorizontal },
   ];
@@ -55,15 +55,20 @@ export function BottomNav() {
 
   return (
     <>
-      {/* More menu overlay */}
+      {/* More menu overlay — F3.3 animated slide-up sheet */}
       {moreOpen && (
         <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setMoreOpen(false)}>
-          <div className="absolute bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-card border-t border-border shadow-lg rounded-t-2xl p-4 space-y-1"
+          <div
+            className="absolute bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-0 right-0 bg-card border-t border-border shadow-2xl rounded-t-2xl p-4 space-y-1 animate-slide-up-sheet"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* F3.3 drag handle */}
+            <div className="flex justify-center mb-1 -mt-1">
+              <div className="w-10 h-1 rounded-full bg-muted-foreground/25" />
+            </div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-muted-foreground">More</span>
-              <button onClick={() => setMoreOpen(false)} className="p-2">
+              <span className="text-sm font-semibold">More</span>
+              <button onClick={() => setMoreOpen(false)} className="p-2 rounded-lg hover:bg-muted transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -99,7 +104,7 @@ export function BottomNav() {
                     setMoreOpen(false);
                     await logout();
                   }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-muted transition-colors w-full text-left"
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-destructive hover:bg-muted transition-colors w-full text-left"
                 >
                   <LogOut className="h-5 w-5" />
                   Logout

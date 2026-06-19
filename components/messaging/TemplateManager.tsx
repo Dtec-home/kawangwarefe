@@ -7,10 +7,11 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import toast from "react-hot-toast";
-import { Plus, Pencil, Trash2, Power } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Pencil, Trash2, Power, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Empty } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -151,7 +152,16 @@ export function TemplateManager() {
       )}
 
       {templates.length === 0 && !showCreate && (
-        <p className="text-sm text-muted-foreground">No templates yet. Create one above.</p>
+        <Empty
+          icon={FileText}
+          title="No templates yet"
+          description="Create a reusable message template to speed up campaigns."
+          action={
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-1" /> New Template
+            </Button>
+          }
+        />
       )}
 
       <ul className="divide-y divide-border">

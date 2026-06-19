@@ -8,12 +8,12 @@ interface CardProps extends React.ComponentProps<"div"> {
 
 const variantStyles = {
   default: "",
-  teal: "border-l-4 border-l-teal-600 dark:border-l-teal-400",
-  emerald: "border-l-4 border-l-emerald-600 dark:border-l-emerald-400",
-  blue: "border-l-4 border-l-blue-600 dark:border-l-blue-400",
-  purple: "border-l-4 border-l-purple-600 dark:border-l-purple-400",
-  red: "border-l-4 border-l-red-600 dark:border-l-red-400",
-  amber: "border-l-4 border-l-amber-600 dark:border-l-amber-400",
+  teal: "border-l-4 border-l-primary",
+  emerald: "border-l-4 border-l-[var(--chart-2)]",
+  blue: "border-l-4 border-l-[var(--chart-3)]",
+  purple: "border-l-4 border-l-[var(--chart-4)]",
+  red: "border-l-4 border-l-destructive",
+  amber: "border-l-4 border-l-[var(--chart-5)]",
 }
 
 function Card({ className, variant = "default", ...props }: CardProps) {

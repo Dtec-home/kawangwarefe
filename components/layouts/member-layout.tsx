@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { BottomNav } from "@/components/layouts/bottom-nav";
 import {
   LayoutDashboard,
@@ -17,8 +18,9 @@ import {
   X,
   Shield,
   Newspaper,
+  Info,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface MemberLayoutProps {
   children: React.ReactNode;
@@ -36,6 +38,7 @@ const memberNavigation: NavItem[] = [
   { name: "Give", href: "/contribute", icon: Heart },
   { name: "Prayer Request", href: "/prayers/new", icon: Heart },
   { name: "Family", href: "/profile/family", icon: Users },
+  { name: "About", href: "/about", icon: Info },
 ];
 
 export function MemberLayout({ children }: MemberLayoutProps) {
@@ -71,23 +74,23 @@ export function MemberLayout({ children }: MemberLayoutProps) {
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-border">
+          <div className="p-6 border-b border-sidebar-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative w-8 h-8">
                   <Image src="/logo.png" alt="SDA Church" fill className="object-contain" />
                 </div>
-                <h1 className="text-xl font-bold">Church Member</h1>
+                <h1 className="text-xl font-bold text-sidebar-foreground">Church Member</h1>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden"
+                className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 onClick={() => setSidebarOpen(false)}
               >
                 <X className="h-5 w-5" />
@@ -102,11 +105,11 @@ export function MemberLayout({ children }: MemberLayoutProps) {
               return (
                 <Button
                   key={item.href}
-                  variant={active ? "secondary" : "ghost"}
-                  className={`w-full justify-start transition-all relative ${
+                  variant="ghost"
+                  className={`w-full justify-start transition-all relative rounded-lg ${
                     active
-                      ? "bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/30 dark:to-emerald-900/30 text-teal-900 dark:text-emerald-100 font-semibold"
-                      : "hover:bg-muted text-foreground"
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold hover:bg-sidebar-accent"
+                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
                   }`}
                   onClick={() => {
                     router.push(item.href);
@@ -114,17 +117,17 @@ export function MemberLayout({ children }: MemberLayoutProps) {
                   }}
                 >
                   {active && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-600 to-emerald-600" />
+                    <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-sidebar-primary rounded-r-full" />
                   )}
-                  <Icon className={`h-4 w-4 mr-3 ${active ? "text-teal-600 dark:text-emerald-400" : ""}`} />
+                  <Icon className={`h-4 w-4 mr-3 ${active ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/50"}`} />
                   {item.name}
                 </Button>
               );
             })}
 
             {extraAdminLinks.length > 0 && (
-              <div className="pt-4 mt-4 border-t border-border space-y-1">
-                <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="pt-4 mt-4 border-t border-sidebar-border space-y-1">
+                <p className="px-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/50">
                   Admin shortcuts
                 </p>
                 {extraAdminLinks.map((item) => {
@@ -133,11 +136,11 @@ export function MemberLayout({ children }: MemberLayoutProps) {
                   return (
                     <Button
                       key={item.href}
-                      variant={active ? "secondary" : "ghost"}
-                      className={`w-full justify-start transition-all relative ${
+                      variant="ghost"
+                      className={`w-full justify-start transition-all relative rounded-lg ${
                         active
-                          ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-900 dark:text-blue-100 font-semibold"
-                          : "hover:bg-muted text-foreground"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold hover:bg-sidebar-accent"
+                          : "text-sidebar-foreground/75 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
                       }`}
                       onClick={() => {
                         router.push(item.href);
@@ -145,9 +148,9 @@ export function MemberLayout({ children }: MemberLayoutProps) {
                       }}
                     >
                       {active && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-indigo-600" />
+                        <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-sidebar-primary rounded-r-full" />
                       )}
-                      <Icon className={`h-4 w-4 mr-3 ${active ? "text-blue-600 dark:text-blue-400" : ""}`} />
+                      <Icon className={`h-4 w-4 mr-3 ${active ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/50"}`} />
                       {item.name}
                     </Button>
                   );
@@ -156,15 +159,15 @@ export function MemberLayout({ children }: MemberLayoutProps) {
             )}
           </nav>
 
-          <div className="p-4 border-t border-border space-y-3">
+          <div className="p-4 border-t border-sidebar-border space-y-3">
             <div className="text-sm min-w-0">
-              <p className="font-medium truncate">{user?.fullName}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.phoneNumber}</p>
+              <p className="font-medium truncate text-sidebar-foreground">{user?.fullName}</p>
+              <p className="text-xs text-sidebar-foreground/60 truncate">{user?.phoneNumber}</p>
             </div>
             <Button
               variant="outline"
               size="mobile-sm"
-              className="w-full"
+              className="w-full border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -191,9 +194,10 @@ export function MemberLayout({ children }: MemberLayoutProps) {
                 <Image src="/logo.png" width={22} height={22} alt="" className="object-contain" />
                 <span className="font-semibold text-sm">SDA Kawangware</span>
               </div>
-              {/* Desktop: user name on right */}
-              <div className="text-sm text-muted-foreground hidden lg:block">
-                {user?.fullName}
+              {/* Desktop: ThemeToggle + user name on right (F7.1) */}
+              <div className="hidden lg:flex items-center gap-2">
+                <ThemeToggle variant="button" size="icon" />
+                <span className="text-sm text-muted-foreground">{user?.fullName}</span>
               </div>
               {/* Balances hamburger width on mobile */}
               <div className="w-11 lg:hidden" />

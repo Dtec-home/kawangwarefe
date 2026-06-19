@@ -25,8 +25,12 @@ import { DepartmentBarChart } from "@/components/admin/DepartmentBarChart";
 import { MemberTimelineChart } from "@/components/admin/MemberTimelineChart";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BarChart2, ChevronDown, ChevronRight, Download, FileText, Table as TableIcon, Calendar, TrendingUp } from "lucide-react";
-import toast from "react-hot-toast";
+import { BarChart2, ChevronDown, ChevronRight, Download, FileText, Table as TableIcon, Calendar, TrendingUp, Inbox } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
+import { toast } from "sonner";
 
 interface Category {
   id: string;
@@ -475,13 +479,13 @@ function ReportsPageContent() {
 
   const entryTypeBadge = (type: string) => {
     const map: Record<string, string> = {
-      mpesa: "bg-green-100 text-green-800",
-      cash: "bg-blue-100 text-blue-800",
-      manual: "bg-amber-100 text-amber-800",
-      envelope: "bg-purple-100 text-purple-800",
-      monthly_aggregate: "bg-slate-100 text-slate-700",
+      mpesa: "bg-success/12 text-success",
+      cash: "bg-info/12 text-info",
+      manual: "bg-warning/15 text-warning",
+      envelope: "bg-[color-mix(in_oklch,var(--chart-3)_14%,transparent)] text-[var(--chart-3)]",
+      monthly_aggregate: "bg-muted text-muted-foreground",
     };
-    return map[type] || "bg-gray-100 text-gray-700";
+    return map[type] || "bg-muted text-muted-foreground";
   };
 
   const routingSummary = routingReportData?.departmentRoutingReport?.summary;
@@ -590,10 +594,7 @@ function ReportsPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Reports</h1>
-          <p className="text-muted-foreground">Generate and download contribution reports</p>
-        </div>
+        <PageHeader title="Reports" description="Generate and download contribution reports" />
 
         <div className="flex flex-wrap gap-2">
           <Button
@@ -703,7 +704,7 @@ function ReportsPageContent() {
 
             {/* Custom Date Range */}
             {reportType === "custom" && (
-              <div className="grid md:grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+              <div className="grid md:grid-cols-2 gap-6 p-4 bg-muted rounded-lg">
                 <div className="space-y-2">
                   <Label htmlFor="dateFrom">Start Date</Label>
                   <Input
@@ -744,7 +745,7 @@ function ReportsPageContent() {
                   ? "All departments will be included"
                   : `${selectedCategoryIds.length} department(s) selected`}
               </p>
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted rounded-lg">
                 {categories.map((category) => {
                   const isChecked = selectedCategoryIds.includes(category.id);
                   return (
@@ -753,7 +754,7 @@ function ReportsPageContent() {
                       className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
                         isChecked
                           ? "bg-primary/10 border-primary"
-                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750"
+                          : "bg-card border-border hover:bg-muted/60"
                       }`}
                     >
                       <Checkbox
@@ -794,7 +795,7 @@ function ReportsPageContent() {
         {/* Quick Report Actions */}
         {isStaff && reportMode === "exports" && (
         <div className="grid md:grid-cols-3 gap-4">
-          <Card className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          <Card className="cursor-pointer hover:bg-muted/60 transition-colors"
             onClick={() => {
               setReportType("daily");
               setFormat("excel");
@@ -804,8 +805,8 @@ function ReportsPageContent() {
           >
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                <div className="p-3 bg-info/12 rounded-lg">
+                  <Calendar className="h-6 w-6 text-info" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Today's Report</h3>
@@ -815,7 +816,7 @@ function ReportsPageContent() {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          <Card className="cursor-pointer hover:bg-muted/60 transition-colors"
             onClick={() => {
               setReportType("weekly");
               setFormat("excel");
@@ -825,8 +826,8 @@ function ReportsPageContent() {
           >
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <Calendar className="h-6 w-6 text-green-600 dark:text-green-300" />
+                <div className="p-3 bg-success/12 rounded-lg">
+                  <Calendar className="h-6 w-6 text-success" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Weekly Report</h3>
@@ -836,7 +837,7 @@ function ReportsPageContent() {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          <Card className="cursor-pointer hover:bg-muted/60 transition-colors"
             onClick={() => {
               setReportType("monthly");
               setFormat("pdf");
@@ -846,8 +847,8 @@ function ReportsPageContent() {
           >
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <FileText className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                <div className="p-3 bg-[color-mix(in_oklch,var(--chart-3)_14%,transparent)] rounded-lg">
+                  <FileText className="h-6 w-6 text-[var(--chart-3)]" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Monthly Report</h3>
@@ -869,11 +870,15 @@ function ReportsPageContent() {
             </CardHeader>
             <CardContent>
               {exportActivity.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No exports yet. Generate a report to see activity here.</p>
+                <Empty
+                  icon={Download}
+                  title="No exports yet"
+                  description="Generate a report to see activity here."
+                />
               ) : (
                 <div className="space-y-3">
                   {exportActivity.map((activity) => (
-                    <div key={activity.id} className="rounded-md border p-3">
+                    <div key={activity.id} className="rounded-md border border-border bg-card p-3">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-medium">
@@ -881,17 +886,9 @@ function ReportsPageContent() {
                           </p>
                           <p className="text-xs text-muted-foreground">{new Date(activity.createdAt).toLocaleString()}</p>
                         </div>
-                        <span
-                          className={`inline-flex w-fit rounded-full px-2 py-1 text-xs font-medium ${
-                            activity.status === "success"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : activity.status === "failed"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
+                        <StatusBadge variant={statusToVariant(activity.status)}>
                           {activity.status.toUpperCase()}
-                        </span>
+                        </StatusBadge>
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">{activity.scope}</p>
                       <p className="mt-1 text-sm">{activity.message}</p>
@@ -934,7 +931,7 @@ function ReportsPageContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 p-3">
               <div>
                 <p className="text-sm font-medium">Active Filters</p>
                 <div className="mt-1 flex flex-wrap gap-2">
@@ -942,9 +939,9 @@ function ReportsPageContent() {
                     <span className="text-xs text-muted-foreground">No filters applied</span>
                   ) : (
                     activeFilterChips.map((chip) => (
-                      <span key={chip} className="rounded-full border px-2 py-1 text-xs">
+                      <StatusBadge key={chip} variant="neutral">
                         {chip}
-                      </span>
+                      </StatusBadge>
                     ))
                   )}
                 </div>
@@ -1056,89 +1053,107 @@ function ReportsPageContent() {
             </div>
 
             {routingReportLoading && (
-              <p className="text-sm text-muted-foreground">Loading routing analytics...</p>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-lg" />
+                ))}
+              </div>
             )}
 
             {!routingReportLoading && routingSummary && (
               <>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-md border p-3">
-                    <p className="text-xs text-muted-foreground">Total Completed</p>
-                    <p className="text-lg font-semibold">KES {Number(routingSummary.totalCompletedAmount).toLocaleString("en-KE")}</p>
-                    <p className="text-xs text-muted-foreground">{routingSummary.totalCompletedCount} contributions</p>
-                  </div>
-                  <div className="rounded-md border p-3">
-                    <p className="text-xs text-muted-foreground">Guest Top-level</p>
-                    <p className="text-lg font-semibold">KES {Number(routingSummary.guestTopLevelAmount).toLocaleString("en-KE")}</p>
-                    <p className="text-xs text-muted-foreground">{routingSummary.guestTopLevelCount} contributions</p>
-                  </div>
-                  <div className="rounded-md border p-3">
-                    <p className="text-xs text-muted-foreground">Member Routed to Group</p>
-                    <p className="text-lg font-semibold">KES {Number(routingSummary.memberRoutedAmount).toLocaleString("en-KE")}</p>
-                    <p className="text-xs text-muted-foreground">{routingSummary.memberRoutedCount} contributions</p>
-                  </div>
-                  <div className="rounded-md border p-3">
-                    <p className="text-xs text-muted-foreground">Member Top-level</p>
-                    <p className="text-lg font-semibold">KES {Number(routingSummary.memberTopLevelAmount).toLocaleString("en-KE")}</p>
-                    <p className="text-xs text-muted-foreground">{routingSummary.memberTopLevelCount} contributions</p>
-                  </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Completed</p>
+                      <p className="text-2xl font-bold tabular-nums">KES {Number(routingSummary.totalCompletedAmount).toLocaleString("en-KE")}</p>
+                      <p className="text-xs text-muted-foreground">{routingSummary.totalCompletedCount} contributions</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Guest Top-level</p>
+                      <p className="text-2xl font-bold tabular-nums">KES {Number(routingSummary.guestTopLevelAmount).toLocaleString("en-KE")}</p>
+                      <p className="text-xs text-muted-foreground">{routingSummary.guestTopLevelCount} contributions</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Member Routed to Group</p>
+                      <p className="text-2xl font-bold tabular-nums">KES {Number(routingSummary.memberRoutedAmount).toLocaleString("en-KE")}</p>
+                      <p className="text-xs text-muted-foreground">{routingSummary.memberRoutedCount} contributions</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Member Top-level</p>
+                      <p className="text-2xl font-bold tabular-nums">KES {Number(routingSummary.memberTopLevelAmount).toLocaleString("en-KE")}</p>
+                      <p className="text-xs text-muted-foreground">{routingSummary.memberTopLevelCount} contributions</p>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-md border p-3">
-                    <p className="mb-2 text-sm font-medium">Top Departments</p>
-                    <div className="space-y-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Top Departments</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       {topDepartments.length === 0 && (
                         <p className="text-xs text-muted-foreground">No department data</p>
                       )}
                       {topDepartments.map((row) => (
-                        <div key={row.departmentId} className="flex items-center justify-between text-sm">
-                          <span>{row.departmentName}</span>
-                          <span className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
+                        <div key={row.departmentId} className="flex items-center justify-between gap-2 py-2 border-b border-border/60 last:border-0">
+                          <span className="text-sm text-foreground truncate">{row.departmentName}</span>
+                          <span className="text-sm font-medium tabular-nums text-right">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
                         </div>
                       ))}
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
-                  <div className="rounded-md border p-3">
-                    <p className="mb-2 text-sm font-medium">Top Department Purposes</p>
-                    <div className="space-y-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Top Department Purposes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       {topPurposeBreakdown.length === 0 && (
                         <p className="text-xs text-muted-foreground">No purpose data</p>
                       )}
                       {topPurposeBreakdown.map((row) => (
-                        <div key={`${row.departmentId}-${row.purposeId}`} className="flex items-center justify-between text-sm">
-                          <span>{row.departmentName} • {row.purposeName}</span>
-                          <span className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
+                        <div key={`${row.departmentId}-${row.purposeId}`} className="flex items-center justify-between gap-2 py-2 border-b border-border/60 last:border-0">
+                          <span className="text-sm text-foreground truncate">{row.departmentName} • {row.purposeName}</span>
+                          <span className="text-sm font-medium tabular-nums text-right">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
                         </div>
                       ))}
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
-                  <div className="rounded-md border p-3">
-                    <p className="mb-2 text-sm font-medium">Top Department Groups</p>
-                    <div className="space-y-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Top Department Groups</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       {topGroupBreakdown.length === 0 && (
                         <p className="text-xs text-muted-foreground">No group data</p>
                       )}
                       {topGroupBreakdown.map((row, index) => {
                         const groupKey = row.groupId || `top-${index}`;
                         return (
-                          <div key={`${row.departmentId}-${groupKey}`} className="flex items-center justify-between text-sm">
-                            <span>{row.departmentName} • {row.groupName}</span>
-                            <span className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
+                          <div key={`${row.departmentId}-${groupKey}`} className="flex items-center justify-between gap-2 py-2 border-b border-border/60 last:border-0">
+                            <span className="text-sm text-foreground truncate">{row.departmentName} • {row.groupName}</span>
+                            <span className="text-sm font-medium tabular-nums text-right">KES {Number(row.totalAmount).toLocaleString("en-KE")}</span>
                           </div>
                         );
                       })}
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 {reportMode === "explore" && (
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-muted-foreground">Detailed Breakdowns</h3>
 
-                  <div className="flex flex-col gap-3 rounded-md border p-3">
+                  <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/40 p-3">
                     <p className="text-sm font-medium">Breakdown View</p>
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -1271,8 +1286,8 @@ function ReportsPageContent() {
                   </div>
 
                   {activeBreakdownTab === "department" && (
-                  <div className="rounded-md border">
-                    <div className="border-b px-4 py-3">
+                  <div className="rounded-md border border-border bg-card">
+                    <div className="border-b border-border px-4 py-3">
                       <p className="text-sm font-medium">By Department ({allDepartmentBreakdown.length})</p>
                     </div>
                     <div className="overflow-auto">
@@ -1284,7 +1299,7 @@ function ReportsPageContent() {
                           <div className="hidden md:block max-h-96">
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="border-b bg-muted/40">
+                                <tr className="border-b border-border bg-muted/40">
                                   <th className="px-4 py-2 text-left font-medium">Department</th>
                                   <th className="px-4 py-2 text-right font-medium">Amount</th>
                                   <th className="px-4 py-2 text-right font-medium">Count</th>
@@ -1294,15 +1309,15 @@ function ReportsPageContent() {
                                 {pagedDepartmentBreakdown.map((row) => (
                                   <tr
                                     key={row.departmentId}
-                                    className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                                    className="border-b border-border last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
                                     onClick={() => {
                                       setSelectedDrillDownRow({type: "department", data: row});
                                       setDrillDownOpen(true);
                                     }}
                                   >
                                     <td className="px-4 py-2">{row.departmentName}</td>
-                                    <td className="px-4 py-2 text-right font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</td>
-                                    <td className="px-4 py-2 text-right">{row.totalCount}</td>
+                                    <td className="px-4 py-2 text-right font-medium tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</td>
+                                    <td className="px-4 py-2 text-right tabular-nums">{row.totalCount}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1314,7 +1329,7 @@ function ReportsPageContent() {
                             {pagedDepartmentBreakdown.map((row) => (
                               <div
                                 key={row.departmentId}
-                                className="rounded-md border p-3 bg-card cursor-pointer hover:shadow-sm transition-shadow active:bg-muted/50"
+                                className="rounded-md border border-border p-3 bg-card cursor-pointer hover:shadow-sm transition-shadow active:bg-muted/50"
                                 onClick={() => {
                                   setSelectedDrillDownRow({type: "department", data: row});
                                   setDrillDownOpen(true);
@@ -1324,11 +1339,11 @@ function ReportsPageContent() {
                                 <div className="grid grid-cols-2 gap-3 mt-2 text-xs text-muted-foreground">
                                   <div>
                                     <p className="text-muted-foreground">Amount</p>
-                                    <p className="font-semibold text-foreground">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
+                                    <p className="font-semibold text-foreground tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
                                   </div>
                                   <div>
                                     <p className="text-muted-foreground">Count</p>
-                                    <p className="font-semibold text-foreground">{row.totalCount}</p>
+                                    <p className="font-semibold text-foreground tabular-nums">{row.totalCount}</p>
                                   </div>
                                 </div>
                               </div>
@@ -1341,8 +1356,8 @@ function ReportsPageContent() {
                   )}
 
                   {activeBreakdownTab === "purpose" && (
-                  <div className="rounded-md border">
-                    <div className="border-b px-4 py-3">
+                  <div className="rounded-md border border-border bg-card">
+                    <div className="border-b border-border px-4 py-3">
                       <p className="text-sm font-medium">By Purpose ({allPurposeBreakdown.length})</p>
                       <p className="text-xs text-muted-foreground mt-0.5">Purpose totals include contributions auto-split to this purpose</p>
                     </div>
@@ -1355,7 +1370,7 @@ function ReportsPageContent() {
                           <div className="hidden md:block max-h-96">
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="border-b bg-muted/40">
+                                <tr className="border-b border-border bg-muted/40">
                                   <th className="px-4 py-2 text-left font-medium">Department</th>
                                   <th className="px-4 py-2 text-left font-medium">Purpose</th>
                                   <th className="px-4 py-2 text-right font-medium">Amount</th>
@@ -1366,7 +1381,7 @@ function ReportsPageContent() {
                                 {pagedPurposeBreakdown.map((row) => (
                                   <tr
                                     key={`${row.departmentId}-${row.purposeId}`}
-                                    className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                                    className="border-b border-border last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
                                     onClick={() => {
                                       setSelectedDrillDownRow({type: "purpose", data: row});
                                       setDrillDownOpen(true);
@@ -1374,8 +1389,8 @@ function ReportsPageContent() {
                                   >
                                     <td className="px-4 py-2">{row.departmentName}</td>
                                     <td className="px-4 py-2">{row.purposeName}</td>
-                                    <td className="px-4 py-2 text-right font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</td>
-                                    <td className="px-4 py-2 text-right">{row.totalCount}</td>
+                                    <td className="px-4 py-2 text-right font-medium tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</td>
+                                    <td className="px-4 py-2 text-right tabular-nums">{row.totalCount}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1387,7 +1402,7 @@ function ReportsPageContent() {
                             {pagedPurposeBreakdown.map((row) => (
                               <div
                                 key={`${row.departmentId}-${row.purposeId}`}
-                                className="rounded-md border p-3 bg-card cursor-pointer hover:shadow-sm transition-shadow active:bg-muted/50"
+                                className="rounded-md border border-border p-3 bg-card cursor-pointer hover:shadow-sm transition-shadow active:bg-muted/50"
                                 onClick={() => {
                                   setSelectedDrillDownRow({type: "purpose", data: row});
                                   setDrillDownOpen(true);
@@ -1398,11 +1413,11 @@ function ReportsPageContent() {
                                 <div className="grid grid-cols-2 gap-3 mt-2 text-xs text-muted-foreground">
                                   <div>
                                     <p className="text-muted-foreground">Amount</p>
-                                    <p className="font-semibold text-foreground">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
+                                    <p className="font-semibold text-foreground tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
                                   </div>
                                   <div>
                                     <p className="text-muted-foreground">Count</p>
-                                    <p className="font-semibold text-foreground">{row.totalCount}</p>
+                                    <p className="font-semibold text-foreground tabular-nums">{row.totalCount}</p>
                                   </div>
                                 </div>
                               </div>
@@ -1415,8 +1430,8 @@ function ReportsPageContent() {
                   )}
 
                   {activeBreakdownTab === "group" && (
-                  <div className="rounded-md border">
-                    <div className="border-b px-4 py-3">
+                  <div className="rounded-md border border-border bg-card">
+                    <div className="border-b border-border px-4 py-3">
                       <p className="text-sm font-medium">By Group ({allGroupBreakdown.length})</p>
                     </div>
                     <div className="overflow-auto">
@@ -1428,7 +1443,7 @@ function ReportsPageContent() {
                           <div className="hidden md:block max-h-96">
                             <table className="w-full text-sm">
                               <thead>
-                                <tr className="border-b bg-muted/40">
+                                <tr className="border-b border-border bg-muted/40">
                                   <th className="px-4 py-2 text-left font-medium">Department</th>
                                   <th className="px-4 py-2 text-left font-medium">Group</th>
                                   <th className="px-4 py-2 text-right font-medium">Amount</th>
@@ -1441,7 +1456,7 @@ function ReportsPageContent() {
                                   return (
                                     <tr
                                       key={`${row.departmentId}-${groupKey}`}
-                                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                                      className="border-b border-border last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
                                       onClick={() => {
                                         setSelectedDrillDownRow({type: "group", data: row});
                                         setDrillDownOpen(true);
@@ -1449,8 +1464,8 @@ function ReportsPageContent() {
                                     >
                                       <td className="px-4 py-2">{row.departmentName}</td>
                                       <td className="px-4 py-2">{row.groupName}</td>
-                                      <td className="px-4 py-2 text-right font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</td>
-                                      <td className="px-4 py-2 text-right">{row.totalCount}</td>
+                                      <td className="px-4 py-2 text-right font-medium tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</td>
+                                      <td className="px-4 py-2 text-right tabular-nums">{row.totalCount}</td>
                                     </tr>
                                   );
                                 })}
@@ -1465,7 +1480,7 @@ function ReportsPageContent() {
                               return (
                                 <div
                                   key={`${row.departmentId}-${groupKey}`}
-                                  className="rounded-md border p-3 bg-card cursor-pointer hover:shadow-sm transition-shadow active:bg-muted/50"
+                                  className="rounded-md border border-border p-3 bg-card cursor-pointer hover:shadow-sm transition-shadow active:bg-muted/50"
                                   onClick={() => {
                                     setSelectedDrillDownRow({type: "group", data: row});
                                     setDrillDownOpen(true);
@@ -1476,11 +1491,11 @@ function ReportsPageContent() {
                                   <div className="grid grid-cols-2 gap-3 mt-2 text-xs text-muted-foreground">
                                     <div>
                                       <p className="text-muted-foreground">Amount</p>
-                                      <p className="font-semibold text-foreground">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
+                                      <p className="font-semibold text-foreground tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
                                     </div>
                                     <div>
                                       <p className="text-muted-foreground">Count</p>
-                                      <p className="font-semibold text-foreground">{row.totalCount}</p>
+                                      <p className="font-semibold text-foreground tabular-nums">{row.totalCount}</p>
                                     </div>
                                   </div>
                                 </div>
@@ -1537,7 +1552,7 @@ function ReportsPageContent() {
 
                 {selectedDrillDownRow.type === "department" && (
                   <>
-                    <div className="border-t pt-4">
+                    <div className="border-t border-border pt-4">
                       <p className="text-sm font-medium mb-3">Top Purposes</p>
                       <div className="space-y-2">
                         {allPurposeBreakdown
@@ -1545,10 +1560,10 @@ function ReportsPageContent() {
                           .sort((a, b) => Number(b.totalAmount) - Number(a.totalAmount))
                           .slice(0, 5)
                           .map((row) => (
-                            <div key={row.purposeId} className="flex items-center justify-between p-2 rounded border bg-muted/30">
+                            <div key={row.purposeId} className="flex items-center justify-between p-2 rounded border border-border bg-muted/30">
                               <span className="text-sm">{row.purposeName}</span>
                               <div className="text-right text-xs">
-                                <p className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
+                                <p className="font-medium tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
                                 <p className="text-muted-foreground">{row.totalCount} items</p>
                               </div>
                             </div>
@@ -1560,7 +1575,7 @@ function ReportsPageContent() {
 
                 {selectedDrillDownRow.type === "purpose" && (
                   <>
-                    <div className="border-t pt-4">
+                    <div className="border-t border-border pt-4">
                       <p className="text-sm font-medium mb-3">Top Groups</p>
                       <div className="space-y-2">
                         {allGroupBreakdown
@@ -1571,10 +1586,10 @@ function ReportsPageContent() {
                           .sort((a, b) => Number(b.totalAmount) - Number(a.totalAmount))
                           .slice(0, 5)
                           .map((row, index) => (
-                            <div key={row.groupId || `${row.departmentId}-${index}`} className="flex items-center justify-between p-2 rounded border bg-muted/30">
+                            <div key={row.groupId || `${row.departmentId}-${index}`} className="flex items-center justify-between p-2 rounded border border-border bg-muted/30">
                               <span className="text-sm">{row.groupName}</span>
                               <div className="text-right text-xs">
-                                <p className="font-medium">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
+                                <p className="font-medium tabular-nums">KES {Number(row.totalAmount).toLocaleString("en-KE")}</p>
                                 <p className="text-muted-foreground">{row.totalCount} items</p>
                               </div>
                             </div>
@@ -1748,7 +1763,7 @@ function ReportsPageContent() {
             <Card>
               <CardContent className="pt-6 space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+                  <Skeleton key={i} className="h-12 w-full rounded" />
                 ))}
               </CardContent>
             </Card>
@@ -1757,8 +1772,12 @@ function ReportsPageContent() {
           {/* Empty state — department selected, report ran, no results */}
           {!progressLoading && progressReport && progressReport.members.length === 0 && (
             <Card>
-              <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
-                No contributions found for the selected filters.
+              <CardContent className="py-8">
+                <Empty
+                  icon={Inbox}
+                  title="No contributions found"
+                  description="No contributions match the selected filters."
+                />
               </CardContent>
             </Card>
           )}
@@ -1766,8 +1785,12 @@ function ReportsPageContent() {
           {/* Prompt — no report loaded yet */}
           {!progressLoading && !progressReport && !progressError && (
             <Card>
-              <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
-                Select a department above and click <strong>Load Report</strong> to view member progress.
+              <CardContent className="py-8">
+                <Empty
+                  icon={TrendingUp}
+                  title="No report loaded"
+                  description="Select a department above and click Load Report to view member progress."
+                />
               </CardContent>
             </Card>
           )}
@@ -1779,21 +1802,21 @@ function ReportsPageContent() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground">Total Collected</p>
-                    <p className="text-2xl font-bold">{formatKes(progressReport.totalAmount)}</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Collected</p>
+                    <p className="text-2xl font-bold tabular-nums">{formatKes(progressReport.totalAmount)}</p>
                     <p className="text-xs text-muted-foreground mt-1">{progressReport.departmentName}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground">Contributing Members</p>
-                    <p className="text-2xl font-bold">{progressReport.contributingMemberCount}</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Contributing Members</p>
+                    <p className="text-2xl font-bold tabular-nums">{progressReport.contributingMemberCount}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-4 pb-4">
-                    <p className="text-xs text-muted-foreground">Average per Member</p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Average per Member</p>
+                    <p className="text-2xl font-bold tabular-nums">
                       {formatKes(
                         progressReport.contributingMemberCount > 0
                           ? Number(progressReport.totalAmount) / progressReport.contributingMemberCount
@@ -1851,7 +1874,7 @@ function ReportsPageContent() {
                 <CardContent className="pt-0 overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b bg-muted/50">
+                      <tr className="border-b border-border bg-muted/50">
                         <th className="text-left p-3 font-medium w-8" />
                         <th className="text-left p-3 font-medium">Member</th>
                         <th className="text-left p-3 font-medium hidden sm:table-cell">Phone</th>
@@ -1876,7 +1899,7 @@ function ReportsPageContent() {
                           <>
                             <tr
                               key={member.memberId}
-                              className="border-b hover:bg-muted/30 cursor-pointer"
+                              className="border-b border-border hover:bg-muted/30 cursor-pointer"
                               onClick={() => toggleProgressMember(member.memberId)}
                             >
                               <td className="p-3 text-muted-foreground">
@@ -1887,7 +1910,7 @@ function ReportsPageContent() {
                               {progressBreakdownBy === "purpose" && (() => {
                                 const purposeMap = Object.fromEntries(member.byPurpose.map((p) => [p.purposeId, p.totalAmount]));
                                 return sortedProgressMembers[0]?.byPurpose.map((p) => (
-                                  <td key={p.purposeId} className="p-3 text-right">
+                                  <td key={p.purposeId} className="p-3 text-right tabular-nums">
                                     {purposeMap[p.purposeId] ? formatKes(purposeMap[p.purposeId]) : "—"}
                                   </td>
                                 ));
@@ -1895,18 +1918,18 @@ function ReportsPageContent() {
                               {progressBreakdownBy === "group" && (() => {
                                 const groupMap = Object.fromEntries(member.byGroup.map((g) => [g.groupId ?? "top", g.totalAmount]));
                                 return sortedProgressMembers[0]?.byGroup.map((g) => (
-                                  <td key={g.groupId ?? "top"} className="p-3 text-right">
+                                  <td key={g.groupId ?? "top"} className="p-3 text-right tabular-nums">
                                     {groupMap[g.groupId ?? "top"] ? formatKes(groupMap[g.groupId ?? "top"]) : "—"}
                                   </td>
                                 ));
                               })()}
-                              <td className="p-3 text-right text-muted-foreground">{member.contributionCount}</td>
-                              <td className="p-3 text-right font-semibold">{formatKes(member.grandTotal)}</td>
+                              <td className="p-3 text-right text-muted-foreground tabular-nums">{member.contributionCount}</td>
+                              <td className="p-3 text-right font-semibold tabular-nums">{formatKes(member.grandTotal)}</td>
                             </tr>
 
                             {/* Expanded individual contribution rows */}
                             {isExpanded && member.contributions.map((entry, idx) => (
-                              <tr key={entry.contributionId} className="bg-muted/20 border-b text-xs">
+                              <tr key={entry.contributionId} className="bg-muted/20 border-b border-border text-xs">
                                 <td className="p-2 pl-8 text-muted-foreground">{idx + 1}</td>
                                 <td className="p-2 text-muted-foreground" colSpan={2}>
                                   {progressTimeBucket === "monthly"
@@ -1917,10 +1940,10 @@ function ReportsPageContent() {
                                     {entry.entryType}
                                   </span>
                                   {entry.purposeName && (
-                                    <span className="ml-1 px-1.5 py-0.5 rounded text-xs bg-slate-100 text-slate-600">{entry.purposeName}</span>
+                                    <span className="ml-1 px-1.5 py-0.5 rounded text-xs bg-muted text-muted-foreground">{entry.purposeName}</span>
                                   )}
                                   {entry.groupName && (
-                                    <span className="ml-1 px-1.5 py-0.5 rounded text-xs bg-slate-100 text-slate-600">{entry.groupName}</span>
+                                    <span className="ml-1 px-1.5 py-0.5 rounded text-xs bg-muted text-muted-foreground">{entry.groupName}</span>
                                   )}
                                 </td>
                                 {/* empty cells for purpose/group breakdown columns */}
@@ -1930,8 +1953,8 @@ function ReportsPageContent() {
                                 {progressBreakdownBy === "group" && sortedProgressMembers[0]?.byGroup.map((g) => (
                                   <td key={g.groupId ?? "top"} className="p-2" />
                                 ))}
-                                <td className="p-2 text-right">{formatKes(entry.amount)}</td>
-                                <td className="p-2 text-right text-muted-foreground">↑ {formatKes(entry.runningTotal)}</td>
+                                <td className="p-2 text-right tabular-nums">{formatKes(entry.amount)}</td>
+                                <td className="p-2 text-right text-muted-foreground tabular-nums">↑ {formatKes(entry.runningTotal)}</td>
                               </tr>
                             ))}
                           </>
@@ -1939,7 +1962,7 @@ function ReportsPageContent() {
                       })}
 
                       {/* Grand total row */}
-                      <tr className="border-t-2 font-semibold bg-muted/30">
+                      <tr className="border-t-2 border-border font-semibold bg-muted/30">
                         <td className="p-3" colSpan={2}>TOTAL</td>
                         <td className="p-3 hidden sm:table-cell" />
                         {progressBreakdownBy === "purpose" && sortedProgressMembers[0]?.byPurpose.map((p) => {
@@ -1947,19 +1970,19 @@ function ReportsPageContent() {
                             const found = m.byPurpose.find((bp) => bp.purposeId === p.purposeId);
                             return sum + Number(found?.totalAmount ?? 0);
                           }, 0);
-                          return <td key={p.purposeId} className="p-3 text-right">{formatKes(colTotal)}</td>;
+                          return <td key={p.purposeId} className="p-3 text-right tabular-nums">{formatKes(colTotal)}</td>;
                         })}
                         {progressBreakdownBy === "group" && sortedProgressMembers[0]?.byGroup.map((g) => {
                           const colTotal = sortedProgressMembers.reduce((sum, m) => {
                             const found = m.byGroup.find((bg) => (bg.groupId ?? "top") === (g.groupId ?? "top"));
                             return sum + Number(found?.totalAmount ?? 0);
                           }, 0);
-                          return <td key={g.groupId ?? "top"} className="p-3 text-right">{formatKes(colTotal)}</td>;
+                          return <td key={g.groupId ?? "top"} className="p-3 text-right tabular-nums">{formatKes(colTotal)}</td>;
                         })}
-                        <td className="p-3 text-right">
+                        <td className="p-3 text-right tabular-nums">
                           {sortedProgressMembers.reduce((s, m) => s + m.contributionCount, 0)}
                         </td>
-                        <td className="p-3 text-right">{formatKes(progressGrandTotal)}</td>
+                        <td className="p-3 text-right tabular-nums">{formatKes(progressGrandTotal)}</td>
                       </tr>
                     </tbody>
                   </table>

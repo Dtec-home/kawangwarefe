@@ -33,14 +33,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, statusToVariant, type StatusVariant } from "@/components/ui/status-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { useUserRole } from "@/lib/hooks/use-user-role";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { PageHeader } from "@/components/ui/page-header";
 import { Filter, Plus, CheckCircle, XCircle, Banknote, Pencil, Receipt } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface Expense {
   id: string;
@@ -134,21 +137,11 @@ function getStatusLabel(status: string) {
   }
 }
 
-function getStatusBadgeClass(status: string) {
-  switch (status) {
-    case "pending":
-      // Requested
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100";
-    case "approved":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
-    case "paid":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100";
-    case "rejected":
-    case "voided":
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100";
-    default:
-      return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100";
-  }
+/** Map a workflow status to a StatusBadge variant. */
+function getStatusVariant(status: string): StatusVariant {
+  // "voided" is not in the shared map; treat it like a rejected/destructive state.
+  if (status === "voided") return "destructive";
+  return statusToVariant(status);
 }
 
 /**
@@ -782,18 +775,18 @@ export default function ExpensesPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Expenses</h1>
-            <p className="text-muted-foreground">Request, approve and pay money out of church funds</p>
-          </div>
-          {canRequest && (
-            <Button className="w-full sm:w-auto" onClick={() => setShowRequestDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Request Expense
-            </Button>
-          )}
-        </div>
+        <PageHeader
+          title="Expenses"
+          description="Request, approve and pay money out of church funds"
+          actions={
+            canRequest ? (
+              <Button onClick={() => setShowRequestDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Request Expense
+              </Button>
+            ) : undefined
+          }
+        />
 
         {/* Summary card */}
         <div className="grid sm:grid-cols-2 gap-4">
@@ -898,15 +891,31 @@ export default function ExpensesPage() {
           </CardHeader>
           <CardContent>
             {loading && (
-              <div className="text-center py-8 text-muted-foreground">Loading expenses...</div>
+              <div className="space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </div>
             )}
             {error && (
-              <div className="text-center py-8 text-red-600">
+              <div className="text-center py-8 text-destructive">
                 Error loading expenses: {error.message}
               </div>
             )}
             {!loading && !error && expenses.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">No expenses found</div>
+              <Empty
+                icon={Receipt}
+                title="No expenses found"
+                description="No expenses match the current filters."
+                action={
+                  canRequest ? (
+                    <Button onClick={() => setShowRequestDialog(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Request Expense
+                    </Button>
+                  ) : undefined
+                }
+              />
             )}
 
             {!loading && !error && expenses.length > 0 && (
@@ -914,10 +923,10 @@ export default function ExpensesPage() {
                 {/* Mobile card view */}
                 <div className="space-y-3 md:hidden">
                   {expenses.map((e) => (
-                    <div key={e.id} className="border rounded-lg p-3 space-y-2">
+                    <div key={e.id} className="border border-border rounded-lg p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">KES {Number.parseFloat(e.amount).toLocaleString()}</span>
-                        <Badge className={getStatusBadgeClass(e.status)}>{getStatusLabel(e.status)}</Badge>
+                        <StatusBadge variant={getStatusVariant(e.status)}>{getStatusLabel(e.status)}</StatusBadge>
                       </div>
                       <div className="text-sm font-medium">{e.payee}</div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -946,7 +955,7 @@ export default function ExpensesPage() {
                           </>
                         )}
                         {(e.status === "rejected" || e.status === "voided") && e.voidReason && (
-                          <div className="text-red-600">Voided: {e.voidReason}</div>
+                          <div className="text-destructive">Voided: {e.voidReason}</div>
                         )}
                       </div>
 
@@ -991,7 +1000,7 @@ export default function ExpensesPage() {
                 {/* Desktop table view */}
                 <div className="overflow-x-auto hidden md:block">
                   <table className="w-full">
-                    <thead>
+                    <thead className="sticky top-0 z-10 bg-card [&_th]:bg-card [&_tr]:shadow-[inset_0_-1px_0_0_var(--border)]">
                       <tr className="border-b">
                         <th className="text-left p-3 font-medium">Date</th>
                         <th className="text-left p-3 font-medium">Fund</th>
@@ -1007,7 +1016,7 @@ export default function ExpensesPage() {
                     </thead>
                     <tbody>
                       {expenses.map((e) => (
-                        <tr key={e.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <tr key={e.id} className="border-b hover:bg-muted/60">
                           <td className="p-3 text-sm">
                             {e.expenseDate
                               ? new Date(e.expenseDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
@@ -1024,7 +1033,7 @@ export default function ExpensesPage() {
                           <td className="p-3 text-sm capitalize">{e.paymentMethod || "—"}</td>
                           <td className="p-3 text-sm font-mono">
                             {e.attachmentUrl ? (
-                              <a href={e.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              <a href={e.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-info hover:underline">
                                 {e.referenceNumber || "View"}
                               </a>
                             ) : (
@@ -1039,7 +1048,7 @@ export default function ExpensesPage() {
                               )}
                               {e.status === "paid" && e.paidBy && <div>Paid: {e.paidBy}</div>}
                               {(e.status === "rejected" || e.status === "voided") && e.voidReason && (
-                                <div className="text-red-600 max-w-[12rem] truncate" title={e.voidReason}>
+                                <div className="text-destructive max-w-[12rem] truncate" title={e.voidReason}>
                                   Voided: {e.voidReason}
                                 </div>
                               )}
@@ -1055,7 +1064,7 @@ export default function ExpensesPage() {
                             KES {Number.parseFloat(e.amount).toLocaleString()}
                           </td>
                           <td className="p-3 text-center">
-                            <Badge className={getStatusBadgeClass(e.status)}>{getStatusLabel(e.status)}</Badge>
+                            <StatusBadge variant={getStatusVariant(e.status)}>{getStatusLabel(e.status)}</StatusBadge>
                           </td>
                           <td className="p-3 text-sm text-right">
                             {hasAnyAction(e) ? (

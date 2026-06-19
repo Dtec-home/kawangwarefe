@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Empty } from "@/components/ui/empty";
 import { Users } from "lucide-react";
 import type { Leader } from "@/lib/graphql/leaders";
 
@@ -83,14 +84,10 @@ export function LeadersSection({
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <Users className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">
-                Leadership information coming soon
-              </p>
-            </div>
+            <Empty
+              icon={Users}
+              title="Leadership information coming soon"
+            />
           )}
         </div>
       </div>

@@ -87,7 +87,7 @@ export function GroupMembersModal({ open, onOpenChange, groupId, groupName }: Re
         </DialogHeader>
         {loading && <div className="text-muted-foreground">Loading members...</div>}
         {error && <div className="text-destructive">Failed to load members.</div>}
-        {!loading && !error && actionMessage && <div className="text-sm text-green-700">{actionMessage}</div>}
+        {!loading && !error && actionMessage && <div className="text-sm text-success">{actionMessage}</div>}
         {!loading && !error && actionError && <div className="text-sm text-destructive">{actionError}</div>}
         {!loading && !error && (
           <div className="space-y-2 max-h-96 overflow-y-auto">

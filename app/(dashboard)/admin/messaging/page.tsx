@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/ui/page-header";
 import { CampaignComposer } from "@/components/messaging/CampaignComposer";
 import { TemplateManager } from "@/components/messaging/TemplateManager";
 import { CampaignHistory } from "@/components/messaging/CampaignHistory";
@@ -20,10 +21,7 @@ import { QuickSendComposer } from "@/components/messaging/QuickSendComposer";
 function MessagingContent() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <MessageSquare className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">Messaging</h1>
-      </div>
+      <PageHeader title="Messaging" />
 
       <Tabs defaultValue="quick">
         <TabsList>
@@ -41,7 +39,7 @@ function MessagingContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-500" />
+                <Zap className="h-5 w-5 text-warning" />
                 Quick Send
               </CardTitle>
               <CardDescription>

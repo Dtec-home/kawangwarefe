@@ -88,8 +88,8 @@ export function MemberTimelineChart({ memberName, contributions, timeBucket, onB
         <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
           <defs>
             <linearGradient id="runningGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
-              <stop offset="95%" stopColor="#2563eb" stopOpacity={0.02} />
+              <stop offset="5%" stopColor="var(--chart-3)" stopOpacity={0.25} />
+              <stop offset="95%" stopColor="var(--chart-3)" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -99,10 +99,10 @@ export function MemberTimelineChart({ memberName, contributions, timeBucket, onB
           <Area
             type="stepAfter"
             dataKey="runningTotal"
-            stroke="#2563eb"
+            stroke="var(--chart-3)"
             strokeWidth={2}
             fill="url(#runningGrad)"
-            dot={{ r: 4, fill: "#2563eb", strokeWidth: 0 }}
+            dot={{ r: 4, fill: "var(--chart-3)", strokeWidth: 0 }}
             activeDot={{ r: 6 }}
             name="Running Total"
           />

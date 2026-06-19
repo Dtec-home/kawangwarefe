@@ -21,9 +21,11 @@ import { WELCOME_TOUR_CONFIG } from "@/lib/tours/tour-configs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, DollarSign, Calendar, Shield, FolderKey } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, Shield, FolderKey, Receipt, HelpCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Empty } from "@/components/ui/empty";
+import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -181,26 +183,37 @@ function DashboardContent() {
         {/* First-run intro overlay; self-gates via localStorage so it
             renders at most once per device. */}
         <OnboardingCarousel />
-        <div className="-m-4 sm:-m-6 lg:-m-8 min-h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="-m-4 sm:-m-6 lg:-m-8 min-h-full bg-gradient-to-br from-muted to-muted/60">
           {/* Header */}
-          <header data-tour="dashboard-header" className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+          <header data-tour="dashboard-header" className="bg-card border-b border-border">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <h1 className="text-2xl font-bold">My Dashboard</h1>
                   <p className="text-sm text-muted-foreground">Welcome, {user?.fullName}</p>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => startWelcomeTour()}
+                  disabled={!isReady}
+                  title="Replay the dashboard walkthrough"
+                  className="self-start"
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Tour</span>
+                </Button>
               </div>
             </div>
           </header>
 
           {/* Main Content */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8">
-        <Card data-tour="dashboard-snapshot" className="mb-6 border-teal-200/70 bg-white/80 dark:bg-slate-800/80 backdrop-blur">
+        <Card data-tour="dashboard-snapshot" className="mb-6 border-primary/20 bg-card/80 backdrop-blur">
           <CardContent className="p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-teal-600 dark:text-teal-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                   Your Giving Snapshot
                 </p>
                 <h2 className="text-lg font-semibold">View total contributions and breakdown</h2>
@@ -250,10 +263,10 @@ function DashboardContent() {
 
         {/* Department Admin Roles */}
         {isAnyCategoryAdmin && (
-          <Card className="mb-8 border-blue-200 dark:border-blue-800">
+          <Card className="mb-8 border-info/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FolderKey className="h-5 w-5 text-blue-600" />
+                <FolderKey className="h-5 w-5 text-info" />
                 Your Department Admin Roles
               </CardTitle>
               <CardDescription>
@@ -265,9 +278,9 @@ function DashboardContent() {
                 {categoryAdminRoles.map((role) => (
                   <div
                     key={role.id}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-info/12 border border-info/30 rounded-lg"
                   >
-                    <Shield className="h-4 w-4 text-blue-600" />
+                    <Shield className="h-4 w-4 text-info" />
                     <div>
                       <p className="font-medium text-sm">{role.category.name}</p>
                       <p className="text-xs text-muted-foreground">
@@ -298,27 +311,30 @@ function DashboardContent() {
           </CardHeader>
           <CardContent data-tour="dashboard-history">
             {loading && (
-              <div className="text-center py-8 text-muted-foreground">
-                Loading contributions...
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))}
               </div>
             )}
 
             {error && (
-              <div className="text-center py-8 text-red-600">
+              <div className="text-center py-8 text-destructive">
                 Error loading contributions: {error.message}
               </div>
             )}
 
             {!loading && !error && contributions.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No contributions yet</p>
-                <Button
-                  className="mt-4"
-                  onClick={() => router.push("/contribute")}
-                >
-                  Make Your First Contribution
-                </Button>
-              </div>
+              <Empty
+                icon={Receipt}
+                title="No contributions yet"
+                description="Your contributions will appear here once you make your first one."
+                action={
+                  <Button onClick={() => router.push("/contribute")}>
+                    Make Your First Contribution
+                  </Button>
+                }
+              />
             )}
 
             {!loading && !error && contributions.length > 0 && (
@@ -328,12 +344,6 @@ function DashboardContent() {
                 {contributionGroups.map((group) => {
                   const rep = group.representative;
                   const isExpanded = expandedGroups.has(group.groupId);
-                  const statusClass =
-                    rep.status === "completed"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                      : rep.status === "failed"
-                      ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
                   return (
                     <div key={group.groupId} className="border rounded-lg overflow-hidden">
                       <div
@@ -345,9 +355,9 @@ function DashboardContent() {
                             KES {group.totalAmount.toLocaleString()}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${statusClass}`}>
+                            <StatusBadge variant={statusToVariant(rep.status)}>
                               {rep.status}
-                            </span>
+                            </StatusBadge>
                             {group.isSplit && (
                               isExpanded
                                 ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -359,7 +369,7 @@ function DashboardContent() {
                           <span>
                             {groupCategoryLabel(group)}
                             {group.isSplit && (
-                              <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                              <span className="ml-1 text-xs text-primary">
                                 ({group.contributions.length} purposes)
                               </span>
                             )}
@@ -377,7 +387,7 @@ function DashboardContent() {
                         )}
                       </div>
                       {group.isSplit && isExpanded && (
-                        <div className="border-t bg-slate-50 dark:bg-slate-800/50 divide-y divide-slate-100 dark:divide-slate-700">
+                        <div className="border-t bg-muted divide-y divide-border">
                           {group.contributions.map((c) => (
                             <div key={c.id} className="flex items-center justify-between px-4 py-2 text-sm">
                               <span className="text-muted-foreground">
@@ -411,16 +421,10 @@ function DashboardContent() {
                     {contributionGroups.map((group) => {
                       const rep = group.representative;
                       const isExpanded = expandedGroups.has(group.groupId);
-                      const statusClass =
-                        rep.status === "completed"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                          : rep.status === "failed"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
                       return (
                         <React.Fragment key={group.groupId}>
                           <tr
-                            className={`border-b hover:bg-slate-50 dark:hover:bg-slate-800 ${group.isSplit ? "cursor-pointer" : ""}`}
+                            className={`border-b hover:bg-muted/60 ${group.isSplit ? "cursor-pointer" : ""}`}
                             onClick={() => group.isSplit && toggleGroup(group.groupId)}
                           >
                             <td className="p-2 text-sm">
@@ -431,7 +435,7 @@ function DashboardContent() {
                             <td className="p-2 text-sm">
                               <span>{groupCategoryLabel(group)}</span>
                               {group.isSplit && (
-                                <span className="ml-1 text-xs text-teal-600 dark:text-teal-400">
+                                <span className="ml-1 text-xs text-primary">
                                   ({group.contributions.length} purposes)
                                 </span>
                               )}
@@ -440,9 +444,9 @@ function DashboardContent() {
                               KES {group.totalAmount.toLocaleString()}
                             </td>
                             <td className="p-2 text-center">
-                              <span className={`inline-block px-2 py-1 text-xs rounded-full ${statusClass}`}>
+                              <StatusBadge variant={statusToVariant(rep.status)}>
                                 {rep.status}
-                              </span>
+                              </StatusBadge>
                             </td>
                             <td className="p-2 text-sm font-mono">
                               <div className="flex items-center gap-1">
@@ -456,7 +460,7 @@ function DashboardContent() {
                             </td>
                           </tr>
                           {group.isSplit && isExpanded && group.contributions.map((c) => (
-                            <tr key={c.id} className="border-b bg-slate-50 dark:bg-slate-800/50">
+                            <tr key={c.id} className="border-b bg-muted">
                               <td className="p-2 text-sm text-muted-foreground pl-6" />
                               <td className="p-2 text-sm text-muted-foreground pl-6">
                                 ↳ {c.purposeName || c.category.name}

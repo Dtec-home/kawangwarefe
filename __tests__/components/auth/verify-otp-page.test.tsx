@@ -19,7 +19,7 @@ const { mockToastError, mockToastSuccess } = vi.hoisted(() => ({
   mockToastError: vi.fn(),
   mockToastSuccess: vi.fn(),
 }))
-vi.mock('react-hot-toast', () => ({ default: { error: mockToastError, success: mockToastSuccess } }))
+vi.mock('sonner', () => ({ toast: { error: mockToastError, success: mockToastSuccess } }))
 
 function renderPage() { return render(<VerifyOtpPage />) }
 
