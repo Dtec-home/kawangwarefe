@@ -12,6 +12,19 @@ export const GET_ALL_EVENTS = gql`
       registrationLink
       isActive
       featuredImageUrl
+      isPayable
+      category {
+        id
+        name
+      }
+      purpose {
+        id
+        name
+      }
+      suggestedAmount
+      displayOrder
+      requiresRegistration
+      registrationCount
       createdAt
       updatedAt
     }
@@ -30,8 +43,46 @@ export const GET_EVENT = gql`
       registrationLink
       isActive
       featuredImageUrl
+      isPayable
+      category {
+        id
+        name
+      }
+      purpose {
+        id
+        name
+      }
+      suggestedAmount
+      displayOrder
+      requiresRegistration
+      registrationCount
       createdAt
       updatedAt
+    }
+  }
+`;
+
+export const EVENT_GIVING_SUMMARY = gql`
+  query EventGivingSummary($eventId: ID!) {
+    eventGivingSummary(eventId: $eventId) {
+      totalAmount
+      contributionCount
+    }
+  }
+`;
+
+export const EVENT_REGISTRATIONS = gql`
+  query EventRegistrations($eventId: ID!) {
+    eventRegistrations(eventId: $eventId) {
+      id
+      guestName
+      guestPhone
+      status
+      registeredAt
+      member {
+        id
+        fullName
+      }
     }
   }
 `;

@@ -10,6 +10,11 @@ export const CREATE_EVENT = gql`
     $registrationLink: String
     $isActive: Boolean
     $featuredImageUrl: String
+    $categoryId: ID
+    $purposeId: ID
+    $suggestedAmount: String
+    $displayOrder: Int
+    $requiresRegistration: Boolean
   ) {
     createEvent(
       title: $title
@@ -20,6 +25,11 @@ export const CREATE_EVENT = gql`
       registrationLink: $registrationLink
       isActive: $isActive
       featuredImageUrl: $featuredImageUrl
+      categoryId: $categoryId
+      purposeId: $purposeId
+      suggestedAmount: $suggestedAmount
+      displayOrder: $displayOrder
+      requiresRegistration: $requiresRegistration
     ) {
       success
       message
@@ -33,6 +43,19 @@ export const CREATE_EVENT = gql`
         registrationLink
         isActive
         featuredImageUrl
+        isPayable
+        category {
+          id
+          name
+        }
+        purpose {
+          id
+          name
+        }
+        suggestedAmount
+        displayOrder
+        requiresRegistration
+        registrationCount
         createdAt
         updatedAt
       }
@@ -51,6 +74,11 @@ export const UPDATE_EVENT = gql`
     $registrationLink: String
     $isActive: Boolean
     $featuredImageUrl: String
+    $categoryId: ID
+    $purposeId: ID
+    $suggestedAmount: String
+    $displayOrder: Int
+    $requiresRegistration: Boolean
   ) {
     updateEvent(
       eventId: $eventId
@@ -62,6 +90,11 @@ export const UPDATE_EVENT = gql`
       registrationLink: $registrationLink
       isActive: $isActive
       featuredImageUrl: $featuredImageUrl
+      categoryId: $categoryId
+      purposeId: $purposeId
+      suggestedAmount: $suggestedAmount
+      displayOrder: $displayOrder
+      requiresRegistration: $requiresRegistration
     ) {
       success
       message
@@ -75,6 +108,19 @@ export const UPDATE_EVENT = gql`
         registrationLink
         isActive
         featuredImageUrl
+        isPayable
+        category {
+          id
+          name
+        }
+        purpose {
+          id
+          name
+        }
+        suggestedAmount
+        displayOrder
+        requiresRegistration
+        registrationCount
         createdAt
         updatedAt
       }
@@ -100,6 +146,44 @@ export const TOGGLE_EVENT_ACTIVE = gql`
         id
         title
         isActive
+      }
+    }
+  }
+`;
+
+export const REORDER_EVENTS = gql`
+  mutation ReorderEvents($ids: [ID!]!) {
+    reorderEvents(ids: $ids) {
+      success
+      message
+    }
+  }
+`;
+
+export const REGISTER_FOR_EVENT = gql`
+  mutation RegisterForEvent($eventId: ID!, $name: String!, $phone: String) {
+    registerForEvent(eventId: $eventId, name: $name, phone: $phone) {
+      success
+      message
+      registration {
+        id
+        guestName
+        guestPhone
+        status
+        registeredAt
+      }
+    }
+  }
+`;
+
+export const CANCEL_REGISTRATION = gql`
+  mutation CancelRegistration($registrationId: ID!) {
+    cancelRegistration(registrationId: $registrationId) {
+      success
+      message
+      registration {
+        id
+        status
       }
     }
   }

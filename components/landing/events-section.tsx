@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, ExternalLink, CalendarDays, HeartHandshake } from "lucide-react";
+import { Empty } from "@/components/ui/empty";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, MapPin, ExternalLink, CalendarDays, HeartHandshake, ClipboardCheck } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import { EventRegistrationDialog } from "@/components/landing/event-registration-dialog";
 
 interface EventRef {
   id: string;
@@ -22,6 +26,8 @@ interface Event {
   featuredImageUrl?: string;
   isPayable?: boolean;
   suggestedAmount?: string | number | null;
+  requiresRegistration?: boolean;
+  registrationCount?: number;
   category?: EventRef | null;
   purpose?: EventRef | null;
 }
@@ -44,6 +50,7 @@ interface EventsSectionProps {
 
 export function EventsSection({ events }: EventsSectionProps) {
   const hasEvents = events && events.length > 0;
+  const [registrationEvent, setRegistrationEvent] = useState<Event | null>(null);
 
   return (
     <section id="events" className="py-16 bg-gradient-to-b from-muted/20 to-background">
@@ -98,12 +105,19 @@ export function EventsSection({ events }: EventsSectionProps) {
                       </div>
                     </div>
 
-                    {(event.isPayable || event.registrationLink) && (
+                    {event.requiresRegistration && event.registrationCount != null && event.registrationCount > 0 && (
+                      <Badge variant="secondary" className="gap-1">
+                        <ClipboardCheck className="w-3 h-3" />
+                        {event.registrationCount} registered
+                      </Badge>
+                    )}
+
+                    {(event.isPayable || event.registrationLink || event.requiresRegistration) && (
                       <div className="space-y-2 mt-4">
                         {event.isPayable && event.category?.id && (
                           <Button
                             size="sm"
-                            className="w-full bg-gradient-to-r from-teal-600 via-emerald-600 to-blue-600 hover:from-teal-700 hover:via-emerald-700 hover:to-blue-700 text-white"
+                            className="w-full bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-primary-foreground"
                             asChild
                           >
                             <Link href={buildGiveHref(event)}>
@@ -117,12 +131,25 @@ export function EventsSection({ events }: EventsSectionProps) {
                             </Link>
                           </Button>
                         )}
-                        {event.registrationLink && (
-                          <Button variant="outline" size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors" asChild>
-                            <a href={event.registrationLink} target="_blank" rel="noopener noreferrer">
-                              Register <ExternalLink className="w-4 h-4 ml-2" />
-                            </a>
+
+                        {event.requiresRegistration ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                            onClick={() => setRegistrationEvent(event)}
+                          >
+                            <ClipboardCheck className="w-4 h-4 mr-2" />
+                            Register
                           </Button>
+                        ) : (
+                          event.registrationLink && (
+                            <Button variant="outline" size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors" asChild>
+                              <a href={event.registrationLink} target="_blank" rel="noopener noreferrer">
+                                Register <ExternalLink className="w-4 h-4 ml-2" />
+                              </a>
+                            </Button>
+                          )
                         )}
                       </div>
                     )}
@@ -131,16 +158,25 @@ export function EventsSection({ events }: EventsSectionProps) {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <CalendarDays className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">No upcoming events scheduled</p>
-              <p className="text-sm text-muted-foreground mt-2">Check back soon for exciting church activities!</p>
-            </div>
+            <Empty
+              icon={CalendarDays}
+              title="No upcoming events scheduled"
+              description="Check back soon for exciting church activities!"
+            />
           )}
         </div>
       </div>
+
+      {registrationEvent && (
+        <EventRegistrationDialog
+          open={!!registrationEvent}
+          onOpenChange={(open) => {
+            if (!open) setRegistrationEvent(null);
+          }}
+          eventId={registrationEvent.id}
+          eventTitle={registrationEvent.title}
+        />
+      )}
     </section>
   );
 }

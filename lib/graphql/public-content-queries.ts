@@ -34,7 +34,7 @@ export const GET_ALL_DEVOTIONALS = gql`
 
 export const GET_ALL_EVENTS = gql`
   query GetAllEvents {
-    events(upcoming: false, limit: 50) {
+    events(upcoming: null, limit: 50) {
       id
       title
       description
@@ -45,6 +45,8 @@ export const GET_ALL_EVENTS = gql`
       featuredImageUrl
       isPayable
       suggestedAmount
+      requiresRegistration
+      registrationCount
       category {
         id
         name
@@ -52,6 +54,23 @@ export const GET_ALL_EVENTS = gql`
       purpose {
         id
         name
+      }
+    }
+  }
+`;
+
+/** Public, no-auth mutation: register the current visitor (member or guest) for an event. */
+export const REGISTER_FOR_EVENT = gql`
+  mutation RegisterForEvent($eventId: ID!, $name: String!, $phone: String) {
+    registerForEvent(eventId: $eventId, name: $name, phone: $phone) {
+      success
+      message
+      registration {
+        id
+        guestName
+        guestPhone
+        status
+        registeredAt
       }
     }
   }
