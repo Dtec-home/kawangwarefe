@@ -16,7 +16,11 @@ const GET_CURRENT_USER_ROLE = gql`
       isAuthenticated
       isStaff
       isCategoryAdmin
+      isGroupAdmin
+      isContentAdmin
+      canSendBulkMessage
       adminCategoryIds
+      adminGroupNames
       adminCategories {
         id
         name
@@ -38,7 +42,11 @@ interface UserRoleInfo {
   isAuthenticated: boolean;
   isStaff: boolean;
   isCategoryAdmin: boolean;
+  isGroupAdmin: boolean;
+  isContentAdmin: boolean;
+  canSendBulkMessage: boolean;
   adminCategoryIds: string[];
+  adminGroupNames: string[];
   adminCategories: Category[];
 }
 
@@ -53,7 +61,7 @@ export function useUserRole() {
   const { data, loading, error, refetch } = useQuery<UserRoleData>(
     GET_CURRENT_USER_ROLE,
     {
-      fetchPolicy: "cache-and-network",
+      fetchPolicy: "cache-first",
       errorPolicy: "ignore",
     }
   );
@@ -72,27 +80,49 @@ export function useUserRole() {
     // Role flags
     isStaff: roleInfo?.isStaff ?? false,
     isCategoryAdmin: roleInfo?.isCategoryAdmin ?? false,
+    isGroupAdmin: roleInfo?.isGroupAdmin ?? false,
+    isContentAdmin: roleInfo?.isContentAdmin ?? false,
+    canSendBulkMessage: roleInfo?.canSendBulkMessage ?? false,
 
     // Combined check: can access admin panel
-    canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin) ?? false,
+    canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin || roleInfo?.isGroupAdmin || roleInfo?.isContentAdmin) ?? false,
+
+    // Can access content management
+    canAccessContent: (roleInfo?.isStaff || roleInfo?.isContentAdmin) ?? false,
 
     // Full admin (can see everything)
     isFullAdmin: roleInfo?.isStaff ?? false,
 
     // Category admin specific data
     adminCategoryIds: roleInfo?.adminCategoryIds ?? [],
+    adminGroupNames: roleInfo?.adminGroupNames ?? [],
     adminCategories: roleInfo?.adminCategories ?? [],
 
     // Helper: check if user can access a specific admin feature
-    canAccessFeature: (feature: "members" | "reports" | "category-admins" | "categories" | "contributions" | "overview" | "c2b-transactions") => {
+    canAccessFeature: (feature: "members" | "reports" | "category-admins" | "categories" | "groups" | "contributions" | "overview" | "c2b-transactions" | "content" | "messaging" | "prayers" | "expenses" | "leaders") => {
       if (!roleInfo) return false;
 
-      // Full staff can access everything
+      // Full staff can access everything (incl. expenses — treasurer/admin are staff)
       if (roleInfo.isStaff) return true;
 
-      // Category admins can only access overview and contributions
+      // Messaging: staff + dept_admin + group_admin (canSendBulkMessage covers all)
+      if (feature === "messaging") return roleInfo.canSendBulkMessage;
+
+      // Content admins can access content + the leaders/about directory
+      if (roleInfo.isContentAdmin) {
+        return feature === "content" || feature === "leaders";
+      }
+
+      // Category (department) admins can access overview, contributions, scoped
+      // reports, and expenses — they raise expense requests for their own funds
+      // (approval is enforced server-side under the four-eyes rule).
       if (roleInfo.isCategoryAdmin) {
-        return feature === "overview" || feature === "contributions";
+        return feature === "overview" || feature === "contributions" || feature === "reports" || feature === "expenses";
+      }
+
+      // Group admins can access overview, their scoped contributions, and scoped reports
+      if (roleInfo.isGroupAdmin) {
+        return feature === "overview" || feature === "contributions" || feature === "reports";
       }
 
       return false;

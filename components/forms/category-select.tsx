@@ -6,7 +6,7 @@
 "use client";
 
 import React from "react";
-import { UseFormRegister, FieldError } from "react-hook-form";
+import { FieldError } from "react-hook-form";
 import { useQuery } from "@apollo/client/react";
 import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
 import { Label } from "@/components/ui/label";
@@ -39,13 +39,13 @@ interface CategorySelectProps {
 }
 
 export function CategorySelect({
-  label = "Contribution Category",
+  label = "Department",
   name,
   value,
   onChange,
   error,
   required = true,
-}: CategorySelectProps) {
+}: Readonly<CategorySelectProps>) {
   const { data, loading, error: queryError } = useQuery<GetCategoriesData>(
     GET_CONTRIBUTION_CATEGORIES
   );
@@ -64,8 +64,8 @@ export function CategorySelect({
           <SelectValue
             placeholder={
               loading
-                ? "Loading categories..."
-                : "Select a category"
+                ? "Loading departments..."
+                : "Select a department"
             }
           />
         </SelectTrigger>
@@ -89,7 +89,7 @@ export function CategorySelect({
       )}
       {queryError && (
         <p className="text-sm text-destructive">
-          Error loading categories. Please try again.
+          Error loading departments. Please try again.
         </p>
       )}
     </div>

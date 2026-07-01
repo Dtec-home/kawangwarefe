@@ -13,11 +13,13 @@ export const INITIATE_CONTRIBUTION = gql`
     $phoneNumber: String!
     $amount: String!
     $categoryId: ID!
+    $purposeId: ID
   ) {
     initiateContribution(
       phoneNumber: $phoneNumber
       amount: $amount
       categoryId: $categoryId
+      purposeId: $purposeId
     ) {
       success
       message
@@ -27,6 +29,8 @@ export const INITIATE_CONTRIBUTION = gql`
         amount
         status
         transactionDate
+        routedGroupName
+        purposeName
         member {
           id
           fullName
@@ -59,6 +63,9 @@ export const GENERATE_CONTRIBUTION_REPORT = gql`
     $dateTo: DateTime
     $categoryId: Int
     $categoryIds: [Int!]
+    $purposeId: Int
+    $groupId: Int
+    $routingType: String
     $memberId: Int
   ) {
     generateContributionReport(
@@ -68,6 +75,9 @@ export const GENERATE_CONTRIBUTION_REPORT = gql`
       dateTo: $dateTo
       categoryId: $categoryId
       categoryIds: $categoryIds
+      purposeId: $purposeId
+      groupId: $groupId
+      routingType: $routingType
       memberId: $memberId
     ) {
       success

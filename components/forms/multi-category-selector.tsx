@@ -8,6 +8,7 @@
 import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryAmountRow } from "./category-amount-row";
 import { useQuery } from "@apollo/client/react";
 import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
@@ -17,6 +18,10 @@ interface Category {
   name: string;
   code: string;
   description: string;
+  routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
+  tracksMemberIdentifier?: boolean;
+  identifierLabel?: string;
+  identifierFormat?: string;
 }
 
 interface GetCategoriesData {
@@ -26,13 +31,16 @@ interface GetCategoriesData {
 export interface CategoryAmount {
   categoryId: string;
   amount: string;
+  purposeId?: string;
+  memberIdentifier?: string;
 }
 
 interface MultiCategorySelectorProps {
   contributions: CategoryAmount[];
   onChange: (contributions: CategoryAmount[]) => void;
-  errors?: Array<{ categoryId?: string; amount?: string }>;
+  errors?: Array<{ categoryId?: string; amount?: string; purposeId?: string; memberIdentifier?: string }>;
   maxCategories?: number;
+  phoneNumber?: string;
 }
 
 export function MultiCategorySelector({
@@ -40,6 +48,7 @@ export function MultiCategorySelector({
   onChange,
   errors = [],
   maxCategories = 10,
+  phoneNumber,
 }: MultiCategorySelectorProps) {
   const { data, loading } = useQuery<GetCategoriesData>(
     GET_CONTRIBUTION_CATEGORIES
@@ -47,26 +56,24 @@ export function MultiCategorySelector({
 
   const allCategories = data?.contributionCategories || [];
 
-  // Get selected category IDs
-  const selectedCategoryIds = new Set(
-    contributions.map((c) => c.categoryId).filter(Boolean)
-  );
-
-  // Filter available categories for each row
-  const getAvailableCategories = (currentCategoryId: string) => {
-    return allCategories.filter(
-      (cat) =>
-        cat.id === currentCategoryId || !selectedCategoryIds.has(cat.id)
-    );
-  };
+  // Keep all departments available per row to allow multi-purpose entries
+  // within the same department.
+  const getAvailableCategories = () => allCategories;
 
   const handleChange = (
     index: number,
-    field: "categoryId" | "amount",
+    field: "categoryId" | "amount" | "purposeId" | "memberIdentifier",
     value: string
   ) => {
     const updated = [...contributions];
     updated[index] = { ...updated[index], [field]: value };
+
+    // Reset purpose and identifier if department changes.
+    if (field === "categoryId") {
+      updated[index].purposeId = "";
+      updated[index].memberIdentifier = "";
+    }
+
     onChange(updated);
   };
 
@@ -77,18 +84,17 @@ export function MultiCategorySelector({
 
   const handleAdd = () => {
     if (contributions.length < maxCategories) {
-      onChange([...contributions, { categoryId: "", amount: "" }]);
+      onChange([...contributions, { categoryId: "", amount: "", purposeId: "" }]);
     }
   };
 
   const canAddMore =
-    contributions.length < maxCategories &&
-    contributions.length < allCategories.length;
+    contributions.length < maxCategories;
 
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-24 bg-muted animate-pulse rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
       </div>
     );
   }
@@ -103,9 +109,11 @@ export function MultiCategorySelector({
             value={contribution}
             onChange={handleChange}
             onRemove={handleRemove}
-            availableCategories={getAvailableCategories(contribution.categoryId)}
+            availableCategories={getAvailableCategories()}
+            selectedCategory={allCategories.find((c) => c.id === contribution.categoryId)}
             canRemove={contributions.length > 1}
             errors={errors && errors[index] ? errors[index] : undefined}
+            phoneNumber={phoneNumber}
           />
         ))}
       </div>
@@ -115,16 +123,16 @@ export function MultiCategorySelector({
           type="button"
           variant="outline"
           onClick={handleAdd}
-          className="w-full"
+          className="w-full border-dashed border-2 border-primary/40 text-primary hover:bg-primary/5 hover:text-primary"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Another Category
+          Add another fund
         </Button>
       )}
 
       {contributions.length >= maxCategories && (
         <p className="text-xs text-muted-foreground text-center">
-          Maximum {maxCategories} categories reached
+          Maximum {maxCategories} departments reached
         </p>
       )}
     </div>

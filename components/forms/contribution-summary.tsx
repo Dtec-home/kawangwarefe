@@ -1,6 +1,6 @@
 /**
  * Contribution Summary Component
- * Displays a summary of multi-category contributions before final submission
+ * Displays a summary of multi-department contributions before final submission
  */
 
 "use client";
@@ -67,7 +67,7 @@ export function ContributionSummary({
         {/* Contributions List */}
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Categories
+            Departments
           </h3>
           <div className="space-y-2">
             {contributions.map((item, index) => (
@@ -116,7 +116,7 @@ export function ContributionSummary({
             variant="outline"
             onClick={onEdit}
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 h-11 sm:h-10"
           >
             <Edit className="mr-2 h-4 w-4" />
             Edit
@@ -125,7 +125,7 @@ export function ContributionSummary({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 h-11 sm:h-10"
           >
             <Send className="mr-2 h-4 w-4" />
             {isLoading ? "Processing..." : "Confirm & Send M-Pesa Prompt"}

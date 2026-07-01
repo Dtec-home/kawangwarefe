@@ -12,6 +12,7 @@ import { useMutation } from "@apollo/client/react";
 import { IMPORT_MEMBERS, GET_MEMBER_IMPORT_TEMPLATE } from "@/lib/graphql/member-import-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { AdminLayout } from "@/components/layouts/admin-layout";
@@ -32,8 +33,12 @@ interface ImportResult {
   success: boolean;
   message: string;
   importedCount: number;
+  createdCount?: number;
+  updatedCount?: number;
   skippedCount: number;
   errorCount: number;
+  identifiersCreated?: number;
+  identifiersUpdated?: number;
   errors: string[];
   duplicates: string[];
 }
@@ -114,6 +119,8 @@ function MemberImportPageContent() {
         importedCount: 0,
         skippedCount: 0,
         errorCount: 1,
+        identifiersCreated: 0,
+        identifiersUpdated: 0,
         errors: [error.message || 'Unknown error occurred'],
         duplicates: [],
       });
@@ -159,24 +166,23 @@ function MemberImportPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Link href="/admin/members">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
-              <h1 className="text-3xl font-bold">Import Members</h1>
-            </div>
-            <p className="text-muted-foreground">
-              Upload a CSV or Excel file to import members in bulk
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleDownloadTemplate}>
-            <Download className="h-4 w-4 mr-2" />
-            Download Template
-          </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/members">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <PageHeader
+            className="flex-1"
+            title="Import Members"
+            description="Upload a CSV or Excel file to import members in bulk"
+            actions={
+              <Button variant="outline" onClick={handleDownloadTemplate}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Template
+              </Button>
+            }
+          />
         </div>
 
         {/* Instructions */}
@@ -192,11 +198,31 @@ function MemberImportPageContent() {
               <li>Download the CSV template using the button above</li>
               <li>Fill in member details (first_name, last_name, phone_number are required)</li>
               <li>Phone numbers should be in format: 0712345678 or 254712345678</li>
+              <li>
+                For departments that track a member number (e.g. Welfare), the template
+                includes a column named after the department code — fill in each member&apos;s
+                number there. Existing members are updated, never deleted; blank cells are ignored.
+              </li>
               <li>Upload the completed file below</li>
               <li>Review any errors and click Import to complete</li>
             </ol>
           </CardContent>
         </Card>
+
+        {/* Department-identifier column note */}
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Department number columns (e.g. &quot;Welfare Number&quot;)</AlertTitle>
+          <AlertDescription>
+            A per-department member-number column (such as Welfare Number, using the
+            department code <code>WELFARE</code> as its header) only appears in the
+            downloaded template for departments that have the member-identifier
+            feature switched on. Enable it under{" "}
+            <strong>Admin → Categories → edit → &quot;Tracks member identifier&quot;</strong>,
+            then download the template again. Once the column is present you can bulk-import
+            existing numbers (for example, Kamau → 0001).
+          </AlertDescription>
+        </Alert>
 
         {/* File Upload */}
         <Card>
@@ -266,7 +292,7 @@ function MemberImportPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-success">
                     {importResult.importedCount}
                   </div>
                 </CardContent>
@@ -279,7 +305,7 @@ function MemberImportPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">
+                  <div className="text-2xl font-bold text-warning">
                     {importResult.skippedCount}
                   </div>
                 </CardContent>
@@ -292,18 +318,37 @@ function MemberImportPageContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-2xl font-bold text-destructive">
                     {importResult.errorCount}
                   </div>
                 </CardContent>
               </Card>
             </div>
 
+            {/* Department numbers set (only when any were applied) */}
+            {((importResult.identifiersCreated ?? 0) + (importResult.identifiersUpdated ?? 0)) > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Department numbers set
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-[var(--chart-3)]">
+                    {(importResult.identifiersCreated ?? 0) + (importResult.identifiersUpdated ?? 0)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {importResult.identifiersCreated ?? 0} new, {importResult.identifiersUpdated ?? 0} updated
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Errors */}
             {importResult.errors.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-red-600 flex items-center gap-2">
+                  <CardTitle className="text-destructive flex items-center gap-2">
                     <XCircle className="h-5 w-5" />
                     Errors ({importResult.errors.length})
                   </CardTitle>
@@ -311,7 +356,7 @@ function MemberImportPageContent() {
                 <CardContent>
                   <div className="space-y-1 max-h-60 overflow-y-auto">
                     {importResult.errors.map((error, index) => (
-                      <p key={index} className="text-sm text-red-600 dark:text-red-400">
+                      <p key={index} className="text-sm text-destructive">
                         • {error}
                       </p>
                     ))}
@@ -324,7 +369,7 @@ function MemberImportPageContent() {
             {importResult.duplicates.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-yellow-600 flex items-center gap-2">
+                  <CardTitle className="text-warning flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
                     Duplicates ({importResult.duplicates.length})
                   </CardTitle>
@@ -332,7 +377,7 @@ function MemberImportPageContent() {
                 <CardContent>
                   <div className="space-y-1 max-h-60 overflow-y-auto">
                     {importResult.duplicates.map((duplicate, index) => (
-                      <p key={index} className="text-sm text-yellow-600 dark:text-yellow-400">
+                      <p key={index} className="text-sm text-warning">
                         • {duplicate}
                       </p>
                     ))}

@@ -34,6 +34,16 @@ export const GET_LANDING_PAGE_CONTENT = gql`
       location
       registrationLink
       featuredImageUrl
+      isPayable
+      suggestedAmount
+      category {
+        id
+        name
+      }
+      purpose {
+        id
+        name
+      }
     }
 
     youtubeVideos(limit: 6, featured: true) {

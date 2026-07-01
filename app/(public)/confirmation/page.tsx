@@ -12,19 +12,25 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_CONTRIBUTION } from "@/lib/graphql/queries";
-import { GET_CONTRIBUTIONS_BY_CHECKOUT_ID } from "@/lib/graphql/payment-status-query";
+import { GET_CONTRIBUTIONS_BY_CHECKOUT_ID, CHECK_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { LoginButton } from "@/components/auth/login-button";
+import { useAuth } from "@/lib/auth/auth-context";
+import { MemberLayout } from "@/components/layouts/member-layout";
+import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
 
 interface Contribution {
   id: string;
   amount: string;
   status: string;
   transactionDate: string | null;
+  purposeName: string | null;
+  departmentMemberIdentifier?: string | null;
+  contributionGroupId: string | null;
   member: {
     id: string;
     fullName: string;
@@ -60,27 +66,27 @@ function getStatusConfig(status: string, resultDesc: string | null | undefined) 
     case "completed":
       return {
         icon: CheckCircle2,
-        color: "text-green-600 dark:text-green-400",
-        bgColor: "bg-green-50 dark:bg-green-950",
-        borderColor: "border-green-200 dark:border-green-800",
+        color: "text-success",
+        bgColor: "bg-success/12",
+        borderColor: "border-success/30",
         title: "Payment Successful!",
         description: "Your contribution has been received and processed.",
       };
     case "failed":
       return {
         icon: XCircle,
-        color: "text-red-600 dark:text-red-400",
-        bgColor: "bg-red-50 dark:bg-red-950",
-        borderColor: "border-red-200 dark:border-red-800",
+        color: "text-destructive",
+        bgColor: "bg-destructive/12",
+        borderColor: "border-destructive/30",
         title: "Payment Failed",
         description: resultDesc || "The payment could not be processed.",
       };
     default: // pending
       return {
         icon: Clock,
-        color: "text-yellow-600 dark:text-yellow-400",
-        bgColor: "bg-yellow-50 dark:bg-yellow-950",
-        borderColor: "border-yellow-200 dark:border-yellow-800",
+        color: "text-warning",
+        bgColor: "bg-warning/12",
+        borderColor: "border-warning/30",
         title: "Payment Pending",
         description: "Waiting for M-Pesa confirmation. Please check your phone.",
       };
@@ -127,8 +133,21 @@ function SingleContributionConfirmation({
 
       <DetailsCard>
         <DetailRow label="Amount" value={`KES ${Number.parseFloat(contribution.amount).toLocaleString()}`} />
-        <DetailRow label="Category" value={contribution.category.name} />
-        <DetailRow label="Status" value={<span className="capitalize">{contribution.status}</span>} />
+        <DetailRow label="Department" value={contribution.category.name} />
+        {contribution.departmentMemberIdentifier && (
+          <DetailRow
+            label={`${contribution.category.name} member #`}
+            value={<span className="font-mono">{contribution.departmentMemberIdentifier}</span>}
+          />
+        )}
+        <DetailRow
+          label="Status"
+          value={
+            <StatusBadge variant={statusToVariant(contribution.status)} className="capitalize">
+              {contribution.status}
+            </StatusBadge>
+          }
+        />
         <DetailRow
           label="Date"
           value={contribution.transactionDate ? new Date(contribution.transactionDate).toLocaleDateString() : "Pending"}
@@ -148,6 +167,7 @@ function SingleContributionConfirmation({
         isPending={contribution.status === "pending"}
         isCompleted={contribution.status === "completed"}
         onRefetch={refetch}
+        checkoutRequestId={checkoutRequestId}
       />
     </ConfirmationLayout>
   );
@@ -204,7 +224,14 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
 
       <DetailsCard>
         <DetailRow label="Total Amount" value={`KES ${totalAmount.toLocaleString()}`} />
-        <DetailRow label="Status" value={<span className="capitalize">{overallStatus}</span>} />
+        <DetailRow
+          label="Status"
+          value={
+            <StatusBadge variant={statusToVariant(overallStatus)} className="capitalize">
+              {overallStatus}
+            </StatusBadge>
+          }
+        />
         {firstContrib && (
           <DetailRow label="Member" value={firstContrib.member.fullName} subValue={firstContrib.member.phoneNumber} wide />
         )}
@@ -213,20 +240,32 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
         )}
         <DetailRow label="Checkout Reference" value={<span className="font-mono text-xs">{checkoutRequestId}</span>} wide />
 
-        {/* Per-category breakdown */}
-        {contributions.length > 0 && (
-          <div className="col-span-2 pt-2">
-            <p className="text-sm text-muted-foreground mb-2">Breakdown</p>
-            <div className="space-y-1">
-              {contributions.map((c) => (
-                <div key={c.id} className="flex justify-between text-sm">
-                  <span>{c.category.name}</span>
-                  <span className="font-medium">KES {Number.parseFloat(c.amount).toLocaleString()}</span>
-                </div>
-              ))}
+        {/* Per-category / per-purpose breakdown */}
+        {contributions.length > 0 && (() => {
+          const categoryIds = new Set(contributions.map((c) => c.category.id));
+          const isAutoSplit = categoryIds.size === 1 && contributions.length > 1;
+          const headingLabel = isAutoSplit ? "Auto-split breakdown" : "Breakdown";
+          return (
+            <div className="col-span-2 pt-2">
+              <p className="text-sm text-muted-foreground mb-2">{headingLabel}</p>
+              <div className="space-y-1">
+                {contributions.map((c) => (
+                  <div key={c.id} className="flex justify-between text-sm">
+                    <span>
+                      {isAutoSplit ? (c.purposeName || c.category.name) : c.category.name}
+                      {c.departmentMemberIdentifier && (
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          (#{c.departmentMemberIdentifier})
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-medium">KES {Number.parseFloat(c.amount).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </DetailsCard>
 
       {overallStatus === "pending" && <PendingStepsCard />}
@@ -235,6 +274,7 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
         isPending={overallStatus === "pending"}
         isCompleted={overallStatus === "completed"}
         onRefetch={refetch}
+        checkoutRequestId={checkoutRequestId}
       />
     </ConfirmationLayout>
   );
@@ -243,7 +283,7 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
 // ─── Shared UI building blocks ─────────────────────────────────────────────
 function LoadingCard() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <Card className="max-w-md w-full">
         <CardContent className="pt-6 text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
@@ -264,10 +304,10 @@ function ErrorCard({
   onBack: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <Card className="max-w-md w-full">
         <CardHeader>
-          <CardTitle className="text-red-600">Error</CardTitle>
+          <CardTitle className="text-destructive">Error</CardTitle>
           <CardDescription>{message || "Could not load contribution details"}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -288,7 +328,7 @@ function ErrorCard({
 function ConfirmationLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4">
+    <div className="min-h-screen bg-muted py-12 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <Button variant="ghost" onClick={() => router.push("/contribute")} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -341,7 +381,7 @@ function DetailsCard({ children }: { children: React.ReactNode }) {
         <CardTitle>Contribution Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4">{children}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
       </CardContent>
     </Card>
   );
@@ -389,19 +429,44 @@ function ActionButtons({
   isPending,
   isCompleted,
   onRefetch,
+  checkoutRequestId,
 }: {
   isPending: boolean;
   isCompleted: boolean;
   onRefetch: () => void;
+  checkoutRequestId?: string;
 }) {
   const router = useRouter();
+  const [checking, setChecking] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  const [checkPaymentStatus] = useMutation(CHECK_PAYMENT_STATUS);
+
+  const handleCheckStatus = async () => {
+    if (!checkoutRequestId) {
+      onRefetch();
+      return;
+    }
+    setChecking(true);
+    try {
+      await checkPaymentStatus({ variables: { checkoutRequestId } });
+      // Refetch the query data to pick up any status changes
+      await onRefetch();
+    } catch {
+      // Fallback to plain refetch if mutation fails
+      await onRefetch();
+    } finally {
+      setChecking(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         {isPending && (
-          <Button onClick={onRefetch} variant="outline" className="flex-1">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Check Status
+          <Button onClick={handleCheckStatus} variant="outline" className="flex-1" disabled={checking}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${checking ? "animate-spin" : ""}`} />
+            {checking ? "Checking M-Pesa..." : "Check Status"}
           </Button>
         )}
         <Button onClick={() => router.push("/contribute")} className="flex-1">
@@ -409,9 +474,15 @@ function ActionButtons({
         </Button>
       </div>
       {isCompleted && (
-        <LoginButton variant="secondary" className="w-full">
-          Login to View Dashboard
-        </LoginButton>
+        isAuthenticated ? (
+          <Button variant="secondary" className="w-full" onClick={() => router.push("/dashboard")}>
+            Go to Dashboard
+          </Button>
+        ) : (
+          <LoginButton variant="secondary" className="w-full">
+            Login to View Dashboard
+          </LoginButton>
+        )
       )}
     </div>
   );
@@ -421,29 +492,28 @@ function ActionButtons({
 function ConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated } = useAuth();
   const contributionId = searchParams.get("id");
   const checkoutRequestId = searchParams.get("checkoutRequestId");
 
   // Route to the appropriate mode
+  let content: React.ReactNode;
+
   if (contributionId) {
-    return (
+    content = (
       <SingleContributionConfirmation
         contributionId={contributionId}
         checkoutRequestId={checkoutRequestId ?? ""}
       />
     );
-  }
-
-  if (checkoutRequestId) {
-    return <MultiContributionConfirmation checkoutRequestId={checkoutRequestId} />;
-  }
-
-  // No params at all
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+  } else if (checkoutRequestId) {
+    content = <MultiContributionConfirmation checkoutRequestId={checkoutRequestId} />;
+  } else {
+    content = (
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <Card className="max-w-md w-full">
         <CardHeader>
-          <CardTitle className="text-red-600">Invalid Request</CardTitle>
+          <CardTitle className="text-destructive">Invalid Request</CardTitle>
           <CardDescription>No contribution information found.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -454,14 +524,17 @@ function ConfirmationContent() {
         </CardContent>
       </Card>
     </div>
-  );
+    );
+  }
+
+  return isAuthenticated ? <MemberLayout>{content}</MemberLayout> : content;
 }
 
 export default function ConfirmationPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-muted flex items-center justify-center px-4">
           <Card className="max-w-md w-full">
             <CardContent className="pt-6 text-center">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />

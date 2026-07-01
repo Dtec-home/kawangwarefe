@@ -1,0 +1,12 @@
+# Service worker — must never be cached so browsers always byte-check for updates
+/sw.js
+  Cache-Control: no-store, no-cache, must-revalidate
+  Service-Worker-Allowed: /
+
+# Version endpoint — must always return fresh build ID
+/api/version
+  Cache-Control: no-store, no-cache, must-revalidate
+
+# Manifest — short cache so PWA metadata stays fresh
+/manifest.webmanifest
+  Cache-Control: no-cache, must-revalidate, max-age=0

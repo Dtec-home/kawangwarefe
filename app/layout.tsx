@@ -1,15 +1,18 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "react-hot-toast";
+import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { ApolloWrapper } from "@/lib/graphql/apollo-client";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { ThemeProvider } from "@/lib/theme/theme-provider";
 import { StructuredData } from "@/components/seo/structured-data";
+import { UpdatePrompt } from "@/components/pwa/update-prompt";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+//Because we must deploy
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -17,7 +20,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = "https://sdakawangwangware.site";
+const siteUrl = "https://www.sdakawangware.org";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -83,9 +94,6 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   category: "religion",
-  verification: {
-    google: "your-google-verification-code",
-  },
 };
 
 export default function RootLayout({
@@ -99,38 +107,31 @@ export default function RootLayout({
         <StructuredData />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${jakarta.variable} ${geistMono.variable} antialiased`}
       >
-        <ApolloWrapper>
-          <AuthProvider>
-            {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: '#10b981',
-                    secondary: '#fff',
-                  },
-                },
-                error: {
-                  duration: 4000,
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#fff',
-                  },
-                },
-              }}
-            />
+        <ThemeProvider>
+          <ApolloWrapper>
+            <AuthProvider>
+              {children}
+              <Toaster position="bottom-center" />
           </AuthProvider>
-        </ApolloWrapper>
+          </ApolloWrapper>
+        </ThemeProvider>
+        <footer className="w-full py-3 pb-16 md:pb-3 text-center text-xs text-muted-foreground border-t bg-background/95">
+          Powered by{" "}
+          <a
+            href="https://www.allons-ysuite.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-foreground hover:underline"
+          >
+            Allons-y Ministry
+          </a>
+        </footer>
         <Analytics />
+        {/* Mandatory PWA update overlay — rendered outside auth/apollo context
+            so it works even if the GraphQL server is temporarily unreachable */}
+        <UpdatePrompt />
       </body>
     </html>
   );

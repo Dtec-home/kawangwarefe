@@ -19,11 +19,24 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   )
 }
 
-function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+function TableHeader({
+  className,
+  stickyHeader = false,
+  ...props
+}: React.ComponentProps<"thead"> & { stickyHeader?: boolean }) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn(
+        "[&_tr]:border-b",
+        // When the table lives inside a bounded overflow container, this keeps the
+        // column headers pinned to the top as the body scrolls. It is inert (no
+        // visual effect) when the table is not inside a scroll container, so it is
+        // safe to opt in without breaking existing static-page tables.
+        stickyHeader &&
+          "sticky top-0 z-10 bg-card [&_th]:bg-card [&_tr]:shadow-[inset_0_-1px_0_0_var(--border)]",
+        className
+      )}
       {...props}
     />
   )

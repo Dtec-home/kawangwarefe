@@ -6,7 +6,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-jakarta);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -25,6 +25,12 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -41,18 +47,41 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --radius: 1rem;
+  --tracking-normal: -0.015em;
+
+  /* ── Brand-tinted soft shadow tokens (teal) ── */
+  --shadow-color: 190 85% 38%;
+  --shadow-2xs: 0px 1px 2px 0px hsl(var(--shadow-color) / 0.04);
+  --shadow-xs: 0px 2px 8px 0px hsl(var(--shadow-color) / 0.05);
+  --shadow-sm: 0px 8px 30px 0px hsl(var(--shadow-color) / 0.06), 0px 1px 2px -1px hsl(var(--shadow-color) / 0.06);
+  --shadow: 0px 8px 30px 0px hsl(var(--shadow-color) / 0.06), 0px 1px 2px -1px hsl(var(--shadow-color) / 0.06);
+  --shadow-md: 0px 8px 30px 0px hsl(var(--shadow-color) / 0.07), 0px 2px 4px -1px hsl(var(--shadow-color) / 0.07);
+  --shadow-lg: 0px 8px 30px 0px hsl(var(--shadow-color) / 0.08), 0px 4px 6px -1px hsl(var(--shadow-color) / 0.08);
+  --shadow-xl: 0px 12px 40px 0px hsl(var(--shadow-color) / 0.10), 0px 8px 10px -1px hsl(var(--shadow-color) / 0.08);
+
+  /* Off-white canvas so white cards + brand-tinted shadows actually register (Sprint 5) */
+  --background: oklch(0.985 0.004 247.858);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  /* ── Brand primary: teal-600 ── */
+  --primary: oklch(0.50 0.22 200);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
@@ -60,33 +89,87 @@
   --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
+  /* ── Semantic status tokens (readable on light surfaces) ── */
+  --success: oklch(0.62 0.16 150);
+  --success-foreground: oklch(0.99 0.01 150);
+  --warning: oklch(0.70 0.15 75);
+  --warning-foreground: oklch(0.27 0.05 75);
+  --info: oklch(0.58 0.15 240);
+  --info-foreground: oklch(0.99 0.01 240);
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --ring: oklch(0.68 0.18 200);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  /* Dark teal-navy "brand rail" — distinct surface vs the light content canvas (Sprint 5) */
+  --sidebar: oklch(0.27 0.045 220);
+  --sidebar-foreground: oklch(0.96 0.008 220);
+  /* ── Sidebar picks up brand primary ── */
+  --sidebar-primary: oklch(0.72 0.15 195);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.38 0.075 210);
+  --sidebar-accent-foreground: oklch(0.98 0.01 210);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.72 0.15 195);
+
+  /* ───────────────────────────────────────────────────────────── */
+  /* OKLASCH BRAND PALETTE (Teal-Emerald-Based)                   */
+  /* ───────────────────────────────────────────────────────────── */
+
+  /* Primary Brand: Teal Scale */
+  --brand-teal-50: oklch(0.97 0.04 210);
+  --brand-teal-100: oklch(0.94 0.08 210);
+  --brand-teal-200: oklch(0.90 0.12 210);
+  --brand-teal-300: oklch(0.82 0.16 210);
+  --brand-teal-400: oklch(0.68 0.18 200);
+  --brand-teal-500: oklch(0.60 0.20 200);
+  --brand-teal-600: oklch(0.50 0.22 200);
+  --brand-teal-700: oklch(0.42 0.24 200);
+  --brand-teal-800: oklch(0.30 0.20 200);
+  --brand-teal-900: oklch(0.15 0.08 200);
+
+  /* Primary Brand: Emerald Scale */
+  --brand-emerald-50: oklch(0.97 0.05 160);
+  --brand-emerald-100: oklch(0.94 0.10 160);
+  --brand-emerald-200: oklch(0.90 0.14 160);
+  --brand-emerald-300: oklch(0.82 0.18 160);
+  --brand-emerald-400: oklch(0.70 0.20 160);
+  --brand-emerald-500: oklch(0.62 0.22 160);
+  --brand-emerald-600: oklch(0.52 0.24 160);
+  --brand-emerald-700: oklch(0.44 0.26 160);
+  --brand-emerald-800: oklch(0.32 0.18 160);
+  --brand-emerald-900: oklch(0.16 0.10 160);
+
+  /* Semantic Colors */
+  --semantic-success: oklch(0.62 0.22 150);
+  --semantic-warning: oklch(0.75 0.18 70);
+  --semantic-error: oklch(0.58 0.25 30);
+  --semantic-info: oklch(0.60 0.20 255);
 }
 
 .dark {
+  /* ── Deeper, darker shadows for dark surfaces ── */
+  --shadow-color: 0 0% 0%;
+  --shadow-2xs: 0px 1px 2px 0px hsl(var(--shadow-color) / 0.4);
+  --shadow-xs: 0px 2px 8px 0px hsl(var(--shadow-color) / 0.45);
+  --shadow-sm: 0px 12px 30px -8px hsl(var(--shadow-color) / 0.5), 0px 1px 2px -1px hsl(var(--shadow-color) / 0.5);
+  --shadow: 0px 12px 30px -8px hsl(var(--shadow-color) / 0.5), 0px 1px 2px -1px hsl(var(--shadow-color) / 0.5);
+  --shadow-md: 0px 16px 36px -10px hsl(var(--shadow-color) / 0.5), 0px 2px 4px -10px hsl(var(--shadow-color) / 0.5);
+  --shadow-lg: 0px 20px 40px -10px hsl(var(--shadow-color) / 0.55), 0px 4px 6px -11px hsl(var(--shadow-color) / 0.55);
+  --shadow-xl: 0px 28px 50px -12px hsl(var(--shadow-color) / 0.6), 0px 8px 10px -12px hsl(var(--shadow-color) / 0.55);
+
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
+  /* ── Brand primary lightened for dark bg ── */
+  --primary: oklch(0.68 0.18 200);
+  --primary-foreground: oklch(0.10 0.02 200);
   --secondary: oklch(0.279 0.041 260.031);
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
@@ -94,22 +177,41 @@
   --accent: oklch(0.279 0.041 260.031);
   --accent-foreground: oklch(0.984 0.003 247.858);
   --destructive: oklch(0.704 0.191 22.216);
+  /* ── Semantic status tokens (lightened for dark surfaces) ── */
+  --success: oklch(0.72 0.15 150);
+  --success-foreground: oklch(0.99 0.01 150);
+  --warning: oklch(0.80 0.15 80);
+  --warning-foreground: oklch(0.25 0.05 80);
+  --info: oklch(0.70 0.14 240);
+  --info-foreground: oklch(0.99 0.01 240);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
+  --ring: oklch(0.82 0.16 200);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar: oklch(0.20 0.038 215);
+  --sidebar-foreground: oklch(0.96 0.008 220);
+  /* ── Sidebar picks up brand primary (dark) ── */
+  --sidebar-primary: oklch(0.72 0.15 195);
+  --sidebar-primary-foreground: oklch(0.12 0.02 210);
+  --sidebar-accent: oklch(0.34 0.07 205);
+  --sidebar-accent-foreground: oklch(0.95 0.02 210);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --sidebar-ring: oklch(0.72 0.15 195);
+
+  /* Dark Mode Brand Colors (Lightened) */
+  --brand-teal-50: oklch(0.30 0.20 200);
+  --brand-teal-100: oklch(0.40 0.22 200);
+  --brand-teal-600: oklch(0.68 0.18 200);
+  --brand-teal-700: oklch(0.60 0.20 200);
+
+  --brand-emerald-50: oklch(0.32 0.18 160);
+  --brand-emerald-100: oklch(0.42 0.20 160);
+  --brand-emerald-600: oklch(0.70 0.20 160);
+  --brand-emerald-700: oklch(0.62 0.22 160);
 }
 
 @layer base {
@@ -118,6 +220,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    letter-spacing: var(--tracking-normal);
   }
 }
 
@@ -144,6 +247,17 @@
   }
 }
 
+@keyframes slide-up-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes pulse-slow {
   0%, 100% {
     opacity: 1;
@@ -153,15 +267,152 @@
   }
 }
 
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fade-in {
-  animation: fade-in 0.6s ease-out;
+  animation: fade-in 0.5s ease-out;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.6s ease-out forwards;
+  animation: slide-up 0.5s ease-out forwards;
   opacity: 0;
+}
+
+.animate-slide-up-sheet {
+  animation: slide-up-sheet 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-pulse-slow {
   animation: pulse-slow 3s ease-in-out infinite;
 }
+
+.animate-count-up {
+  animation: count-up 0.4s ease-out both;
+}
+
+/* Safe area support for notched phones (iPhone X+) in PWA standalone mode */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Bottom nav spacing - add to main content areas that have a bottom nav */
+.has-bottom-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+  .has-bottom-nav {
+    padding-bottom: max(4rem, calc(4rem + env(safe-area-inset-bottom)));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* driver.js Tailwind CSS Integration                             */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* Popover styling - matches shadcn/ui card design */
+.driver-popover {
+  @apply rounded-lg border border-border bg-popover text-popover-foreground shadow-lg;
+  max-width: 400px;
+}
+
+/* Popover title */
+.driver-popover-title {
+  @apply text-lg font-semibold text-foreground;
+}
+
+/* Popover description text */
+.driver-popover-description {
+  @apply mt-2 text-sm text-muted-foreground;
+}
+
+/* Popover footer and button container */
+.driver-popover-footer {
+  @apply mt-4 flex gap-2;
+}
+
+/* Next / Finish buttons — primary action.
+   Scoped under .driver-popover so these win over driver.css's base
+   `.driver-popover-footer button` rule (which otherwise renders them as
+   unstyled white buttons). */
+.driver-popover .driver-popover-next-btn,
+.driver-popover .driver-button-next,
+.driver-popover .driver-popover-finish-btn,
+.driver-popover .driver-button-finish {
+  @apply rounded-md border-0 bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90;
+  text-shadow: none;
+}
+
+/* Previous/Back button — secondary action */
+.driver-popover .driver-popover-prev-btn,
+.driver-popover .driver-button-prev {
+  @apply rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground;
+  text-shadow: none;
+}
+
+/* Close button */
+.driver-popover .driver-button-close,
+.driver-popover .driver-popover-close-btn {
+  @apply text-muted-foreground hover:text-foreground;
+}
+
+/* Popover arrow follows the popover surface */
+.driver-popover-arrow {
+  color: var(--popover);
+}
+
+/* Highlighted element outline — F6.1 brand teal */
+.driver-highlighted-element {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+/* Overlay - semi-transparent background */
+.driver-overlay {
+  @apply bg-black/50 dark:bg-black/70;
+}
+
+/* NOTE: do NOT override .driver-popover/.driver-popover-wrapper z-index.
+   driver.js sets the popover to z-index 1000000000 and the overlay to
+   10000 by default specifically so the popover (and its Next/Prev
+   buttons) stay above the dimming overlay and remain clickable. An
+   earlier override here dropped the popover to 9999 — below the
+   overlay's 10000 — which let the overlay's click-catching SVG path
+   intercept clicks meant for the tour buttons. The default already
+   clears this app's bottom nav (z-50) with huge margin. */
+
+/* Progress indicator */
+.driver-popover-progress {
+  @apply text-xs text-muted-foreground;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: 300px;
+    @apply text-sm;
+  }
+
+  .driver-popover-title {
+    @apply text-base;
+  }
+
+  .driver-popover-description {
+    @apply text-xs;
+  }
+
+  .driver-popover .driver-popover-next-btn,
+  .driver-popover .driver-button-next,
+  .driver-popover .driver-popover-finish-btn,
+  .driver-popover .driver-button-finish,
+  .driver-popover .driver-popover-prev-btn,
+  .driver-popover .driver-button-prev {
+    @apply px-2 py-1 text-xs;
+  }
+}
+

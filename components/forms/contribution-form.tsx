@@ -1,12 +1,13 @@
 /**
  * Multi-Category Contribution Form Component
- * Supports selecting multiple categories with amounts and displays summary before submission
+ * Supports selecting multiple departments with amounts and displays summary before submission
  * Following SOLID principles with step-based flow
  */
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,8 +20,9 @@ import { MultiCategorySelector, CategoryAmount } from "./multi-category-selector
 import { ContributionSummary } from "./contribution-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
-import toast from "react-hot-toast";
+import { Loader2, ArrowRight, CheckCircle2, Check } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import { GET_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
 
 // Validation schema using Zod
@@ -31,7 +33,9 @@ const multiContributionSchema = z.object({
   contributions: z
     .array(
       z.object({
-        categoryId: z.string().min(1, "Please select a category"),
+        categoryId: z.string().min(1, "Please select a department"),
+        purposeId: z.string().optional(),
+        memberIdentifier: z.string().optional(),
         amount: z
           .string()
           .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 1, {
@@ -42,10 +46,10 @@ const multiContributionSchema = z.object({
     .min(1, "Add at least one contribution")
     .refine(
       (contributions) => {
-        const categoryIds = contributions.map((c) => c.categoryId);
-        return new Set(categoryIds).size === categoryIds.length;
+        const uniqueKeys = contributions.map((c) => `${c.categoryId}::${c.purposeId || ""}`);
+        return new Set(uniqueKeys).size === uniqueKeys.length;
       },
-      { message: "Duplicate categories are not allowed" }
+      { message: "Duplicate department and purpose combinations are not allowed" }
     ),
 });
 
@@ -69,6 +73,7 @@ type InitiateMultiContributionResult = {
       categoryName: string;
       categoryCode: string;
       amount: string;
+      purposeName?: string | null;
     }>;
     checkoutRequestId?: string;
     transactionId?: string;
@@ -80,7 +85,10 @@ type InitiateMultiContributionVars = {
   contributions: Array<{
     categoryId: string;
     amount: string;
+    purposeId?: string;
+    memberIdentifier?: string;
   }>;
+  eventId?: string;
 };
 
 type PaymentStatusResult = {
@@ -92,6 +100,12 @@ interface Category {
   name: string;
   code: string;
   description: string;
+  routingMode?: "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
+  fallbackIfNoGroup?: "TOP_LEVEL" | "REJECT";
+  hasAutoSplit?: boolean;
+  tracksMemberIdentifier?: boolean;
+  identifierLabel?: string;
+  identifierFormat?: string;
 }
 
 interface GetCategoriesData {
@@ -101,18 +115,32 @@ interface GetCategoriesData {
 interface ContributionDetails {
   phoneNumber: string;
   totalAmount: string;
-  contributions: Array<{ categoryName: string; categoryCode: string; amount: string }>;
+  contributions: Array<{ categoryName: string; categoryCode: string; amount: string; purposeName?: string | null }>;
   checkoutRequestId: string;
   mpesaReceiptNumber?: string;
 }
 
-export function ContributionForm({ onSuccess }: ContributionFormProps) {
+// Wrapper provides the Suspense boundary required by useSearchParams (the
+// /contribute page renders this component directly, not inside its own boundary).
+export function ContributionForm(props: ContributionFormProps) {
+  return (
+    <Suspense fallback={<Skeleton className="h-24 w-full rounded-lg" />}>
+      <ContributionFormInner {...props} />
+    </Suspense>
+  );
+}
+
+function ContributionFormInner({ onSuccess }: ContributionFormProps) {
   const [step, setStep] = useState<FormStep>("input");
   const [contributionDetails, setContributionDetails] = useState<ContributionDetails | null>(null);
   const [pollingAttempts, setPollingAttempts] = useState(0);
   const pollingAttemptsRef = useRef(0);
   const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null);
   const onSuccessRef = useRef(onSuccess);
+
+  // Payable-event deep-link: remember the event so we can attribute the contribution.
+  const searchParams = useSearchParams();
+  const [eventId, setEventId] = useState<string | undefined>(undefined);
 
   // Get logged-in user's phone number if available
   const { user: authUser } = useAuth();
@@ -134,13 +162,15 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     handleSubmit,
     formState: { errors },
     setValue,
+    setError,
+    clearErrors,
     watch,
     reset,
   } = useForm<MultiContributionFormData>({
     resolver: zodResolver(multiContributionSchema),
     defaultValues: {
       phoneNumber: getDefaultPhone(),
-      contributions: [{ categoryId: "", amount: "" }],
+      contributions: [{ categoryId: "", amount: "", purposeId: "", memberIdentifier: "" }],
     },
   });
 
@@ -155,6 +185,35 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
       }
     }
   }, [authUser, setValue]);
+
+  // Seed the first row from payable-event query params (categoryId/purposeId/amount/eventId).
+  const eventSeededRef = useRef(false);
+  useEffect(() => {
+    if (eventSeededRef.current || !searchParams) return;
+    const categoryId = searchParams.get("categoryId") || "";
+    const purposeId = searchParams.get("purposeId") || "";
+    const amount = searchParams.get("amount") || "";
+    const evtId = searchParams.get("eventId") || "";
+
+    if (!categoryId && !evtId) return;
+    eventSeededRef.current = true;
+
+    if (evtId) setEventId(evtId);
+    if (categoryId) {
+      setValue(
+        "contributions",
+        [
+          {
+            categoryId,
+            amount: amount && !isNaN(parseFloat(amount)) ? amount : "",
+            purposeId: purposeId || "",
+            memberIdentifier: "",
+          },
+        ],
+        { shouldValidate: false }
+      );
+    }
+  }, [searchParams, setValue]);
 
   const contributions = watch("contributions");
   const phoneNumber = watch("phoneNumber");
@@ -208,6 +267,45 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
 
   const handleReviewClick = () => {
     handleSubmit(() => {
+      const categoryMap = new Map(
+        (categoriesData?.contributionCategories || []).map((category) => [category.id, category])
+      );
+
+      let hasPurposeError = false;
+      let hasIdentifierError = false;
+      contributions.forEach((contribution, index) => {
+        const category = categoryMap.get(contribution.categoryId);
+        if (category?.routingMode === "REQUIRES_PURPOSE" && !category?.hasAutoSplit && !contribution.purposeId) {
+          hasPurposeError = true;
+          setError(`contributions.${index}.purposeId` as any, {
+            type: "manual",
+            message: "Please select a purpose",
+          });
+        } else {
+          clearErrors(`contributions.${index}.purposeId` as any);
+        }
+
+        if (category?.tracksMemberIdentifier && !(contribution.memberIdentifier || "").trim()) {
+          hasIdentifierError = true;
+          setError(`contributions.${index}.memberIdentifier` as any, {
+            type: "manual",
+            message: `Please enter your ${category.identifierLabel?.trim() || "member number"}`,
+          });
+        } else {
+          clearErrors(`contributions.${index}.memberIdentifier` as any);
+        }
+      });
+
+      if (hasPurposeError) {
+        toast.error("Please select purpose for required departments.");
+        return;
+      }
+
+      if (hasIdentifierError) {
+        toast.error("Please enter the member number for the selected department.");
+        return;
+      }
+
       setStep("summary");
     })();
   };
@@ -275,7 +373,10 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
           contributions: contributions.map((c) => ({
             categoryId: c.categoryId,
             amount: c.amount,
+            purposeId: c.purposeId || undefined,
+            memberIdentifier: c.memberIdentifier?.trim() || undefined,
           })),
+          eventId: eventId || undefined,
         },
       });
 
@@ -328,79 +429,143 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     setStep("input");
   };
 
+  const FORM_STEPS = [
+    { id: "input" as const,   label: "Details" },
+    { id: "summary" as const, label: "Review"  },
+    { id: "waiting" as const, label: "Payment" },
+  ];
+  const stepIndex = FORM_STEPS.findIndex(s => s.id === step);
+
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-6 px-2">
+      {FORM_STEPS.map((s, i) => {
+        const isCompleted = i < stepIndex;
+        const isCurrent = i === stepIndex;
+        return (
+          <Fragment key={s.id}>
+            <div className="flex flex-col items-center gap-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                isCompleted
+                  ? "bg-success text-success-foreground"
+                  : isCurrent
+                  ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                  : "bg-muted text-muted-foreground"
+              }`}>
+                {isCompleted ? <Check className="h-4 w-4" /> : i + 1}
+              </div>
+              <span className={`text-xs font-medium ${isCurrent ? "text-primary" : "text-muted-foreground"}`}>
+                {s.label}
+              </span>
+            </div>
+            {i < FORM_STEPS.length - 1 && (
+              <div className={`flex-1 h-0.5 mx-2 mb-5 rounded-full ${
+                i < stepIndex ? "bg-success" : "bg-muted"
+              }`} />
+            )}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+
   // Input Step
   if (step === "input") {
     return (
-      <Card className="w-full shadow-lg">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-xl md:text-2xl">
+      <div className="w-full space-y-0">
+      <StepIndicator />
+      <Card className="w-full shadow-lg border border-border">
+        <CardHeader data-tour="contribution-header" className="space-y-2 border-b border-border pb-4">
+          <CardTitle className="text-2xl md:text-3xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Make a Contribution
           </CardTitle>
-          <CardDescription className="text-sm">
-            Select one or more categories and enter amounts. You'll receive a
+          <CardDescription className="text-sm text-muted-foreground">
+            Select one or more departments and enter amounts. You'll receive a
             single M-Pesa prompt for the total.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        {/* Scrollable body: phone (compact, top) + bounded category list.
+            The total + CTA live in a sticky footer below so they stay reachable. */}
+        <CardContent className="pt-6 pb-0">
           <form className="space-y-5">
-            <PhoneInput
-              name="phoneNumber"
-              register={register}
-              error={errors.phoneNumber}
-            />
-
-            <div className="space-y-2">
-              <MultiCategorySelector
-                contributions={contributions}
-                onChange={(newContributions) =>
-                  setValue("contributions", newContributions, {
-                    shouldValidate: true,
-                  })
-                }
-                errors={
-                  Array.isArray(errors.contributions)
-                    ? errors.contributions.map((err) => ({
-                      categoryId: err?.categoryId?.message,
-                      amount: err?.amount?.message,
-                    }))
-                    : undefined
-                }
-              />
-              {errors.contributions?.message && typeof errors.contributions.message === 'string' && (
-                <p className="text-sm text-destructive">
-                  {errors.contributions.message}
-                </p>
-              )}
-            </div>
-
-            {/* Total Display */}
-            {parseFloat(totalAmount) > 0 && (
-              <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg border">
-                <span className="font-semibold">Total Amount:</span>
-                <span className="text-xl font-bold text-primary">
-                  KES {parseFloat(totalAmount).toLocaleString("en-KE")}
-                </span>
+              {/* F5.3 — required field note */}
+              <p className="text-xs text-muted-foreground -mb-2">
+                Fields marked <span className="text-destructive font-semibold">*</span> are required
+              </p>
+              <div data-tour="contribution-phone">
+                <PhoneInput
+                  name="phoneNumber"
+                  register={register}
+                  error={errors.phoneNumber}
+                />
               </div>
-            )}
 
-            <Button
-              type="button"
-              className="w-full h-11"
-              onClick={handleReviewClick}
-              size="lg"
-            >
-              Review Contribution
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </form>
+              {/* F5.2 — bounded scroll using clamp + dvh so landscape mobile keeps headroom */}
+              <div
+                data-tour="contribution-categories"
+                className="space-y-2 max-h-[clamp(180px,40dvh,420px)] overflow-y-auto overflow-x-hidden -mx-1 px-1 pb-1"
+              >
+                <MultiCategorySelector
+                  contributions={contributions}
+                  phoneNumber={phoneNumber}
+                  onChange={(newContributions) =>
+                    setValue("contributions", newContributions, {
+                      shouldValidate: true,
+                    })
+                  }
+                  errors={
+                    Array.isArray(errors.contributions)
+                      ? errors.contributions.map((err) => ({
+                        categoryId: err?.categoryId?.message,
+                        purposeId: (err as any)?.purposeId?.message,
+                        amount: err?.amount?.message,
+                        memberIdentifier: (err as any)?.memberIdentifier?.message,
+                      }))
+                      : undefined
+                  }
+                />
+                {errors.contributions?.message && typeof errors.contributions.message === 'string' && (
+                  <p className="text-sm text-destructive">
+                    {errors.contributions.message}
+                  </p>
+                )}
+              </div>
+            </form>
         </CardContent>
+
+        {/* Sticky footer: running total + Review CTA. Always visible / thumb-reachable
+            on mobile, including safe-area padding (W5.1). */}
+        <div className="sticky bottom-0 z-10 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 rounded-b-xl px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-3">
+          {parseFloat(totalAmount) > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-sm text-muted-foreground">Total Amount</span>
+              <span className="text-2xl font-bold text-primary">
+                KES {parseFloat(totalAmount).toLocaleString("en-KE")}
+              </span>
+            </div>
+          )}
+
+          {/* F5.5 — plain primary button; colour comes from --primary token (brand-teal) */}
+          <Button
+            type="button"
+            data-tour="contribution-review-btn"
+            className="w-full"
+            onClick={handleReviewClick}
+            size="lg"
+          >
+            Review Contribution
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
       </Card>
+      </div>
     );
   }
 
   // Summary Step
   if (step === "summary") {
     return (
+      <div className="w-full space-y-0">
+      <StepIndicator />
       <ContributionSummary
         phoneNumber={`254${phoneNumber}`}
         contributions={contributionItems}
@@ -409,18 +574,22 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
         onConfirm={handleConfirmSubmit}
         isLoading={false}
       />
+      </div>
     );
   }
 
   // Processing Step
   if (step === "processing") {
+    const formattedPhone = `0${phoneNumber}`.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
     return (
       <Card className="w-full shadow-lg">
         <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <h3 className="text-xl font-semibold">Processing Your Contribution</h3>
-          <p className="text-muted-foreground text-center">
-            Sending M-Pesa prompt to your phone...
+          <h3 className="text-xl font-semibold text-center">Sending M-Pesa Request</h3>
+          <p className="text-muted-foreground text-center text-sm">
+            Sending prompt to{" "}
+            <span className="font-semibold text-foreground">{formattedPhone}</span>
+            {" "}— please wait...
           </p>
         </CardContent>
       </Card>
@@ -429,49 +598,59 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
 
   // Waiting for Payment Step
   if (step === "waiting" && contributionDetails) {
+    const waitingPhone = contributionDetails.phoneNumber
+      .replace(/^254/, "0")
+      .replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3");
     return (
+      <div className="w-full space-y-0">
+      <StepIndicator />
       <Card className="w-full shadow-lg">
-        <CardContent className="flex flex-col items-center py-12 space-y-6">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <CardContent className="flex flex-col items-center py-10 space-y-6">
+          <Loader2 className="h-14 w-14 animate-spin text-primary" />
 
-          <div className="text-center space-y-2">
-            <h3 className="text-2xl font-bold">Waiting for Payment Confirmation</h3>
-            <p className="text-muted-foreground max-w-md">
-              Please complete the payment on your phone{" "}
-              <span className="font-semibold">
-                ({contributionDetails.phoneNumber.replace(/^254/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3')})
-              </span>
+          <div className="text-center space-y-1.5">
+            <h3 className="text-xl font-bold">Waiting for M-Pesa</h3>
+            <p className="text-muted-foreground text-sm">
+              Check your phone{" "}
+              <span className="font-semibold text-foreground">{waitingPhone}</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              Enter your M-Pesa PIN to confirm the payment
+              Enter your M-Pesa PIN to complete the payment
             </p>
           </div>
 
-          <div className="w-full max-w-md space-y-4">
-            {/* Total Amount */}
-            <div className="flex justify-between items-center p-4 bg-primary/5 rounded-lg border">
-              <span className="font-semibold">Total Amount:</span>
+          <div className="w-full max-w-sm space-y-4">
+            <div className="flex justify-between items-center p-4 bg-primary/5 rounded-xl border">
+              <span className="font-medium text-sm">Total Amount</span>
               <span className="text-xl font-bold text-primary">
                 KES {parseFloat(contributionDetails.totalAmount).toLocaleString("en-KE")}
               </span>
             </div>
 
-            {/* Polling indicator */}
-            <div className="text-center text-sm text-muted-foreground">
-              <p>Checking payment status... ({pollingAttempts}/30)</p>
-              <p className="text-xs mt-1">This may take up to 60 seconds</p>
+            {/* Progress bar replaces the raw counter */}
+            <div>
+              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-primary h-full rounded-full transition-all duration-[2000ms] ease-linear"
+                  style={{ width: `${Math.min(Math.round((pollingAttempts / 30) * 100), 95)}%` }}
+                />
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                Waiting for confirmation — do not close this page
+              </p>
             </div>
           </div>
 
           <Button
             variant="outline"
+            size="mobile"
             onClick={handleCancelWaiting}
-            className="mt-4"
           >
             Cancel
           </Button>
         </CardContent>
       </Card>
+      </div>
     );
   }
 
@@ -480,10 +659,10 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
     return (
       <Card className="w-full shadow-lg">
         <CardContent className="flex flex-col items-center py-8 space-y-6">
-          <CheckCircle2 className="h-16 w-16 text-green-500" />
+          <CheckCircle2 className="h-16 w-16 text-success" />
 
           <div className="text-center space-y-2">
-            <h3 className="text-2xl font-bold text-green-600">
+            <h3 className="text-2xl font-bold text-success">
               Payment Completed Successfully!
             </h3>
             <p className="text-muted-foreground max-w-md">
@@ -493,36 +672,45 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
 
           <div className="w-full max-w-md space-y-4">
             {/* Total Amount */}
-            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg border-2 border-green-200">
+            <div className="flex justify-between items-center p-4 bg-success/12 rounded-lg border-2 border-success/30">
               <span className="font-semibold text-lg">Total Amount:</span>
-              <span className="text-2xl font-bold text-green-600">
+              <span className="text-2xl font-bold text-success">
                 KES {parseFloat(contributionDetails.totalAmount).toLocaleString("en-KE")}
               </span>
             </div>
 
             {/* Contribution Breakdown */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-muted-foreground">
-                Contribution Breakdown:
-              </h4>
-              <div className="space-y-2">
-                {contributionDetails.contributions.map((contrib, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
-                    <span className="font-medium">{contrib.categoryName}</span>
-                    <span className="font-semibold">
-                      KES {parseFloat(contrib.amount).toLocaleString("en-KE")}
-                    </span>
+            {(() => {
+              const contribs = contributionDetails.contributions;
+              const categoryIds = new Set(contribs.map((c) => c.categoryCode));
+              const isAutoSplit = categoryIds.size === 1 && contribs.length > 1 && contribs.some((c) => c.purposeName);
+              return (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-muted-foreground">
+                    {isAutoSplit ? "Auto-split breakdown:" : "Contribution Breakdown:"}
+                  </h4>
+                  <div className="space-y-2">
+                    {contribs.map((contrib, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
+                        <span className="font-medium">
+                          {isAutoSplit ? (contrib.purposeName || contrib.categoryName) : contrib.categoryName}
+                        </span>
+                        <span className="font-semibold">
+                          KES {parseFloat(contrib.amount).toLocaleString("en-KE")}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              );
+            })()}
 
             {/* Reference ID */}
             <div className="text-center text-xs text-muted-foreground space-y-1">
               <p>Reference: {contributionDetails.checkoutRequestId}</p>
-              <p className="text-green-600 font-medium">✓ Payment Confirmed</p>
+              <p className="text-success font-medium">✓ Payment Confirmed</p>
             </div>
           </div>
 
@@ -533,8 +721,7 @@ export function ContributionForm({ onSuccess }: ContributionFormProps) {
               setContributionDetails(null);
               if (onSuccess) onSuccess(null);
             }}
-            size="lg"
-            className="w-full max-w-md"
+            className="w-full max-w-md h-11 sm:h-10"
           >
             Make Another Contribution
           </Button>

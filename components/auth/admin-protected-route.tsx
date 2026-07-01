@@ -2,20 +2,21 @@
  * Admin Protected Route Component
  *
  * Protects admin pages based on user role.
- * - Staff-only pages: Members, Reports, Category Admins management
- * - Category admin pages: Overview, Contributions (filtered)
+ * Uses useAuth() directly instead of wrapping ProtectedRoute
+ * to avoid double loading gates.
  */
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/auth-context";
 import { useUserRole } from "@/lib/hooks/use-user-role";
-import { ProtectedRoute } from "./protected-route";
+import { Loader2 } from "lucide-react";
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
-  requiredAccess?: "staff" | "category-admin" | "any-admin";
+  requiredAccess?: "staff" | "category-admin" | "content-admin" | "any-admin" | "messaging";
 }
 
 export function AdminProtectedRoute({
@@ -23,71 +24,58 @@ export function AdminProtectedRoute({
   requiredAccess = "any-admin",
 }: AdminProtectedRouteProps) {
   const router = useRouter();
-  const { isStaff, isCategoryAdmin, canAccessAdmin, loading } = useUserRole();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, loading: roleLoading, roleInfo } = useUserRole();
 
-  useEffect(() => {
-    if (loading) return;
+  // Treat as loading if: auth is loading, role query is loading, OR
+  // role query returned loading:false but hasn't delivered data yet
+  // (Apollo cache-first can briefly return {loading:false, data:undefined})
+  const isLoading = authLoading || roleLoading || (isAuthenticated && !roleInfo);
 
-    // Check access based on required level
-    let hasAccess = false;
-
+  // Compute access once, use everywhere
+  const hasAccess = useMemo(() => {
     switch (requiredAccess) {
       case "staff":
-        hasAccess = isStaff;
-        break;
+        return isStaff;
       case "category-admin":
-        hasAccess = isCategoryAdmin || isStaff;
-        break;
+        return isCategoryAdmin || isStaff;
+      case "content-admin":
+        return canAccessContent;
+      case "messaging":
+        return canSendBulkMessage;
       case "any-admin":
-        hasAccess = canAccessAdmin;
-        break;
+        return canAccessAdmin || canAccessContent || canSendBulkMessage;
+      default:
+        return false;
     }
+  }, [requiredAccess, isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage]);
 
-    if (!hasAccess) {
-      // Redirect to dashboard if no access
+  // Redirect when not authenticated or not authorized
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (!isAuthenticated) {
+      router.push("/login");
+    } else if (!hasAccess) {
       router.push("/dashboard");
     }
-  }, [isStaff, isCategoryAdmin, canAccessAdmin, loading, requiredAccess, router]);
+  }, [isAuthenticated, hasAccess, isLoading, router]);
 
-  // Show loading while checking access
-  if (loading) {
+  // Single loading spinner for both auth + role check
+  if (isLoading) {
     return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-muted-foreground">Checking access...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
         </div>
-      </ProtectedRoute>
+      </div>
     );
   }
 
-  // Check access
-  let hasAccess = false;
-  switch (requiredAccess) {
-    case "staff":
-      hasAccess = isStaff;
-      break;
-    case "category-admin":
-      hasAccess = isCategoryAdmin || isStaff;
-      break;
-    case "any-admin":
-      hasAccess = canAccessAdmin;
-      break;
+  if (!isAuthenticated || !hasAccess) {
+    return null;
   }
 
-  if (!hasAccess) {
-    return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">
-              You don&apos;t have permission to access this page.
-            </p>
-          </div>
-        </div>
-      </ProtectedRoute>
-    );
-  }
-
-  return <ProtectedRoute>{children}</ProtectedRoute>;
+  return <>{children}</>;
 }

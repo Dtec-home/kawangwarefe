@@ -1,8 +1,17 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Sparkles } from "lucide-react";
+import { Empty } from "@/components/ui/empty";
+import { Bell, Sparkles, X } from "lucide-react";
 import { format } from "date-fns";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Announcement {
   id: string;
@@ -16,8 +25,39 @@ interface AnnouncementsSectionProps {
   announcements: Announcement[];
 }
 
+function AnnouncementDetailModal({ announcement, onClose }: { announcement: Announcement | null; onClose: () => void }) {
+  if (!announcement) return null;
+
+  return (
+    <Dialog open={!!announcement} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-start gap-2">
+            {announcement.priority > 0 && (
+              <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            )}
+            <span>{announcement.title}</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {format(new Date(announcement.publishDate), "MMMM d, yyyy 'at' h:mm a")}
+          </p>
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <p className="whitespace-pre-wrap text-base leading-relaxed">{announcement.content}</p>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function AnnouncementsSection({ announcements }: AnnouncementsSectionProps) {
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const hasAnnouncements = announcements && announcements.length > 0;
+
+  // Check if content exceeds 3 lines (rough estimate: ~150 characters)
+  const isContentLong = (content: string) => content.length > 150;
 
   return (
     <section className="py-16 bg-gradient-to-b from-muted/30 to-background">
@@ -40,7 +80,7 @@ export function AnnouncementsSection({ announcements }: AnnouncementsSectionProp
               {announcements.map((announcement, index) => (
                 <Card
                   key={announcement.id}
-                  className="hover:shadow-xl hover:scale-105 transition-all duration-300 border-l-4 border-l-primary animate-slide-up"
+                  className="hover:shadow-xl hover:scale-105 transition-all duration-300 border-l-4 border-l-primary animate-slide-up flex flex-col"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardHeader>
@@ -54,23 +94,37 @@ export function AnnouncementsSection({ announcements }: AnnouncementsSectionProp
                       {format(new Date(announcement.publishDate), "MMMM d, yyyy")}
                     </p>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="flex-1 flex flex-col justify-between">
                     <p className="text-sm line-clamp-3">{announcement.content}</p>
+                    {isContentLong(announcement.content) && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => setSelectedAnnouncement(announcement)}
+                        className="mt-3 p-0 h-auto"
+                      >
+                        Read more →
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-                <Bell className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground text-lg">No announcements at this time</p>
-              <p className="text-sm text-muted-foreground mt-2">Check back soon for updates!</p>
-            </div>
+            <Empty
+              icon={Bell}
+              title="No announcements at this time"
+              description="Check back soon for updates!"
+            />
           )}
         </div>
       </div>
+
+      {/* Announcement Detail Modal */}
+      <AnnouncementDetailModal
+        announcement={selectedAnnouncement}
+        onClose={() => setSelectedAnnouncement(null)}
+      />
     </section>
   );
 }

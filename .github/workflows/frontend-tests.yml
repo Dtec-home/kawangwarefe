@@ -1,0 +1,44 @@
+name: Frontend Tests
+
+# Sprint 0 — re-enabled 2026-06-12. Runs the Vitest unit/integration suite
+# (673 tests, green) on every push/PR. The coverage threshold is NOT enforced
+# here (npm run test does not pass --coverage): measured coverage is ~45%, below
+# the aspirational 60% in vitest.config.mts — see FE-COV-1 in the deferred
+# backlog. The Playwright e2e job stays disabled until a CI webServer (build +
+# start) is wired — see playwright.yml.disabled.
+
+on:
+  push:
+    branches: [ main, develop, master ]
+    paths:
+      - 'church-funds-ui/**'
+  pull_request:
+    branches: [ main, develop, master ]
+    paths:
+      - 'church-funds-ui/**'
+
+defaults:
+  run:
+    working-directory: church-funds-ui
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: church-funds-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit + integration tests
+        run: npm run test -- --run
