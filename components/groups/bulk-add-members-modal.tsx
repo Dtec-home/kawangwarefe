@@ -16,6 +16,7 @@ interface MemberItem {
   id: string;
   fullName: string;
   phoneNumber: string;
+  groups?: { id: string; name: string }[];
 }
 
 interface GetMembersData {
@@ -30,6 +31,10 @@ interface BulkAddResponse {
   bulkAddMembersToGroup: {
     success: boolean;
     message: string;
+    addedCount: number;
+    alreadyMemberCount: number;
+    skippedCount: number;
+    skippedMembers: string[];
   };
 }
 
@@ -42,21 +47,29 @@ interface BulkAddMembersModalProps {
 
 export function BulkAddMembersModal({ open, onOpenChange, groupId, groupName }: BulkAddMembersModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [limit, setLimit] = useState(50);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const { data, loading } = useQuery<GetMembersData>(GET_MEMBERS_LIST, {
-    variables: { search: searchTerm, limit: 50, offset: 0 },
+  const { data, loading, refetch } = useQuery<GetMembersData>(GET_MEMBERS_LIST, {
+    variables: { search: searchTerm, limit, offset: 0 },
     skip: !open,
   });
 
   const members = useMemo(() => data?.membersList.items || [], [data]);
+  const hasMore = data?.membersList.hasMore ?? false;
+
+  // A member already in this group can't be added again — mark and disable them
+  // rather than letting the admin re-select them and get a confusing "0 added".
+  const isAlreadyMember = (member: MemberItem) =>
+    (member.groups || []).some(g => g.id === groupId);
 
   const [bulkAdd, { loading: adding }] = useMutation<BulkAddResponse>(BULK_ADD_MEMBERS_TO_GROUP);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setLimit(50); // reset the window on a new search
   };
 
   const toggleSelection = (id: string) => {
@@ -69,11 +82,17 @@ export function BulkAddMembersModal({ open, onOpenChange, groupId, groupName }: 
     setSelectedIds(next);
   };
 
+  // Select-all only targets members who can actually be added.
+  const selectableMembers = useMemo(
+    () => members.filter(m => !isAlreadyMember(m)),
+    [members, groupId]
+  );
+
   const selectAll = () => {
-    if (selectedIds.size === members.length && members.length > 0) {
+    if (selectedIds.size === selectableMembers.length && selectableMembers.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(members.map(m => m.id)));
+      setSelectedIds(new Set(selectableMembers.map(m => m.id)));
     }
   };
 
@@ -93,8 +112,13 @@ export function BulkAddMembersModal({ open, onOpenChange, groupId, groupName }: 
         }
       });
       if (result?.bulkAddMembersToGroup?.success) {
-        setSuccess(result.bulkAddMembersToGroup.message);
+        const r = result.bulkAddMembersToGroup;
+        setSuccess(
+          `Added ${r.addedCount} · ${r.alreadyMemberCount} already members · ${r.skippedCount} skipped`
+        );
         setSelectedIds(new Set());
+        // Refresh so newly-added members show as "Already a member".
+        await refetch();
         // Optionally auto-close after a delay
         setTimeout(() => {
           onOpenChange(false);
@@ -165,30 +189,53 @@ export function BulkAddMembersModal({ open, onOpenChange, groupId, groupName }: 
           ) : (
             <>
               <div className="flex items-center space-x-2 pb-2 mb-2 border-b px-2 sticky top-0 bg-card z-10">
-                <Checkbox 
-                  id="select-all" 
-                  checked={members.length > 0 && selectedIds.size === members.length}
+                <Checkbox
+                  id="select-all"
+                  checked={selectableMembers.length > 0 && selectedIds.size === selectableMembers.length}
                   onCheckedChange={selectAll}
                 />
                 <Label htmlFor="select-all" className="cursor-pointer text-sm font-medium">
                   Select All
                 </Label>
               </div>
-              {members.map(member => (
-                <div key={member.id} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded">
-                  <Checkbox 
-                    id={`member-${member.id}`} 
-                    checked={selectedIds.has(member.id)}
-                    onCheckedChange={() => toggleSelection(member.id)}
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor={`member-${member.id}`} className="cursor-pointer text-sm font-medium">
-                      {member.fullName}
-                    </Label>
-                    <div className="text-xs text-muted-foreground">{member.phoneNumber}</div>
+              {members.map(member => {
+                const alreadyMember = isAlreadyMember(member);
+                return (
+                  <div key={member.id} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded">
+                    <Checkbox
+                      id={`member-${member.id}`}
+                      checked={selectedIds.has(member.id)}
+                      disabled={alreadyMember}
+                      onCheckedChange={() => toggleSelection(member.id)}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={`member-${member.id}`}
+                        className={`text-sm font-medium ${alreadyMember ? "text-muted-foreground" : "cursor-pointer"}`}
+                      >
+                        {member.fullName}
+                      </Label>
+                      <div className="text-xs text-muted-foreground">
+                        {member.phoneNumber}
+                        {alreadyMember && <span className="ml-2 italic">Already a member</span>}
+                      </div>
+                    </div>
                   </div>
+                );
+              })}
+              {hasMore && (
+                <div className="flex justify-center pt-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={loading}
+                    onClick={() => setLimit(l => l + 50)}
+                  >
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Load more
+                  </Button>
                 </div>
-              ))}
+              )}
             </>
           )}
         </div>

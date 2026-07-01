@@ -18,14 +18,15 @@ vi.mock('lucide-react', async (importOriginal) => {
 const mockMembersData = {
   membersList: {
     items: [
-      { id: 'm1', fullName: 'John Doe', phoneNumber: '0711111111' },
-      { id: 'm2', fullName: 'Jane Smith', phoneNumber: '0722222222' },
+      { id: 'm1', fullName: 'John Doe', phoneNumber: '0711111111', groups: [] },
+      { id: 'm2', fullName: 'Jane Smith', phoneNumber: '0722222222', groups: [] },
     ],
     total: 2,
     hasMore: false,
   }
 }
 
+const mockRefetch = vi.fn().mockResolvedValue({})
 const mockUseQuery = vi.fn()
 const mockUseMutation = vi.fn()
 
@@ -44,7 +45,7 @@ describe('BulkAddMembersModal', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseQuery.mockReturnValue({ data: mockMembersData, loading: false })
+    mockUseQuery.mockReturnValue({ data: mockMembersData, loading: false, refetch: mockRefetch })
     mockUseMutation.mockReturnValue([vi.fn(), { loading: false }])
   })
 
@@ -86,7 +87,11 @@ describe('BulkAddMembersModal', () => {
       data: {
         bulkAddMembersToGroup: {
           success: true,
-          message: 'Added members successfully'
+          message: 'ignored',
+          addedCount: 1,
+          alreadyMemberCount: 0,
+          skippedCount: 0,
+          skippedMembers: [],
         }
       }
     })
@@ -94,13 +99,13 @@ describe('BulkAddMembersModal', () => {
 
     const onOpenChange = vi.fn()
     render(<BulkAddMembersModal {...defaultProps} onOpenChange={onOpenChange} />)
-    
+
     // Select one
     fireEvent.click(screen.getByLabelText('John Doe'))
-    
+
     // Submit
     fireEvent.click(screen.getByRole('button', { name: /Add \(1\)/i }))
-    
+
     expect(mockMutate).toHaveBeenCalledWith({
       variables: {
         memberIds: ['m1'],
@@ -108,14 +113,93 @@ describe('BulkAddMembersModal', () => {
       }
     })
 
-    // Should show success message
+    // Should render the breakdown and refetch the list
     await waitFor(() => {
-      expect(screen.getByText('Added members successfully')).toBeInTheDocument()
+      expect(screen.getByText(/Added 1 · 0 already members · 0 skipped/)).toBeInTheDocument()
     })
+    expect(mockRefetch).toHaveBeenCalled()
 
     // Advance timers to trigger auto-close
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
     }, { timeout: 3000 })
+  })
+
+  it('disables and labels members already in this group', () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        membersList: {
+          items: [
+            { id: 'm1', fullName: 'John Doe', phoneNumber: '0711111111', groups: [{ id: 'g1', name: 'Test Group' }] },
+            { id: 'm2', fullName: 'Jane Smith', phoneNumber: '0722222222', groups: [] },
+          ],
+          total: 2,
+          hasMore: false,
+        }
+      },
+      loading: false,
+      refetch: mockRefetch,
+    })
+
+    render(<BulkAddMembersModal {...defaultProps} />)
+
+    // John is already in g1 → disabled + labelled; Jane is selectable.
+    expect(screen.getByLabelText('John Doe')).toBeDisabled()
+    expect(screen.getByLabelText('Jane Smith')).not.toBeDisabled()
+    expect(screen.getByText('Already a member')).toBeInTheDocument()
+  })
+
+  it('shows Load more and grows the page limit when there are more members', () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        membersList: {
+          items: [{ id: 'm1', fullName: 'John Doe', phoneNumber: '0711111111', groups: [] }],
+          total: 120,
+          hasMore: true,
+        }
+      },
+      loading: false,
+      refetch: mockRefetch,
+    })
+
+    render(<BulkAddMembersModal {...defaultProps} />)
+
+    const loadMore = screen.getByRole('button', { name: /Load more/i })
+    expect(loadMore).toBeInTheDocument()
+
+    fireEvent.click(loadMore)
+
+    // Re-query fires with a larger limit (initial 50 -> 100).
+    const lastCall = mockUseQuery.mock.calls.at(-1)
+    expect(lastCall?.[1]?.variables?.limit).toBe(100)
+  })
+
+  it('does not show Load more when there are no more members', () => {
+    render(<BulkAddMembersModal {...defaultProps} />)
+    expect(screen.queryByRole('button', { name: /Load more/i })).not.toBeInTheDocument()
+  })
+
+  it('select-all only selects members not already in the group', () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        membersList: {
+          items: [
+            { id: 'm1', fullName: 'John Doe', phoneNumber: '0711111111', groups: [{ id: 'g1', name: 'Test Group' }] },
+            { id: 'm2', fullName: 'Jane Smith', phoneNumber: '0722222222', groups: [] },
+          ],
+          total: 2,
+          hasMore: false,
+        }
+      },
+      loading: false,
+      refetch: mockRefetch,
+    })
+
+    render(<BulkAddMembersModal {...defaultProps} />)
+    fireEvent.click(screen.getByLabelText('Select All'))
+
+    // Only Jane (m2) is selectable.
+    expect(screen.getByLabelText('Jane Smith')).toBeChecked()
+    expect(screen.getByRole('button', { name: /Add \(1\)/i })).toBeInTheDocument()
   })
 })
