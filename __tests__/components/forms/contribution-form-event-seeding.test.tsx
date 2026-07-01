@@ -50,7 +50,7 @@ vi.mock('@/components/forms/phone-input', () => ({
     const React = require('react')
     return React.createElement('div', null,
       React.createElement('span', null, '+254'),
-      React.createElement('input', { type: 'tel', placeholder: '797030300', ...(register ? register('phoneNumber') : {}) }),
+      React.createElement('input', { type: 'tel', placeholder: '798765432', ...(register ? register('phoneNumber') : {}) }),
       error ? React.createElement('p', null, error.message) : null
     )
   },
@@ -114,7 +114,7 @@ describe('ContributionForm — payable-event query-param seeding', () => {
         request: {
           query: INITIATE_MULTI_CONTRIBUTION,
           variables: {
-            phoneNumber: '254797030300',
+            phoneNumber: '254798765432',
             contributions: [
               { categoryId: 'cat-X', amount: '500', purposeId: 'purp-Y', memberIdentifier: undefined },
             ],
@@ -151,8 +151,8 @@ describe('ContributionForm — payable-event query-param seeding', () => {
       expect(screen.getByTestId('row0-categoryId').textContent).toBe('cat-X')
     })
 
-    const phoneInput = screen.getByPlaceholderText('797030300')
-    fireEvent.change(phoneInput, { target: { value: '797030300' } })
+    const phoneInput = screen.getByPlaceholderText('798765432')
+    fireEvent.change(phoneInput, { target: { value: '798765432' } })
 
     fireEvent.click(screen.getByRole('button', { name: /review contribution/i }))
 
@@ -166,7 +166,7 @@ describe('ContributionForm — payable-event query-param seeding', () => {
       expect(capturedVariables).toBeDefined()
     })
     expect(capturedVariables.eventId).toBe('evt-Z')
-    expect(capturedVariables.phoneNumber).toBe('254797030300')
+    expect(capturedVariables.phoneNumber).toBe('254798765432')
     expect(capturedVariables.contributions[0]).toMatchObject({
       categoryId: 'cat-X',
       purposeId: 'purp-Y',

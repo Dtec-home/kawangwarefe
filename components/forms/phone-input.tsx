@@ -24,7 +24,7 @@ export function PhoneInput({
   name,
   register,
   error,
-  placeholder = "797030300",
+  placeholder = "798765432",
   required = true,
 }: PhoneInputProps) {
   return (
@@ -63,7 +63,7 @@ export function PhoneInput({
         <p className="text-sm text-destructive">{error.message}</p>
       )}
       <p className="text-sm text-muted-foreground">
-        Enter your 9-digit M-Pesa number (e.g., 797030300)
+        Enter your 9-digit M-Pesa number (e.g., 798765432)
       </p>
     </div>
   );

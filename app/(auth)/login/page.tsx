@@ -93,7 +93,7 @@ function LoginContent() {
     const target = e.currentTarget as unknown as { value: string };
     let value = (target.value || "").replaceAll(/\D/g, "");
 
-    // If user starts with 0, remove it (they should just type 797030300)
+    // If user starts with 0, remove it (they should just type 798765432)
     if (value.startsWith("0")) {
       value = value.substring(1);
     }
@@ -162,7 +162,7 @@ function LoginContent() {
                     <Input
                       id="phoneNumber"
                       type="tel"
-                      placeholder="797030300"
+                      placeholder="798765432"
                       value={phoneNumber}
                       onChange={handlePhoneChange}
                       required
@@ -171,7 +171,7 @@ function LoginContent() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Enter your 9-digit M-Pesa number (e.g., 797030300)
+                    Enter your 9-digit M-Pesa number (e.g., 798765432)
                   </p>
                 </div>
 

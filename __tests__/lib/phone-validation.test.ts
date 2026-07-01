@@ -22,7 +22,7 @@ function normalisePhone(raw: string): string {
 
 describe('Phone number regex — equivalence partitioning', () => {
   it('passes for a valid 9-digit Safaricom number', () => {
-    expect(PHONE_REGEX.test('797030300')).toBe(true)
+    expect(PHONE_REGEX.test('798765432')).toBe(true)
   })
 
   it('passes for a valid 9-digit Airtel number', () => {
@@ -34,7 +34,7 @@ describe('Phone number regex — equivalence partitioning', () => {
   })
 
   it('fails for a 10-digit number (above boundary)', () => {
-    expect(PHONE_REGEX.test('7970303000')).toBe(false)
+    expect(PHONE_REGEX.test('7987654320')).toBe(false)
   })
 
   it('fails for an empty string', () => {
@@ -51,25 +51,25 @@ describe('Phone number regex — equivalence partitioning', () => {
 
   it('fails for a number with a leading +254 prefix', () => {
     // Users must input 9-digit portion only
-    expect(PHONE_REGEX.test('254797030300')).toBe(false)
+    expect(PHONE_REGEX.test('254798765432')).toBe(false)
   })
 })
 
 describe('normalisePhone — transformation logic (boundary analysis)', () => {
   it('strips non-digit characters', () => {
-    expect(normalisePhone('797-030-300')).toBe('797030300')
+    expect(normalisePhone('798-765-432')).toBe('798765432')
   })
 
   it('removes a leading zero', () => {
-    expect(normalisePhone('0797030300')).toBe('797030300')
+    expect(normalisePhone('0798765432')).toBe('798765432')
   })
 
   it('truncates to 9 characters max', () => {
-    expect(normalisePhone('7970303001234')).toBe('797030300')
+    expect(normalisePhone('7987654321234')).toBe('798765432')
   })
 
   it('handles an already-clean 9-digit string unchanged', () => {
-    expect(normalisePhone('797030300')).toBe('797030300')
+    expect(normalisePhone('798765432')).toBe('798765432')
   })
 
   it('returns empty string for all non-digit input', () => {

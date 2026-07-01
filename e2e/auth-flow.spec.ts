@@ -61,14 +61,14 @@ test.describe('Login Page — Phone Number Validation (BVA)', () => {
 
   test('submit button is ENABLED when phone has exactly 9 digits (valid boundary)', async ({ page }) => {
     const input = page.getByLabel(/phone number/i)
-    await input.fill('797030300')
+    await input.fill('798765432')
     const btn = page.getByRole('button', { name: /send verification code/i })
     await expect(btn).toBeEnabled()
   })
 
   test('input strips leading zero automatically', async ({ page }) => {
     const input = page.getByLabel(/phone number/i)
-    await input.fill('0797030300')
+    await input.fill('0798765432')
     // Leading 0 is removed; only 9 digits remain
     const value = await input.inputValue()
     expect(value).not.toMatch(/^0/)
@@ -97,7 +97,7 @@ test.describe('OTP Verification Page', () => {
   })
 
   test('shows OTP input when phone param is in URL', async ({ page }) => {
-    await page.goto('/verify-otp?phone=254797030300')
+    await page.goto('/verify-otp?phone=254798765432')
     await page.waitForLoadState('networkidle')
     // CardTitle renders as <div>, not <h*>; text is "Verify Your Phone"
     await expect(page.getByText(/verify your phone/i)).toBeVisible()

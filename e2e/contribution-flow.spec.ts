@@ -46,8 +46,8 @@ test.describe('Contribution Page — Form Validation', () => {
 
   test('phone input accepts a valid 9-digit number', async ({ page }) => {
     const phoneInput = page.getByLabel(/phone/i)
-    await phoneInput.fill('797030300')
-    await expect(phoneInput).toHaveValue('797030300')
+    await phoneInput.fill('798765432')
+    await expect(phoneInput).toHaveValue('798765432')
   })
 
   test('department select is present and loads options', async ({ page }) => {

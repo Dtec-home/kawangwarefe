@@ -9,7 +9,7 @@ import VerifyOtpPage from '@/app/(auth)/verify-otp/page'
 const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
-  useSearchParams: () => ({ get: (k: string) => k === 'phone' ? '254797030300' : null }),
+  useSearchParams: () => ({ get: (k: string) => k === 'phone' ? '254798765432' : null }),
 }))
 
 const mockLogin = vi.fn()
@@ -38,7 +38,7 @@ describe('VerifyOtpPage', () => {
 
   it('renders the phone number in the description', () => {
     renderPage()
-    expect(screen.getByText('254797030300')).toBeInTheDocument()
+    expect(screen.getByText('254798765432')).toBeInTheDocument()
   })
 
   it('renders a submit button', () => {
@@ -70,7 +70,7 @@ describe('VerifyOtpPage', () => {
     for (let i = 0; i < 6; i++) {
       fireEvent.change(inputs[i], { target: { value: String(i + 1) } })
     }
-    await waitFor(() => expect(mockLogin).toHaveBeenCalledWith('254797030300', '123456'))
+    await waitFor(() => expect(mockLogin).toHaveBeenCalledWith('254798765432', '123456'))
   })
 
   it('navigates to /dashboard on successful login', async () => {

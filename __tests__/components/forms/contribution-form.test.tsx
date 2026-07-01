@@ -29,7 +29,7 @@ vi.mock('@/components/forms/phone-input', () => ({
     const React = require('react')
     return React.createElement('div', null,
       React.createElement('span', null, '+254'),
-      React.createElement('input', { type: 'tel', placeholder: '797030300', ...(register ? register('phoneNumber') : {}) }),
+      React.createElement('input', { type: 'tel', placeholder: '798765432', ...(register ? register('phoneNumber') : {}) }),
       error ? React.createElement('p', null, error.message) : null
     )
   },

@@ -3,7 +3,7 @@ import { injectSession, clearSession } from "./helpers/auth";
 
 test.describe("Dashboard -- Authenticated Content", () => {
   test.beforeEach(async ({ page }) => {
-    await injectSession(page, { fullName: "John Doe", phoneNumber: "254797030300" });
+    await injectSession(page, { fullName: "John Doe", phoneNumber: "254798765432" });
     await page.goto("/dashboard", { waitUntil: "networkidle" });
   });
 

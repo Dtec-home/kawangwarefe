@@ -62,11 +62,11 @@ describe('PhoneInput', () => {
     expect(screen.queryByText('*')).not.toBeInTheDocument()
   })
 
-  it('renders a tel input with placeholder "797030300"', () => {
+  it('renders a tel input with placeholder "798765432"', () => {
     render(<PhoneInputWrapper />)
     const input = screen.getByRole('textbox')
     expect(input).toHaveAttribute('type', 'tel')
-    expect(input).toHaveAttribute('placeholder', '797030300')
+    expect(input).toHaveAttribute('placeholder', '798765432')
   })
 
   it('renders an error message when error prop is provided', () => {
@@ -94,21 +94,21 @@ describe('PhoneInput', () => {
   it('strips non-digit characters on input', () => {
     render(<PhoneInputWrapper />)
     const input = screen.getByRole('textbox') as HTMLInputElement
-    fireEvent.change(input, { target: { value: '79a7-03 0300' } })
-    expect(input.value).toBe('797030300')
+    fireEvent.change(input, { target: { value: '79a8-76 5432' } })
+    expect(input.value).toBe('798765432')
   })
 
   it('drops a leading zero (local format) on input', () => {
     render(<PhoneInputWrapper />)
     const input = screen.getByRole('textbox') as HTMLInputElement
-    fireEvent.change(input, { target: { value: '0797030300' } })
-    expect(input.value).toBe('797030300')
+    fireEvent.change(input, { target: { value: '0798765432' } })
+    expect(input.value).toBe('798765432')
   })
 
   it('truncates to nine digits on input', () => {
     render(<PhoneInputWrapper />)
     const input = screen.getByRole('textbox') as HTMLInputElement
-    fireEvent.change(input, { target: { value: '7970303001234' } })
-    expect(input.value).toBe('797030300')
+    fireEvent.change(input, { target: { value: '7987654321234' } })
+    expect(input.value).toBe('798765432')
   })
 })

@@ -52,7 +52,7 @@ describe('LoginPage', () => {
 
   it('renders phone number input', () => {
     renderLogin()
-    expect(screen.getByPlaceholderText('797030300')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('798765432')).toBeInTheDocument()
   })
 
   it('renders Send Verification Code button', () => {
@@ -68,29 +68,29 @@ describe('LoginPage', () => {
 
   it('submit button is disabled when phone is less than 9 digits', () => {
     renderLogin()
-    fireEvent.change(screen.getByPlaceholderText('797030300'), { target: { value: '12345' } })
+    fireEvent.change(screen.getByPlaceholderText('798765432'), { target: { value: '12345' } })
     const btn = screen.getByRole('button', { name: /send verification code/i }) as HTMLButtonElement
     expect(btn.disabled).toBe(true)
   })
 
   it('submit button is enabled when phone is exactly 9 digits', () => {
     renderLogin()
-    fireEvent.change(screen.getByPlaceholderText('797030300'), { target: { value: '797030300' } })
+    fireEvent.change(screen.getByPlaceholderText('798765432'), { target: { value: '798765432' } })
     const btn = screen.getByRole('button', { name: /send verification code/i }) as HTMLButtonElement
     expect(btn.disabled).toBe(false)
   })
 
   it('strips leading zero from phone input', () => {
     renderLogin()
-    const input = screen.getByPlaceholderText('797030300') as HTMLInputElement
-    fireEvent.change(input, { target: { value: '0797030300' } })
-    expect(input.value).toBe('797030300')
+    const input = screen.getByPlaceholderText('798765432') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '0798765432' } })
+    expect(input.value).toBe('798765432')
   })
 
   it('navigates to /verify-otp on successful OTP request', async () => {
     mockRequestOtp.mockResolvedValue({ data: { requestOtp: { success: true, message: 'OTP sent' } } })
     renderLogin()
-    fireEvent.change(screen.getByPlaceholderText('797030300'), { target: { value: '797030300' } })
+    fireEvent.change(screen.getByPlaceholderText('798765432'), { target: { value: '798765432' } })
     fireEvent.click(screen.getByRole('button', { name: /send verification code/i }))
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('/verify-otp')))
   })
@@ -98,7 +98,7 @@ describe('LoginPage', () => {
   it('shows error toast on failed OTP request', async () => {
     mockRequestOtp.mockResolvedValue({ data: { requestOtp: { success: false, message: 'Member not found' } } })
     renderLogin()
-    fireEvent.change(screen.getByPlaceholderText('797030300'), { target: { value: '797030300' } })
+    fireEvent.change(screen.getByPlaceholderText('798765432'), { target: { value: '798765432' } })
     fireEvent.click(screen.getByRole('button', { name: /send verification code/i }))
     await waitFor(() => expect(mockToastError).toHaveBeenCalled())
   })

@@ -101,7 +101,7 @@ export async function injectSession(
   const {
     userId = 1,
     memberId = 1,
-    phoneNumber = "254797030300",
+    phoneNumber = "254798765432",
     fullName = "Test User",
     expiresIn = 3600,
     role,

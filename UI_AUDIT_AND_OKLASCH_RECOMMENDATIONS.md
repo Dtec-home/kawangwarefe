@@ -543,7 +543,7 @@ const config: Config = {
             <Input
               id="phone"
               type="tel"
-              placeholder="797030300"
+              placeholder="798765432"
               value={phoneNumber}
               onChange={handlePhoneChange}
               maxLength={9}
