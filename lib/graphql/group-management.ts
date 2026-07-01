@@ -49,6 +49,10 @@ export const BULK_ADD_MEMBERS_TO_GROUP = gql`
     bulkAddMembersToGroup(memberIds: $memberIds, groupId: $groupId) {
       success
       message
+      addedCount
+      alreadyMemberCount
+      skippedCount
+      skippedMembers
     }
   }
 `;
