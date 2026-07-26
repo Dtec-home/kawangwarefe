@@ -32,8 +32,22 @@ const EXPENSE_FIELDS = `
   requestedByMe
   canApprove
   canMarkPaid
+  canDisburse
   attachmentUrl
   createdAt
+  payoutChannel
+  beneficiaryAccountNumber
+  beneficiaryPhoneNumber
+  beneficiaryBankCode
+  kcbDisbursement {
+    id
+    status
+    kcbTransactionId
+    resultDesc
+    amount
+    createdAt
+    completedAt
+  }
 `;
 
 /**
@@ -92,6 +106,10 @@ export const CREATE_EXPENSE = gql`
     $purposeId: ID
     $attachmentUrl: String
     $autoApprove: Boolean
+    $payoutChannel: String
+    $beneficiaryAccountNumber: String
+    $beneficiaryPhoneNumber: String
+    $beneficiaryBankCode: String
   ) {
     createExpense(
       categoryId: $categoryId
@@ -104,6 +122,10 @@ export const CREATE_EXPENSE = gql`
       purposeId: $purposeId
       attachmentUrl: $attachmentUrl
       autoApprove: $autoApprove
+      payoutChannel: $payoutChannel
+      beneficiaryAccountNumber: $beneficiaryAccountNumber
+      beneficiaryPhoneNumber: $beneficiaryPhoneNumber
+      beneficiaryBankCode: $beneficiaryBankCode
     ) {
       success
       message
@@ -125,6 +147,10 @@ export const UPDATE_EXPENSE = gql`
     $referenceNumber: String
     $purposeId: ID
     $attachmentUrl: String
+    $payoutChannel: String
+    $beneficiaryAccountNumber: String
+    $beneficiaryPhoneNumber: String
+    $beneficiaryBankCode: String
   ) {
     updateExpense(
       id: $id
@@ -136,6 +162,10 @@ export const UPDATE_EXPENSE = gql`
       referenceNumber: $referenceNumber
       purposeId: $purposeId
       attachmentUrl: $attachmentUrl
+      payoutChannel: $payoutChannel
+      beneficiaryAccountNumber: $beneficiaryAccountNumber
+      beneficiaryPhoneNumber: $beneficiaryPhoneNumber
+      beneficiaryBankCode: $beneficiaryBankCode
     ) {
       success
       message
@@ -173,6 +203,18 @@ export const MARK_EXPENSE_PAID = gql`
 export const VOID_EXPENSE = gql`
   mutation VoidExpense($id: ID!, $reason: String!) {
     voidExpense(id: $id, reason: $reason) {
+      success
+      message
+      expense {
+        ${EXPENSE_FIELDS}
+      }
+    }
+  }
+`;
+
+export const INITIATE_KCB_DISBURSEMENT = gql`
+  mutation InitiateKcbDisbursement($id: ID!) {
+    initiateKcbDisbursement(id: $id) {
       success
       message
       expense {

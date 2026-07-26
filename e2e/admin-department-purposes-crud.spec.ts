@@ -191,7 +191,10 @@ test.describe("Department Purpose CRUD", () => {
     await page.goto("/admin/categories/cat-1/purposes", { waitUntil: "networkidle" });
 
     await expect(page.getByRole("heading", { name: /department purposes/i })).toBeVisible();
-    await expect(page.getByText("Camp Meeting")).toBeVisible();
+    // "Camp Meeting" appears both as a list-row label and as an <option> in a
+    // <select> (e.g. a purpose picker) — scope to the row div to avoid the
+    // Playwright strict-mode violation from matching both.
+    await expect(page.locator("div.font-medium", { hasText: "Camp Meeting" }).first()).toBeVisible();
 
     await page.getByLabel(/purpose name/i).fill("Transport");
     await page.getByLabel(/purpose code/i).fill("TRAN");
@@ -199,20 +202,34 @@ test.describe("Department Purpose CRUD", () => {
     await page.getByRole("button", { name: /save purpose/i }).click();
 
     await expect(page.getByText(/created successfully/i)).toBeVisible();
-    await expect(page.getByText("Transport", { exact: true })).toBeVisible();
+    // Radix Select renders a visually-hidden native <select> mirroring every
+    // SelectItem (for form/autofill compatibility) — since the Auto-Split
+    // Allocations "Purpose" picker also lists "Transport" as an option, a
+    // bare getByText("Transport") hits both that <option> and the row label.
+    // Scope to the purpose row's name element to disambiguate.
+    await expect(page.locator("div.font-medium", { hasText: "Transport" }).first()).toBeVisible();
 
     await page.getByLabel(/purpose name/i).fill("Transport");
     await page.getByLabel(/purpose code/i).fill("TRAN");
     await page.getByRole("button", { name: /save purpose/i }).click();
     await expect(page.getByText(/already exists/i)).toBeVisible();
 
-    const transportRow = page.locator("div.border.rounded-md", { hasText: "Transport" }).first();
+    // Purpose rows render as shadcn <Card> (data-slot="card", class "rounded-xl
+    // border ..."), not "rounded-md" — the old locator here never matched anything.
+    // The outer "Current Purposes" section is *also* a Card and contains this
+    // row as a descendant, so filtering [data-slot="card"] by hasText matches
+    // both — walk up from the row's own name element to its nearest Card
+    // ancestor instead, which is unambiguous.
+    const transportRow = page
+      .locator("div.font-medium", { hasText: "Transport" })
+      .first()
+      .locator("xpath=ancestor::*[@data-slot='card'][1]");
     await transportRow.getByRole("button", { name: /deactivate/i }).click();
     await expect(transportRow.getByRole("button", { name: /activate/i })).toBeVisible();
 
     page.on("dialog", (dialog) => dialog.accept());
     await transportRow.getByRole("button", { name: /delete/i }).click();
     await expect(page.getByText(/deleted successfully/i)).toBeVisible();
-    await expect(page.getByText("Transport", { exact: true })).toHaveCount(0);
+    await expect(page.locator("div.font-medium", { hasText: "Transport" })).toHaveCount(0);
   });
 });

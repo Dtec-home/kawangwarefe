@@ -15,7 +15,8 @@ import { VERIFY_OTP, LOGOUT, REFRESH_TOKEN } from "@/lib/graphql/auth-mutations"
 interface User {
   userId: number;
   memberId: number;
-  phoneNumber: string;
+  phoneNumber?: string;
+  email?: string;
   fullName: string;
 }
 
@@ -24,7 +25,7 @@ interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phoneNumber: string, otpCode: string) => Promise<{ success: boolean; message: string; isNewMember?: boolean }>;
+  login: (phoneNumber: string | null, email: string | null, otpCode: string) => Promise<{ success: boolean; message: string; isNewMember?: boolean }>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
 }
@@ -72,6 +73,7 @@ interface VerifyOtpPayload {
   userId?: number;
   memberId?: number;
   phoneNumber?: string;
+  email?: string;
   fullName?: string;
   message: string;
   isNewMember?: boolean;
@@ -143,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Typed mutations so `data` is strongly typed (not `unknown`)
   const [verifyOtpMutation] = useMutation<
     { verifyOtp: VerifyOtpPayload },
-    { phoneNumber: string; otpCode: string }
+    { phoneNumber?: string | null; email?: string | null; otpCode: string }
   >(VERIFY_OTP);
 
   const [logoutMutation] = useMutation<
@@ -284,10 +286,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const login = useCallback(
-    async (phoneNumber: string, otpCode: string): Promise<{ success: boolean; message: string; isNewMember?: boolean }> => {
+    async (
+      phoneNumber: string | null,
+      email: string | null,
+      otpCode: string
+    ): Promise<{ success: boolean; message: string; isNewMember?: boolean }> => {
       try {
         const { data } = await verifyOtpMutation({
-          variables: { phoneNumber, otpCode },
+          variables: { phoneNumber, email, otpCode },
         });
 
         if (!data || !data.verifyOtp) {
@@ -305,7 +311,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userData: User = {
             userId: result.userId ?? 0,
             memberId: result.memberId ?? 0,
-            phoneNumber: result.phoneNumber ?? phoneNumber,
+            phoneNumber: result.phoneNumber ?? phoneNumber ?? "",
+            email: result.email ?? email ?? "",
             fullName: result.fullName ?? "",
           };
           localStorage.setItem(USER_KEY, JSON.stringify(userData));

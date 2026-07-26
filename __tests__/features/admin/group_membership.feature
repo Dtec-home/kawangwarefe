@@ -28,3 +28,14 @@ Feature: Bulk add members to a group
     Given a soft-deleted member "Del"
     When the admin bulk-adds Del to "Complex A"
     Then the result reports 0 added and "Del" is listed as skipped
+
+  Scenario: Removing a member from a group
+    Given a member "Ann" who is already in "Complex A"
+    When the admin removes Ann from "Complex A"
+    Then the removal succeeds
+    And Ann is no longer in "Complex A"
+
+  Scenario: Removing a member who is not in the group reports failure
+    Given a member "Ben" with a login account, not in "Complex A"
+    When the admin removes Ben from "Complex A"
+    Then the removal fails with a message containing "not in group"

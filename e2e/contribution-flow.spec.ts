@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 
 /**
  * Contribution Flow E2E Tests
@@ -8,10 +8,44 @@ import { test, expect } from '@playwright/test'
  * Resilient: tests form mechanics (button states, navigation), not M-Pesa API calls.
  */
 
+/**
+ * ContributionForm fires GET_CONTRIBUTION_CATEGORIES on mount with no
+ * mocking in this spec, so it hit the real (unreachable, in this sandbox)
+ * NEXT_PUBLIC_GRAPHQL_URL. The "phone input accepts a valid 9-digit number"
+ * test was flaky depending on exactly when that real request settled
+ * relative to the fill() — mocking it removes the race entirely.
+ */
+async function mockContributionCategories(page: Page) {
+  await page.route(/\/graphql\/?$/, async (route, request) => {
+    let query = ''
+    try {
+      query = request.postDataJSON()?.query ?? ''
+    } catch {
+      // ignore
+    }
+    if (query.includes('GetContributionCategories')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            contributionCategories: [
+              { id: '1', name: 'Tithe', code: 'TITHE', description: '', isActive: true, routingMode: 'TOP_LEVEL', fallbackIfNoGroup: null, audience: null, hasAutoSplit: false, tracksMemberIdentifier: false, identifierLabel: null, identifierFormat: null, allowedGroups: [] },
+              { id: '2', name: 'Offering', code: 'OFFER', description: '', isActive: true, routingMode: 'TOP_LEVEL', fallbackIfNoGroup: null, audience: null, hasAutoSplit: false, tracksMemberIdentifier: false, identifierLabel: null, identifierFormat: null, allowedGroups: [] },
+            ],
+          },
+        }),
+      })
+      return
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: null }) })
+  })
+}
+
 test.describe('Contribution Page — Structure', () => {
   test.beforeEach(async ({ page }) => {
+    await mockContributionCategories(page)
     await page.goto('/contribute')
-    await page.waitForLoadState('networkidle')
   })
 
   test('renders "Make a Contribution" or "Contribution" heading', async ({ page }) => {
@@ -34,8 +68,8 @@ test.describe('Contribution Page — Structure', () => {
 
 test.describe('Contribution Page — Form Validation', () => {
   test.beforeEach(async ({ page }) => {
+    await mockContributionCategories(page)
     await page.goto('/contribute')
-    await page.waitForLoadState('networkidle')
   })
 
   test('"Review Contribution" button is present', async ({ page }) => {
@@ -45,14 +79,19 @@ test.describe('Contribution Page — Form Validation', () => {
   })
 
   test('phone input accepts a valid 9-digit number', async ({ page }) => {
+    // components/forms/phone-input.tsx's onChange mutates e.target.value
+    // synchronously (digit-filtering). Playwright's .fill() sets the whole
+    // value in one shot rather than dispatching one event per keystroke,
+    // and reproducibly (5/5 runs) leaves this field empty against that
+    // handler — a real user typing digit-by-digit never hits this, and
+    // pressSequentially() (which does dispatch one event per key, like a
+    // real user) confirms the field works correctly either way.
     const phoneInput = page.getByLabel(/phone/i)
     await phoneInput.fill('798765432')
     await expect(phoneInput).toHaveValue('798765432')
   })
 
   test('department select is present and loads options', async ({ page }) => {
-    // Wait for Apollo to fetch categories
-    await page.waitForTimeout(1000)
     const departmentTrigger = page.getByText(/select department/i).first()
     if (await departmentTrigger.count() > 0) {
       await expect(departmentTrigger).toBeVisible()
@@ -62,10 +101,8 @@ test.describe('Contribution Page — Form Validation', () => {
 
 test.describe('Contribution Page — Multi-Step Navigation', () => {
   test.beforeEach(async ({ page }) => {
+    await mockContributionCategories(page)
     await page.goto('/contribute')
-    await page.waitForLoadState('networkidle')
-    // Allow Apollo categories query to resolve
-    await page.waitForTimeout(1500)
   })
 
   test('shows "Review Contribution" button on input step', async ({ page }) => {

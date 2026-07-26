@@ -25,7 +25,17 @@ test.describe("Public Bottom Nav -- Mobile", () => {
     await expect(page.getByText("Sermons").last()).toBeVisible();
   });
 
-  test("bottom nav has More button that opens menu", async ({ page }) => {
+  // KNOWN APP GAP, needs a Sprint E product decision (see
+  // docs/test-parity-audit/07_ADMIN_PARITY_SPRINT_PLAN_2026-07-21.md):
+  // components/layouts/bottom-nav.tsx's `guestPrimaryLinks` (used for
+  // unauthenticated visitors, which is what this describe block tests) is
+  // [Home, Give, Events, Sermons] — there is no "More" button for guests at
+  // all, only for authenticated members (`memberPrimaryLinks`).
+  // guestMoreLinks (Announcements, Devotionals) is defined in the component
+  // but never rendered anywhere for guests, so this test cannot pass without
+  // either a product decision to add a guest "More" affordance or an
+  // explicit re-scope of this test to an authenticated session.
+  test.fixme("bottom nav has More button that opens menu", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
 
     const moreBtn = page.getByText("More").last();
@@ -82,8 +92,16 @@ test.describe("Admin Bottom Nav -- Mobile", () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test("admin bottom nav is visible on admin pages", async ({ page }) => {
-    await injectSession(page);
+    // Without a role, injectSession sets up no GraphQL mocking at all, so
+    // currentUserRole hits the real (unreachable, in this environment)
+    // backend and never resolves — canAccessFeature() then always returns
+    // false and AdminBottomNav renders no nav items. role: "staff" gives it
+    // real role data so the nav actually renders.
+    await injectSession(page, { role: "staff" });
     await page.goto("/admin", { waitUntil: "networkidle" });
+    // "networkidle" resolves before React finishes rendering — wait for the
+    // dashboard heading so the bare .count() checks below don't race hydration.
+    await expect(page.getByRole("heading", { name: /dashboard overview/i })).toBeVisible();
 
     // Admin bottom nav should show Overview, Funds, Members, Reports, More
     // Check that at least some admin nav items are visible

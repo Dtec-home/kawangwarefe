@@ -5,6 +5,9 @@ test.describe("Admin Overview Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin", { waitUntil: "networkidle" });
+    // "networkidle" resolves before React finishes rendering — wait for the
+    // heading so the bare .count() checks below don't race hydration.
+    await expect(page.getByRole("heading", { name: /dashboard overview/i })).toBeVisible();
   });
 
   test("renders dashboard overview heading", async ({ page }) => {

@@ -324,4 +324,207 @@ test.describe("Admin Groups CRUD", () => {
     await page.getByRole("button", { name: /Add \(1\)/i }).click();
     await expect(page.getByText(/Added 1 · 0 already members · 0 skipped/)).toBeVisible();
   });
+
+  test("staff can remove a member from a group after confirming, and the member disappears from the list", async ({ page }) => {
+    await injectSession(page);
+
+    // Mutable in-memory member roster so the mocked GetGroupMembers refetch
+    // reflects the removal, mirroring how the real backend would behave.
+    let members = [
+      { id: "101", fullName: "Jane Doe", phoneNumber: "0711111111", email: "jane@example.com" },
+      { id: "102", fullName: "John Smith", phoneNumber: "0722222222", email: "" },
+    ];
+
+    await page.route(/\/graphql\/?$/, async (route, request) => {
+      const body = request.postDataJSON() as { query?: string; variables?: Record<string, unknown> };
+      const query = body?.query || "";
+
+      if (query.includes("currentUserRole")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: {
+              currentUserRole: {
+                isAuthenticated: true,
+                isStaff: true,
+                isCategoryAdmin: false,
+                isGroupAdmin: false,
+                isContentAdmin: false,
+                adminCategoryIds: [],
+                adminGroupNames: [],
+                adminCategories: [],
+              },
+            },
+          }),
+        });
+        return;
+      }
+
+      if (query.includes("groupsList")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ data: { groupsList: [{ id: "1", name: "Youth" }] } }),
+        });
+        return;
+      }
+
+      if (query.includes("GetGroupMembers")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: { group: { id: "1", name: "Youth", members } },
+          }),
+        });
+        return;
+      }
+
+      if (query.includes("RemoveMemberFromGroup")) {
+        const memberId = String(body?.variables?.memberId);
+        const removed = members.find((m) => m.id === memberId);
+        members = members.filter((m) => m.id !== memberId);
+
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: {
+              removeMemberFromGroup: {
+                success: true,
+                message: `${removed?.fullName ?? "Member"} removed from Youth`,
+                group: { id: "1", name: "Youth" },
+              },
+            },
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: null }),
+      });
+    });
+
+    await page.goto("/admin/groups", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: /^groups$/i })).toBeVisible();
+
+    // Open the members-info modal for Youth.
+    await page.getByRole("button", { name: /^info$/i }).first().click();
+    await expect(page.getByRole("dialog", { name: /Members in Youth/i })).toBeVisible();
+
+    // Both members are listed before removal.
+    await expect(page.getByText("Jane Doe")).toBeVisible();
+    await expect(page.getByText("John Smith")).toBeVisible();
+
+    // The component gates removal behind a native window.confirm().
+    page.once("dialog", (dialog) => dialog.accept());
+    await page
+      .getByRole("dialog", { name: /Members in Youth/i })
+      .locator("li", { hasText: "Jane Doe" })
+      .getByRole("button", { name: /remove/i })
+      .click();
+
+    // Success message from the mutation response, and the member is gone
+    // from the list because the modal refetches GetGroupMembers.
+    await expect(page.getByText(/Jane Doe removed from Youth/i)).toBeVisible();
+    // Scope to the member list itself (exact match) — the success banner
+    // above it also contains the substring "Jane Doe" ("Jane Doe removed
+    // from Youth"), so a loose getByText would false-negative here.
+    await expect(
+      page.getByRole("dialog", { name: /Members in Youth/i }).getByText("Jane Doe", { exact: true })
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("dialog", { name: /Members in Youth/i }).getByText("John Smith", { exact: true })
+    ).toBeVisible();
+  });
+
+  test("declining the confirmation dialog does not remove the member or call the mutation", async ({ page }) => {
+    await injectSession(page);
+
+    let removeCalls = 0;
+    const members = [{ id: "101", fullName: "Jane Doe", phoneNumber: "0711111111", email: "" }];
+
+    await page.route(/\/graphql\/?$/, async (route, request) => {
+      const body = request.postDataJSON() as { query?: string; variables?: Record<string, unknown> };
+      const query = body?.query || "";
+
+      if (query.includes("currentUserRole")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: {
+              currentUserRole: {
+                isAuthenticated: true,
+                isStaff: true,
+                isCategoryAdmin: false,
+                isGroupAdmin: false,
+                isContentAdmin: false,
+                adminCategoryIds: [],
+                adminGroupNames: [],
+                adminCategories: [],
+              },
+            },
+          }),
+        });
+        return;
+      }
+
+      if (query.includes("groupsList")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ data: { groupsList: [{ id: "1", name: "Youth" }] } }),
+        });
+        return;
+      }
+
+      if (query.includes("GetGroupMembers")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ data: { group: { id: "1", name: "Youth", members } } }),
+        });
+        return;
+      }
+
+      if (query.includes("RemoveMemberFromGroup")) {
+        removeCalls += 1;
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: { removeMemberFromGroup: { success: true, message: "Removed", group: { id: "1", name: "Youth" } } },
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: null }),
+      });
+    });
+
+    await page.goto("/admin/groups", { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /^info$/i }).first().click();
+    await expect(page.getByRole("dialog", { name: /Members in Youth/i })).toBeVisible();
+    await expect(page.getByText("Jane Doe")).toBeVisible();
+
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await page
+      .getByRole("dialog", { name: /Members in Youth/i })
+      .getByRole("button", { name: /remove/i })
+      .click();
+
+    // Give the (non-existent) mutation a beat to fire if it were going to.
+    await page.waitForTimeout(300);
+    expect(removeCalls).toBe(0);
+    await expect(page.getByRole("dialog", { name: /Members in Youth/i }).getByText("Jane Doe")).toBeVisible();
+  });
 });

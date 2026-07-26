@@ -20,6 +20,7 @@ function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phoneNumber = searchParams.get("phone") || "";
+  const email = searchParams.get("email") || "";
   const redirectTo = searchParams.get("redirect") || "/dashboard";
   const { login } = useAuth();
 
@@ -28,11 +29,11 @@ function VerifyOtpContent() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    // Redirect if no phone number
-    if (!phoneNumber) {
+    // Redirect if neither phone nor email is provided
+    if (!phoneNumber && !email) {
       router.push("/login");
     }
-  }, [phoneNumber, router]);
+  }, [phoneNumber, email, router]);
 
   useEffect(() => {
     // Focus first input on mount
@@ -97,11 +98,15 @@ function VerifyOtpContent() {
     setIsSubmitting(true);
 
     try {
-      const result = await login(phoneNumber, code);
+      const result = await login(
+        phoneNumber ? phoneNumber : null,
+        email ? email : null,
+        code
+      );
 
       if (result.success) {
         if (result.isNewMember) {
-          toast.success("Phone verified! Complete your registration.");
+          toast.success("Identity verified! Complete your registration.");
           router.push("/register");
         } else {
           toast.success("Login successful!");
@@ -137,10 +142,10 @@ function VerifyOtpContent() {
 
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Verify Your Phone</CardTitle>
+            <CardTitle className="text-2xl">Verify Your Identity</CardTitle>
             <CardDescription>
               Enter the 6-digit code sent to{" "}
-              <span className="font-semibold">{phoneNumber}</span>
+              <span className="font-semibold">{phoneNumber || email}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>

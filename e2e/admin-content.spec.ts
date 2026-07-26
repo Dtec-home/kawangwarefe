@@ -5,6 +5,10 @@ test.describe("Admin Announcements Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/announcements", { waitUntil: "networkidle" });
+    // "networkidle" resolves before React finishes rendering this page's
+    // content — waiting for the heading first prevents the bare .count()
+    // checks below (which don't auto-retry) from racing hydration.
+    await expect(page.getByRole("heading", { name: /announcements/i })).toBeVisible();
   });
 
   test("renders announcements heading", async ({ page }) => {
@@ -44,6 +48,7 @@ test.describe("Admin Devotionals Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/devotionals", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: /devotional/i })).toBeVisible();
   });
 
   test("renders devotionals heading", async ({ page }) => {
@@ -70,6 +75,7 @@ test.describe("Admin Events Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/events", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: /event/i })).toBeVisible();
   });
 
   test("renders events heading", async ({ page }) => {
@@ -96,6 +102,7 @@ test.describe("Admin YouTube Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/youtube", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: /youtube|sermon|video/i })).toBeVisible();
   });
 
   test("renders youtube/sermons heading", async ({ page }) => {

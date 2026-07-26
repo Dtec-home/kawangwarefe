@@ -5,8 +5,12 @@ test.describe("Responsive Tables -- Mobile Card View", () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test("dashboard contribution history shows card view on mobile", async ({ page }) => {
-    await injectSession(page);
+    // role: "member" mocks all GraphQL calls — without it, the dashboard's
+    // real queries hit an unreachable backend (NEXT_PUBLIC_GRAPHQL_URL is a
+    // LAN address in .env.local) and the page never leaves its loading state.
+    await injectSession(page, { role: "member" });
     await page.goto("/dashboard", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 
     // On mobile, table should be hidden and cards should be visible (or empty state)
     const table = page.locator("table");
@@ -24,8 +28,12 @@ test.describe("Responsive Tables -- Desktop Table View", () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test("dashboard contribution history shows table on desktop", async ({ page }) => {
-    await injectSession(page);
+    // role: "member" mocks all GraphQL calls — without it, the dashboard's
+    // real queries hit an unreachable backend (NEXT_PUBLIC_GRAPHQL_URL is a
+    // LAN address in .env.local) and the page never leaves its loading state.
+    await injectSession(page, { role: "member" });
     await page.goto("/dashboard", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 
     // On desktop, either the table, cards, or empty state is shown
     const hasTable = await page.locator("table").count();

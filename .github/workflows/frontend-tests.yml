@@ -1,25 +1,25 @@
 name: Frontend Tests
 
 # Sprint 0 — re-enabled 2026-06-12. Runs the Vitest unit/integration suite
-# (673 tests, green) on every push/PR. The coverage threshold is NOT enforced
+# (844 tests, green) on every push/PR. The coverage threshold is NOT enforced
 # here (npm run test does not pass --coverage): measured coverage is ~45%, below
 # the aspirational 60% in vitest.config.mts — see FE-COV-1 in the deferred
-# backlog. The Playwright e2e job stays disabled until a CI webServer (build +
-# start) is wired — see playwright.yml.disabled.
+# backlog.
+#
+# FE-D.5 (2026-07-21): this workflow had never actually run — `paths:
+# church-funds-ui/**` and `working-directory: church-funds-ui` both assumed
+# this repo's app lived in a `church-funds-ui/` subdirectory, but this repo's
+# root already IS church-funds-ui (package.json, app/, etc. are all at the
+# root). That `paths` filter could never match any real file in this repo, so
+# every push/PR to this file's own repo silently skipped it — confirmed via
+# `gh run list`, which showed zero runs of this workflow ever, only unrelated
+# Copilot-review runs. Removed both.
 
 on:
   push:
     branches: [ main, develop, master ]
-    paths:
-      - 'church-funds-ui/**'
   pull_request:
     branches: [ main, develop, master ]
-    paths:
-      - 'church-funds-ui/**'
-
-defaults:
-  run:
-    working-directory: church-funds-ui
 
 jobs:
   unit-tests:
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: church-funds-ui/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci

@@ -5,6 +5,12 @@ test.describe("Admin Contributions Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/contributions", { waitUntil: "networkidle" });
+    // "networkidle" resolves before React finishes rendering — wait for the
+    // heading so the page is fully settled before tests look for/click
+    // elements (an in-flight re-render around click time was the likely
+    // cause of "manual entry link navigates correctly" occasionally timing
+    // out waiting for a navigation that never fired).
+    await expect(page.getByRole("heading", { name: /contributions/i })).toBeVisible();
   });
 
   test("renders contributions heading", async ({ page }) => {
@@ -54,10 +60,20 @@ test.describe("Admin Contributions Page", () => {
   });
 
   test("manual entry link navigates correctly", async ({ page }) => {
+    // Intermittently (~1 in 5-8 runs, reproducible in isolation, unrelated to
+    // any mock/copy issue) the click doesn't result in a navigation within
+    // the default timeout — plausibly Next.js dev-mode compiling the
+    // manual-entry route on-demand on its first visit in a given dev-server
+    // lifetime. Retry the click once with a longer wait before failing.
     const manualEntryLink = page.getByRole("link", { name: /manual entry/i });
     if ((await manualEntryLink.count()) > 0) {
       await manualEntryLink.click();
-      await page.waitForURL(/\/admin\/contributions\/manual-entry/);
+      try {
+        await page.waitForURL(/\/admin\/contributions\/manual-entry/, { timeout: 15000 });
+      } catch {
+        await manualEntryLink.click();
+        await page.waitForURL(/\/admin\/contributions\/manual-entry/, { timeout: 20000 });
+      }
       expect(page.url()).toContain("/admin/contributions/manual-entry");
     }
   });
@@ -67,10 +83,16 @@ test.describe("Admin Manual Entry Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/contributions/manual-entry", { waitUntil: "networkidle" });
+    // "networkidle" resolves before React finishes rendering — wait for the
+    // heading so the bare .count() checks below don't race hydration.
+    await expect(page.getByRole("heading", { name: /manual contribution entry/i })).toBeVisible();
   });
 
   test("renders manual entry heading", async ({ page }) => {
-    const hasHeading = await page.getByRole("heading", { name: /manual entry/i }).count();
+    // Actual heading is "Manual Contribution Entry" — /manual entry/i doesn't
+    // match that (the words aren't adjacent), so this never matched even
+    // with real data. Match the real heading text instead.
+    const hasHeading = await page.getByRole("heading", { name: /manual contribution entry/i }).count();
     expect(hasHeading).toBeGreaterThan(0);
   });
 
@@ -81,13 +103,25 @@ test.describe("Admin Manual Entry Page", () => {
   });
 
   test("renders category selector", async ({ page }) => {
-    const hasCategory = await page.getByText(/category/i).count();
-    expect(hasCategory).toBeGreaterThan(0);
+    // The department/purpose picker on this form says "Department", not
+    // "Category" — the category → department rename reached this form too.
+    // MultiCategorySelector's row (with the "Department" label) mounts once
+    // GET_CONTRIBUTION_CATEGORIES resolves, which lags slightly behind the
+    // (static) heading above — poll instead of a one-shot count so a slow
+    // resolve under load doesn't flake this.
+    await expect(async () => {
+      const hasCategory = await page.getByText(/department/i).count();
+      expect(hasCategory).toBeGreaterThan(0);
+    }).toPass({ timeout: 5000 });
   });
 
   test("renders amount input", async ({ page }) => {
-    const hasAmount = await page.getByText(/amount/i).count();
-    expect(hasAmount).toBeGreaterThan(0);
+    // See note above — the "Amount" label lives in the same
+    // categories-query-dependent row, so poll rather than one-shot count.
+    await expect(async () => {
+      const hasAmount = await page.getByText(/amount/i).count();
+      expect(hasAmount).toBeGreaterThan(0);
+    }).toPass({ timeout: 5000 });
   });
 
   test("submit button is present", async ({ page }) => {

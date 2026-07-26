@@ -1,5 +1,13 @@
 # Playwright Test Coverage Sprint
 
+> **HISTORICAL — do not cite as current state.** This snapshot (8 test files, 42
+> cases) predates the test-parity-audit program. As of Sprint D.5
+> (2026-07-21/22), the suite has 269 specs across `e2e/*.spec.ts`, wired into
+> CI via `.github/workflows/playwright.yml`, with a real verified baseline
+> documented in `docs/e2e-baseline-2026-07-21.txt` and
+> `docs/test-parity-audit/07_ADMIN_PARITY_SPRINT_PLAN_2026-07-21.md`. Kept here
+> for historical reference only (FE-D.7).
+
 ## Current State
 - 8 test files, 42 test cases
 - 8 of 24 routes have any test coverage

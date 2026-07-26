@@ -105,39 +105,46 @@ test.describe("Messaging — Global Staff", () => {
     await injectSession(page);
   });
 
-  test("shows Bulk Messaging heading", async ({ page }) => {
+  test("shows Messaging heading", async ({ page }) => {
+    // Page header was simplified from "Bulk Messaging" to just "Messaging"
+    // when the Quick Send tab was introduced alongside the campaign composer.
     await interceptGraphQL(page, "staff");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+    await expect(page.getByRole("heading", { name: "Messaging", exact: true })).toBeVisible({ timeout: 8000 });
   });
 
-  test("shows three tabs: Compose, Templates, History", async ({ page }) => {
+  test("shows four tabs: Quick Send, New Campaign, Templates, History", async ({ page }) => {
     await interceptGraphQL(page, "staff");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
-    await expect(page.getByRole("tab", { name: /compose/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /quick send/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /new campaign/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: /templates/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: /history/i })).toBeVisible();
   });
 
-  test("Compose tab shows AudienceBuilder with Departments and Groups", async ({ page }) => {
+  test("New Campaign tab shows AudienceBuilder with Departments and Groups", async ({ page }) => {
     await interceptGraphQL(page, "staff");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
-    // Compose is the default tab — departments render immediately
+    // Quick Send is now the default tab — the campaign composer (and its
+    // AudienceBuilder) only mounts once "New Campaign" is selected.
+    await page.getByRole("tab", { name: /new campaign/i }).click();
     await expect(page.getByText("Youth Ministry")).toBeVisible({ timeout: 8000 });
     await expect(page.getByText("Music Ministry")).toBeVisible();
     await expect(page.getByText("Choir")).toBeVisible();
   });
 
-  test("Compose step shows Select Audience sub-heading", async ({ page }) => {
+  test("New Campaign step shows Select Audience sub-heading", async ({ page }) => {
     await interceptGraphQL(page, "staff");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
-    // AudienceBuilder always renders its heading on the compose step
+    await page.getByRole("tab", { name: /new campaign/i }).click();
+    // AudienceBuilder always renders its heading on the audience step
     await expect(page.getByText(/select audience/i)).toBeVisible({ timeout: 8000 });
   });
 
   test("Composer advances to step 2 on Next", async ({ page }) => {
     await interceptGraphQL(page, "staff");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    await page.getByRole("tab", { name: /new campaign/i }).click();
     // Wait for AudienceBuilder to mount, then click Next
     await page.getByText(/select audience/i).waitFor({ timeout: 8000 });
     // Use first() to avoid strict-mode violation if multiple "Next" buttons appear in DOM
@@ -167,10 +174,10 @@ test.describe("Messaging — Global Staff", () => {
     await interceptGraphQL(page, "staff");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
     // Wait for page content to confirm the role has loaded
-    await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+    await expect(page.getByRole("heading", { name: "Messaging", exact: true })).toBeVisible({ timeout: 8000 });
     // The sidebar uses <Button> (rendered as <button>) with router.push(), not <a> tags.
-    // Scope the lookup to the <aside> to isolate it from any other "Bulk Messaging" text.
-    const navBtn = page.locator("aside").getByRole("button", { name: /bulk messaging/i });
+    // Scope the lookup to the <aside> to isolate it from any other "Messaging" text.
+    const navBtn = page.locator("aside").getByRole("button", { name: "Messaging", exact: true });
     await expect(navBtn).toHaveCount(1, { timeout: 8000 });
   });
 });
@@ -183,19 +190,25 @@ test.describe("Messaging — Department Admin (scoped)", () => {
   test("can access messaging page", async ({ page }) => {
     await interceptGraphQL(page, "dept-admin");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+    await expect(page.getByRole("heading", { name: "Messaging", exact: true })).toBeVisible({ timeout: 8000 });
   });
 
   test("sees available departments from API", async ({ page }) => {
     await interceptGraphQL(page, "dept-admin");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    // Departments only render inside the campaign composer's AudienceBuilder,
+    // which lives under the "New Campaign" tab (Quick Send is now the default).
+    await page.getByRole("tab", { name: /new campaign/i }).click();
     await expect(page.getByText("Youth Ministry")).toBeVisible({ timeout: 8000 });
   });
 
-  test("Messaging Admin badge shown in sidebar", async ({ page }) => {
+  test("Messaging role badge shown in sidebar", async ({ page }) => {
+    // A dept-admin whose only admin capability is canSendBulkMessage gets the
+    // generic "Messaging" role badge (getRoleBadge() in admin-layout.tsx) —
+    // there is no separate "Messaging Admin" label in the current UI.
     await interceptGraphQL(page, "dept-admin");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
-    await expect(page.getByText(/messaging admin/i)).toBeVisible({ timeout: 8000 });
+    await expect(page.locator('[data-slot="role-badge"]', { hasText: "Messaging" })).toBeVisible({ timeout: 8000 });
   });
 
   test("History tab is accessible", async ({ page }) => {
@@ -214,12 +227,15 @@ test.describe("Messaging — Group Admin (scoped)", () => {
   test("can access messaging page", async ({ page }) => {
     await interceptGraphQL(page, "group-admin");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+    await expect(page.getByRole("heading", { name: "Messaging", exact: true })).toBeVisible({ timeout: 8000 });
   });
 
   test("sees Groups section in audience builder", async ({ page }) => {
     await interceptGraphQL(page, "group-admin");
     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    // Groups render inside the campaign composer's AudienceBuilder, under
+    // the "New Campaign" tab (Quick Send is now the default tab).
+    await page.getByRole("tab", { name: /new campaign/i }).click();
     await expect(page.getByText("Choir")).toBeVisible({ timeout: 8000 });
   });
 });

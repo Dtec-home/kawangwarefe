@@ -1,22 +1,19 @@
 name: Frontend BDD
 
-# Focused, always-on BDD job. The full Vitest/Playwright workflows in this repo
-# are currently *.yml.disabled (see Sprint 0); this runs only the Gherkin
-# parity scenarios so cross-platform BDD has live CI coverage regardless.
+# Focused, always-on BDD job — runs only the Gherkin parity scenarios so
+# cross-platform BDD has its own clearly-labeled CI signal alongside the
+# broader frontend-tests.yml.
+#
+# FE-D.5 (2026-07-21): like frontend-tests.yml, this had never actually run —
+# `paths: church-funds-ui/**` never matches anything in a repo whose root
+# already IS church-funds-ui. Confirmed via `gh run list`: zero runs ever.
+# Removed the bad `paths` filter and `working-directory`.
 
 on:
   push:
     branches: [main, develop]
-    paths:
-      - 'church-funds-ui/**'
   pull_request:
     branches: [main, develop]
-    paths:
-      - 'church-funds-ui/**'
-
-defaults:
-  run:
-    working-directory: church-funds-ui
 
 jobs:
   bdd:
@@ -31,7 +28,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: church-funds-ui/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci

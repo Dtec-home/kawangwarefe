@@ -6,11 +6,11 @@
 import { gql } from "@apollo/client";
 
 /**
- * Request OTP for phone-based authentication
+ * Request OTP for phone or email-based authentication
  */
 export const REQUEST_OTP = gql`
-  mutation RequestOtp($phoneNumber: String!) {
-    requestOtp(phoneNumber: $phoneNumber) {
+  mutation RequestOtp($phoneNumber: String, $email: String, $channel: String!) {
+    requestOtp(phoneNumber: $phoneNumber, email: $email, channel: $channel) {
       success
       message
       expiresInMinutes
@@ -23,8 +23,8 @@ export const REQUEST_OTP = gql`
  * Verify OTP and get JWT tokens
  */
 export const VERIFY_OTP = gql`
-  mutation VerifyOtp($phoneNumber: String!, $otpCode: String!) {
-    verifyOtp(phoneNumber: $phoneNumber, otpCode: $otpCode) {
+  mutation VerifyOtp($phoneNumber: String, $email: String, $otpCode: String!) {
+    verifyOtp(phoneNumber: $phoneNumber, email: $email, otpCode: $otpCode) {
       success
       message
       accessToken
@@ -32,6 +32,7 @@ export const VERIFY_OTP = gql`
       userId
       memberId
       phoneNumber
+      email
       fullName
       isNewMember
     }

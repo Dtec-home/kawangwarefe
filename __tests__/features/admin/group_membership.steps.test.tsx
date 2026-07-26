@@ -14,7 +14,7 @@ import { MockedProvider } from '@apollo/client/testing/react'
 import { useMutation } from '@apollo/client/react'
 import React from 'react'
 
-import { BULK_ADD_MEMBERS_TO_GROUP } from '@/lib/graphql/group-management'
+import { BULK_ADD_MEMBERS_TO_GROUP, REMOVE_MEMBER_FROM_GROUP } from '@/lib/graphql/group-management'
 
 const feature = loadFeature('./group_membership.feature', { loadRelativePath: true })
 
@@ -26,6 +26,17 @@ const MEMBER_IDS: Record<string, string> = {
   Ben: '14202',
   Cyn: '14203',
   Del: '14204',
+}
+
+function MemberRemover({ variables, onResult }: any) {
+  const [remove] = useMutation(REMOVE_MEMBER_FROM_GROUP)
+  React.useEffect(() => {
+    remove({ variables })
+      .then((res: any) => onResult(res?.data?.removeMemberFromGroup ?? { success: false }))
+      .catch((e: any) => onResult({ success: false, message: String(e?.message ?? e) }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return null
 }
 
 function BulkAdder({ variables, mockResult, onResult }: any) {
@@ -85,7 +96,34 @@ defineFeature(feature, (test) => {
       await waitFor(() => expect(ctx.result).not.toBeNull())
     }
 
-    return { ctx, registerMember, bulkAdd }
+    const removeMember = async (name: string) => {
+      const member = ctx.members[name]
+      const variables = { memberId: member.id, groupId: ctx.groupId }
+      const inGroup = member.state === 'already'
+      const mocks = [{
+        request: { query: REMOVE_MEMBER_FROM_GROUP, variables },
+        result: {
+          data: {
+            removeMemberFromGroup: {
+              __typename: 'GroupResponse',
+              success: inGroup,
+              message: inGroup
+                ? `Removed '${name}' from group 'Complex A'`
+                : `Member '${name}' is not in group 'Complex A'`,
+              group: { __typename: 'DjangoGroupType', id: ctx.groupId, name: 'Complex A' },
+            },
+          },
+        },
+      }]
+      render(
+        <MockedProvider mocks={mocks}>
+          <MemberRemover variables={variables} onResult={(r: any) => { ctx.result = r }} />
+        </MockedProvider>
+      )
+      await waitFor(() => expect(ctx.result).not.toBeNull())
+    }
+
+    return { ctx, registerMember, bulkAdd, removeMember }
   }
 
   test('Adding a mix of new, existing, and account-less members', ({ given, and, when, then }) => {
@@ -144,5 +182,31 @@ defineFeature(feature, (test) => {
         expect(ctx.result.addedCount).toBe(Number(added))
         expect(ctx.result.skippedMembers.some((s: string) => s.includes(name))).toBe(true)
       })
+  })
+
+  test('Removing a member from a group', ({ given, when, then, and }) => {
+    const { ctx, registerMember, removeMember } = setup()
+
+    given(/^a group "(.*)" exists$/, () => {})
+    and('an admin is signed in', () => {})
+    and(/^a member "(.*)" who is already in "(.*)"$/, (name: string) => registerMember(name, 'already'))
+    when(/^the admin removes (\w+) from "(.*)"$/, async (name: string) => { await removeMember(name) })
+    then('the removal succeeds', () => {
+      expect(ctx.result.success).toBe(true)
+    })
+    and(/^(\w+) is no longer in "(.*)"$/, () => {})
+  })
+
+  test('Removing a member who is not in the group reports failure', ({ given, when, then, and }) => {
+    const { ctx, registerMember, removeMember } = setup()
+
+    given(/^a group "(.*)" exists$/, () => {})
+    and('an admin is signed in', () => {})
+    and(/^a member "(.*)" with a login account, not in "(.*)"$/, (name: string) => registerMember(name, 'account'))
+    when(/^the admin removes (\w+) from "(.*)"$/, async (name: string) => { await removeMember(name) })
+    then(/^the removal fails with a message containing "(.*)"$/, (fragment: string) => {
+      expect(ctx.result.success).toBe(false)
+      expect(String(ctx.result.message).toLowerCase()).toContain(fragment.toLowerCase())
+    })
   })
 })

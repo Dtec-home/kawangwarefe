@@ -21,7 +21,9 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [channel, setChannel] = useState<"sms" | "email">("sms");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Read redirect target from query params (set by middleware)
@@ -36,25 +38,36 @@ function LoginContent() {
 
   const [requestOtp] = useMutation<
     { requestOtp: { success: boolean; message: string; otpCode?: string } },
-    { phoneNumber: string }
+    { phoneNumber?: string; email?: string; channel: string }
   >(REQUEST_OTP);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate phone number (should be 9 digits)
-    if (phoneNumber.length !== 9) {
-      toast.error("Please enter a valid 9-digit phone number");
-      return;
+    if (channel === "sms") {
+      // Validate phone number (should be 9 digits)
+      if (phoneNumber.length !== 9) {
+        toast.error("Please enter a valid 9-digit phone number");
+        return;
+      }
+    } else {
+      // Validate email address
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
     }
 
     setIsSubmitting(true);
 
     try {
-      // Send with 254 prefix
-      const fullPhone = `254${phoneNumber}`;
+      const fullPhone = channel === "sms" ? `254${phoneNumber}` : undefined;
       const { data } = await requestOtp({
-        variables: { phoneNumber: fullPhone },
+        variables: {
+          phoneNumber: fullPhone,
+          email: channel === "email" ? email : undefined,
+          channel: channel
+        },
       });
 
       const resp = data?.requestOtp;
@@ -69,9 +82,11 @@ function LoginContent() {
           });
         }
 
-        // Navigate to OTP verification page (send full phone with 254)
+        // Navigate to OTP verification page
         const redirectParam = redirectTo === "/dashboard" ? "" : `&redirect=${encodeURIComponent(redirectTo)}`;
-        const verifyUrl = `/verify-otp?phone=${fullPhone}${redirectParam}`;
+        const verifyUrl = channel === "sms"
+          ? `/verify-otp?phone=${fullPhone}${redirectParam}`
+          : `/verify-otp?email=${encodeURIComponent(email)}${redirectParam}`;
         router.push(verifyUrl);
       } else {
         toast.error(resp?.message || "Failed to request OTP");
@@ -148,10 +163,34 @@ function LoginContent() {
               </div>
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Member Login</CardTitle>
               <CardDescription className="text-base">
-                Enter your phone number to receive a verification code
+                Choose a method to receive your verification code
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Premium Channel Toggle */}
+              <div className="grid grid-cols-2 p-1 bg-muted rounded-lg mb-6">
+                <button
+                  type="button"
+                  onClick={() => setChannel("sms")}
+                  className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${channel === "sms"
+                      ? "bg-background text-foreground shadow-sm font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  Phone Number
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChannel("email")}
+                  className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${channel === "email"
+                      ? "bg-background text-foreground shadow-sm font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  Email Address
+                </button>
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="phoneNumber" className="text-base font-medium">Phone Number</Label>
@@ -178,7 +217,7 @@ function LoginContent() {
                 <Button
                   type="submit"
                   className="w-full h-11 text-base font-semibold"
-                  disabled={isSubmitting || phoneNumber.length !== 9}
+                  disabled={isSubmitting || (channel === "sms" ? phoneNumber.length !== 9 : !email)}
                 >
                   {isSubmitting ? (
                     <>
@@ -193,7 +232,7 @@ function LoginContent() {
 
               <div className="mt-6 text-center text-sm text-muted-foreground">
                 <p>
-                  Don&apos;t have an account? Enter your phone number above
+                  Don&apos;t have an account? Enter your details above
                   to register.
                 </p>
               </div>

@@ -1,0 +1,1899 @@
+[WebServer] [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[WebServer]  ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+
+Running 275 tests using 4 workers
+
+[1/275] [chromium] › e2e/admin-c2b.spec.ts:34:7 › Admin C2B Transactions Page › renders filter section
+[2/275] [chromium] › e2e/admin-c2b.spec.ts:10:7 › Admin C2B Transactions Page › renders C2B transactions heading
+[3/275] [chromium] › e2e/admin-c2b.spec.ts:21:7 › Admin C2B Transactions Page › renders statistics cards
+[4/275] [chromium] › e2e/admin-c2b.spec.ts:16:7 › Admin C2B Transactions Page › renders refresh button
+[5/275] [chromium] › e2e/admin-c2b.spec.ts:38:7 › Admin C2B Transactions Page › renders transactions table or empty state
+[6/275] [chromium] › e2e/admin-c2b.spec.ts:51:7 › Admin C2B Transactions Page › renders pagination when transactions exist
+[7/275] [chromium] › e2e/admin-c2b.spec.ts:47:7 › Admin C2B Transactions Page › renders pay bill transactions section heading
+[8/275] [chromium] › e2e/admin-categories.spec.ts:10:7 › Admin Category Admins Page › renders category admins heading
+[9/275] [chromium] › e2e/admin-categories.spec.ts:16:7 › Admin Category Admins Page › renders statistics cards
+[10/275] [chromium] › e2e/admin-categories.spec.ts:26:7 › Admin Category Admins Page › renders assign category admin form
+[11/275] [chromium] › e2e/admin-categories.spec.ts:32:7 › Admin Category Admins Page › renders filter section
+  1) [chromium] › e2e/admin-categories.spec.ts:16:7 › Admin Category Admins Page › renders statistics cards 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      21 |     expect(
+      22 |       hasTotalCategories > 0 && hasCategoryAdmins > 0 && hasCategoriesWithAdmins > 0
+    > 23 |     ).toBeTruthy();
+         |       ^
+      24 |   });
+      25 |
+      26 |   test("renders assign category admin form", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-categories.spec.ts:23:7
+
+    Error Context: test-results/admin-categories-Admin-Cat-b7bae-ge-renders-statistics-cards-chromium/error-context.md
+
+
+  2) [chromium] › e2e/admin-categories.spec.ts:10:7 › Admin Category Admins Page › renders category admins heading 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /category admins/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /category admins/i })
+
+
+      11 |     await expect(
+      12 |       page.getByRole("heading", { name: /category admins/i })
+    > 13 |     ).toBeVisible();
+         |       ^
+      14 |   });
+      15 |
+      16 |   test("renders statistics cards", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-categories.spec.ts:13:7
+
+    Error Context: test-results/admin-categories-Admin-Cat-7fcd3-ers-category-admins-heading-chromium/error-context.md
+
+
+[12/275] [chromium] › e2e/admin-categories.spec.ts:37:7 › Admin Category Admins Page › renders current category admins list or empty state
+[13/275] [chromium] › e2e/admin-categories.spec.ts:45:7 › Admin Category Admins Page › assign admin button is present
+  3) [chromium] › e2e/admin-categories.spec.ts:37:7 › Admin Category Admins Page › renders current category admins list or empty state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      40 |     const hasLoading = await page.getByText(/loading/i).count();
+      41 |
+    > 42 |     expect(hasAdminsList > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                                 ^
+      43 |   });
+      44 |
+      45 |   test("assign admin button is present", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-categories.spec.ts:42:65
+
+    Error Context: test-results/admin-categories-Admin-Cat-587b8--admins-list-or-empty-state-chromium/error-context.md
+
+
+  4) [chromium] › e2e/admin-categories.spec.ts:26:7 › Admin Category Admins Page › renders assign category admin form 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/assign category admin/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/assign category admin/i)
+
+
+      25 |
+      26 |   test("renders assign category admin form", async ({ page }) => {
+    > 27 |     await expect(page.getByText(/assign category admin/i)).toBeVisible();
+         |                                                            ^
+      28 |     await expect(page.getByText(/search member/i)).toBeVisible();
+      29 |     await expect(page.getByText(/select category/i)).toBeVisible();
+      30 |   });
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-categories.spec.ts:27:60
+
+    Error Context: test-results/admin-categories-Admin-Cat-e7f38--assign-category-admin-form-chromium/error-context.md
+
+
+  5) [chromium] › e2e/admin-categories.spec.ts:32:7 › Admin Category Admins Page › renders filter section 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/filter category admins/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/filter category admins/i)
+
+
+      31 |
+      32 |   test("renders filter section", async ({ page }) => {
+    > 33 |     await expect(page.getByText(/filter category admins/i)).toBeVisible();
+         |                                                             ^
+      34 |     await expect(page.getByText(/filter by category/i)).toBeVisible();
+      35 |   });
+      36 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-categories.spec.ts:33:61
+
+    Error Context: test-results/admin-categories-Admin-Cat-072e9-Page-renders-filter-section-chromium/error-context.md
+
+
+  6) [chromium] › e2e/admin-categories.spec.ts:45:7 › Admin Category Admins Page › assign admin button is present 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      45 |   test("assign admin button is present", async ({ page }) => {
+      46 |     const hasAssignBtn = await page.getByRole("button", { name: /assign admin/i }).count();
+    > 47 |     expect(hasAssignBtn).toBeGreaterThan(0);
+         |                          ^
+      48 |   });
+      49 | });
+      50 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-categories.spec.ts:47:26
+
+    Error Context: test-results/admin-categories-Admin-Cat-8baf0-ign-admin-button-is-present-chromium/error-context.md
+
+
+[14/275] [chromium] › e2e/admin-category-admins.spec.ts:10:7 › Admin Category Admins Page › renders Category Admins heading
+[15/275] [chromium] › e2e/admin-category-admins.spec.ts:16:7 › Admin Category Admins Page › renders statistics cards
+[16/275] [chromium] › e2e/admin-category-admins.spec.ts:22:7 › Admin Category Admins Page › renders assign category admin form
+[17/275] [chromium] › e2e/admin-category-admins.spec.ts:27:7 › Admin Category Admins Page › renders member and category selectors
+  7) [chromium] › e2e/admin-category-admins.spec.ts:16:7 › Admin Category Admins Page › renders statistics cards 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      17 |     const hasTotal = await page.getByText(/total categories/i).count();
+      18 |     const hasAdmins = await page.getByText(/category admins/i).count();
+    > 19 |     expect(hasTotal > 0 && hasAdmins > 0).toBeTruthy();
+         |                                           ^
+      20 |   });
+      21 |
+      22 |   test("renders assign category admin form", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:19:43
+
+    Error Context: test-results/admin-category-admins-Admi-ecbec-ge-renders-statistics-cards-chromium/error-context.md
+
+
+  8) [chromium] › e2e/admin-category-admins.spec.ts:27:7 › Admin Category Admins Page › renders member and category selectors 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      28 |     const hasMemberSelect = await page.getByText(/select member/i).count();
+      29 |     const hasCategorySelect = await page.getByText(/select category/i).count();
+    > 30 |     expect(hasMemberSelect > 0 && hasCategorySelect > 0).toBeTruthy();
+         |                                                          ^
+      31 |   });
+      32 |
+      33 |   test("Assign Admin button is present and disabled when nothing selected", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:30:58
+
+    Error Context: test-results/admin-category-admins-Admi-ed5fb-mber-and-category-selectors-chromium/error-context.md
+
+
+[18/275] [chromium] › e2e/admin-category-admins.spec.ts:39:7 › Admin Category Admins Page › renders filter by category section
+[19/275] [chromium] › e2e/admin-category-admins.spec.ts:33:7 › Admin Category Admins Page › Assign Admin button is present and disabled when nothing selected
+  9) [chromium] › e2e/admin-category-admins.spec.ts:10:7 › Admin Category Admins Page › renders Category Admins heading 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /category admins/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /category admins/i })
+
+
+      11 |     await expect(
+      12 |       page.getByRole("heading", { name: /category admins/i })
+    > 13 |     ).toBeVisible();
+         |       ^
+      14 |   });
+      15 |
+      16 |   test("renders statistics cards", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:13:7
+
+    Error Context: test-results/admin-category-admins-Admi-3c24d-ers-Category-Admins-heading-chromium/error-context.md
+
+
+[20/275] [chromium] › e2e/admin-category-admins.spec.ts:47:7 › Admin Category Admins Page › shows empty state or admin list
+  10) [chromium] › e2e/admin-category-admins.spec.ts:22:7 › Admin Category Admins Page › renders assign category admin form 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/assign category admin/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/assign category admin/i)
+
+
+      21 |
+      22 |   test("renders assign category admin form", async ({ page }) => {
+    > 23 |     await expect(page.getByText(/assign category admin/i)).toBeVisible();
+         |                                                            ^
+      24 |     await expect(page.getByPlaceholder(/search by name or phone/i)).toBeVisible();
+      25 |   });
+      26 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:23:60
+
+    Error Context: test-results/admin-category-admins-Admi-7cba8--assign-category-admin-form-chromium/error-context.md
+
+
+[21/275] [chromium] › e2e/admin-category-admins.spec.ts:43:7 › Admin Category Admins Page › renders current category admins section
+  11) [chromium] › e2e/admin-category-admins.spec.ts:47:7 › Admin Category Admins Page › shows empty state or admin list 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      49 |     const hasList = await page.locator("table, .border.rounded-lg").count();
+      50 |     const hasLoading = await page.getByText(/loading/i).count();
+    > 51 |     expect(hasEmpty > 0 || hasList > 0 || hasLoading > 0).toBeTruthy();
+         |                                                           ^
+      52 |   });
+      53 |
+      54 |   test("non-staff session is redirected away from page", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:51:59
+
+    Error Context: test-results/admin-category-admins-Admi-f7f92-s-empty-state-or-admin-list-chromium/error-context.md
+
+
+[22/275] [chromium] › e2e/admin-category-admins.spec.ts:54:7 › Admin Category Admins Page › non-staff session is redirected away from page
+[23/275] [chromium] › e2e/admin-content.spec.ts:10:7 › Admin Announcements Page › renders announcements heading
+  12) [chromium] › e2e/admin-category-admins.spec.ts:39:7 › Admin Category Admins Page › renders filter by category section 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/filter.*category/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/filter.*category/i)
+
+
+      38 |
+      39 |   test("renders filter by category section", async ({ page }) => {
+    > 40 |     await expect(page.getByText(/filter.*category/i)).toBeVisible();
+         |                                                       ^
+      41 |   });
+      42 |
+      43 |   test("renders current category admins section", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:40:55
+
+    Error Context: test-results/admin-category-admins-Admi-4a103--filter-by-category-section-chromium/error-context.md
+
+
+[24/275] [chromium] › e2e/admin-content.spec.ts:16:7 › Admin Announcements Page › renders new announcement button
+  13) [chromium] › e2e/admin-category-admins.spec.ts:43:7 › Admin Category Admins Page › renders current category admins section 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/current category admins/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/current category admins/i)
+
+
+      42 |
+      43 |   test("renders current category admins section", async ({ page }) => {
+    > 44 |     await expect(page.getByText(/current category admins/i)).toBeVisible();
+         |                                                              ^
+      45 |   });
+      46 |
+      47 |   test("shows empty state or admin list", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:44:62
+
+    Error Context: test-results/admin-category-admins-Admi-548a6-ent-category-admins-section-chromium/error-context.md
+
+
+[WebServer]  ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+
+  14) [chromium] › e2e/admin-category-admins.spec.ts:54:7 › Admin Category Admins Page › non-staff session is redirected away from page 
+
+    Error: expect(received).toMatch(expected)
+
+    Expected pattern: /\/(login|dashboard)/
+    Received string:  "http://localhost:3001/admin/category-admins"
+
+      55 |     await injectSession(page, { role: "member" });
+      56 |     await page.goto("/admin/category-admins", { waitUntil: "networkidle" });
+    > 57 |     expect(page.url()).toMatch(/\/(login|dashboard)/);
+         |                        ^
+      58 |   });
+      59 | });
+      60 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-category-admins.spec.ts:57:24
+
+    Error Context: test-results/admin-category-admins-Admi-0e8f7-s-redirected-away-from-page-chromium/error-context.md
+
+
+[25/275] [chromium] › e2e/admin-content.spec.ts:21:7 › Admin Announcements Page › renders statistics cards
+  15) [chromium] › e2e/admin-content.spec.ts:16:7 › Admin Announcements Page › renders new announcement button 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      16 |   test("renders new announcement button", async ({ page }) => {
+      17 |     const hasNewBtn = await page.getByText(/new announcement/i).count();
+    > 18 |     expect(hasNewBtn).toBeGreaterThan(0);
+         |                       ^
+      19 |   });
+      20 |
+      21 |   test("renders statistics cards", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:18:23
+
+    Error Context: test-results/admin-content-Admin-Announ-21689-ers-new-announcement-button-chromium/error-context.md
+
+
+[26/275] [chromium] › e2e/admin-content.spec.ts:49:7 › Admin Devotionals Page › renders devotionals heading
+[27/275] [chromium] › e2e/admin-content.spec.ts:29:7 › Admin Announcements Page › renders filter section
+[28/275] [chromium] › e2e/admin-content.spec.ts:34:7 › Admin Announcements Page › renders announcements list or empty state
+  16) [chromium] › e2e/admin-content.spec.ts:21:7 › Admin Announcements Page › renders statistics cards 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      24 |     const hasHighPriority = await page.getByText(/high priority/i).count();
+      25 |
+    > 26 |     expect(hasTotal > 0 && hasActive > 0 && hasHighPriority > 0).toBeTruthy();
+         |                                                                  ^
+      27 |   });
+      28 |
+      29 |   test("renders filter section", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:26:66
+
+    Error Context: test-results/admin-content-Admin-Announ-a651a-ge-renders-statistics-cards-chromium/error-context.md
+
+
+  17) [chromium] › e2e/admin-content.spec.ts:34:7 › Admin Announcements Page › renders announcements list or empty state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      37 |     const hasLoading = await page.getByText(/loading announcements/i).count();
+      38 |
+    > 39 |     expect(hasCards > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                            ^
+      40 |   });
+      41 | });
+      42 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:39:60
+
+    Error Context: test-results/admin-content-Admin-Announ-60987-cements-list-or-empty-state-chromium/error-context.md
+
+
+[29/275] [chromium] › e2e/admin-content.spec.ts:75:7 › Admin Events Page › renders events heading
+[30/275] [chromium] › e2e/admin-content.spec.ts:81:7 › Admin Events Page › renders new event button
+[31/275] [chromium] › e2e/admin-content.spec.ts:55:7 › Admin Devotionals Page › renders new devotional button
+[32/275] [chromium] › e2e/admin-content.spec.ts:60:7 › Admin Devotionals Page › renders devotionals list or empty state
+  18) [chromium] › e2e/admin-content.spec.ts:55:7 › Admin Devotionals Page › renders new devotional button 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      55 |   test("renders new devotional button", async ({ page }) => {
+      56 |     const hasNewBtn = await page.getByText(/new devotional/i).count();
+    > 57 |     expect(hasNewBtn).toBeGreaterThan(0);
+         |                       ^
+      58 |   });
+      59 |
+      60 |   test("renders devotionals list or empty state", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:57:23
+
+    Error Context: test-results/admin-content-Admin-Devoti-195ef-nders-new-devotional-button-chromium/error-context.md
+
+
+  19) [chromium] › e2e/admin-content.spec.ts:81:7 › Admin Events Page › renders new event button ───
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      81 |   test("renders new event button", async ({ page }) => {
+      82 |     const hasNewBtn = await page.getByText(/new event/i).count();
+    > 83 |     expect(hasNewBtn).toBeGreaterThan(0);
+         |                       ^
+      84 |   });
+      85 |
+      86 |   test("renders events list or empty state", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:83:23
+
+    Error Context: test-results/admin-content-Admin-Events-Page-renders-new-event-button-chromium/error-context.md
+
+
+  20) [chromium] › e2e/admin-content.spec.ts:60:7 › Admin Devotionals Page › renders devotionals list or empty state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      63 |     const hasLoading = await page.getByText(/loading/i).count();
+      64 |
+    > 65 |     expect(hasCards > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                            ^
+      66 |   });
+      67 | });
+      68 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:65:60
+
+    Error Context: test-results/admin-content-Admin-Devoti-67f49-tionals-list-or-empty-state-chromium/error-context.md
+
+
+[33/275] [chromium] › e2e/admin-content.spec.ts:111:7 › Admin YouTube Page › renders videos list or empty state
+[34/275] [chromium] › e2e/admin-content.spec.ts:86:7 › Admin Events Page › renders events list or empty state
+[35/275] [chromium] › e2e/admin-content.spec.ts:101:7 › Admin YouTube Page › renders youtube/sermons heading
+[36/275] [chromium] › e2e/admin-content.spec.ts:106:7 › Admin YouTube Page › renders sync button
+  21) [chromium] › e2e/admin-content.spec.ts:101:7 › Admin YouTube Page › renders youtube/sermons heading 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      101 |   test("renders youtube/sermons heading", async ({ page }) => {
+      102 |     const hasYouTube = await page.getByRole("heading", { name: /youtube|sermon|video/i }).count();
+    > 103 |     expect(hasYouTube).toBeGreaterThan(0);
+          |                        ^
+      104 |   });
+      105 |
+      106 |   test("renders sync button", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:103:24
+
+    Error Context: test-results/admin-content-Admin-YouTub-84003-ers-youtube-sermons-heading-chromium/error-context.md
+
+
+  22) [chromium] › e2e/admin-content.spec.ts:106:7 › Admin YouTube Page › renders sync button ──────
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      106 |   test("renders sync button", async ({ page }) => {
+      107 |     const hasSyncBtn = await page.getByText(/sync/i).count();
+    > 108 |     expect(hasSyncBtn).toBeGreaterThan(0);
+          |                        ^
+      109 |   });
+      110 |
+      111 |   test("renders videos list or empty state", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:108:24
+
+    Error Context: test-results/admin-content-Admin-YouTube-Page-renders-sync-button-chromium/error-context.md
+
+
+  23) [chromium] › e2e/admin-content.spec.ts:111:7 › Admin YouTube Page › renders videos list or empty state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      114 |     const hasLoading = await page.getByText(/loading/i).count();
+      115 |
+    > 116 |     expect(hasCards > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+          |                                                            ^
+      117 |   });
+      118 | });
+      119 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:116:60
+
+    Error Context: test-results/admin-content-Admin-YouTub-22039--videos-list-or-empty-state-chromium/error-context.md
+
+
+  24) [chromium] › e2e/admin-content.spec.ts:86:7 › Admin Events Page › renders events list or empty state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      89 |     const hasLoading = await page.getByText(/loading/i).count();
+      90 |
+    > 91 |     expect(hasCards > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                            ^
+      92 |   });
+      93 | });
+      94 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-content.spec.ts:91:60
+
+    Error Context: test-results/admin-content-Admin-Events-42b50--events-list-or-empty-state-chromium/error-context.md
+
+
+[37/275] [chromium] › e2e/admin-contributions.spec.ts:10:7 › Admin Contributions Page › renders contributions heading
+[38/275] [chromium] › e2e/admin-contributions.spec.ts:16:7 › Admin Contributions Page › renders manual entry button
+[39/275] [chromium] › e2e/admin-contributions.spec.ts:21:7 › Admin Contributions Page › renders statistics cards when data is available
+[40/275] [chromium] › e2e/admin-contributions.spec.ts:41:7 › Admin Contributions Page › renders filter section with search, status, and category
+[41/275] [chromium] › e2e/admin-contributions.spec.ts:47:7 › Admin Contributions Page › renders contributions table or empty state
+[42/275] [chromium] › e2e/admin-contributions.spec.ts:56:7 › Admin Contributions Page › manual entry link navigates correctly
+[43/275] [chromium] › e2e/admin-contributions.spec.ts:72:7 › Admin Manual Entry Page › renders manual entry heading
+[44/275] [chromium] › e2e/admin-contributions.spec.ts:77:7 › Admin Manual Entry Page › renders member phone lookup field
+[45/275] [chromium] › e2e/admin-contributions.spec.ts:83:7 › Admin Manual Entry Page › renders category selector
+  25) [chromium] › e2e/admin-contributions.spec.ts:77:7 › Admin Manual Entry Page › renders member phone lookup field 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      78 |     const hasPhone = await page.getByPlaceholder(/phone|member/i).count();
+      79 |     const hasInput = await page.locator("input[type='tel'], input[type='text']").count();
+    > 80 |     expect(hasPhone > 0 || hasInput > 0).toBeTruthy();
+         |                                          ^
+      81 |   });
+      82 |
+      83 |   test("renders category selector", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-contributions.spec.ts:80:42
+
+    Error Context: test-results/admin-contributions-Admin--b1855-s-member-phone-lookup-field-chromium/error-context.md
+
+
+  26) [chromium] › e2e/admin-contributions.spec.ts:72:7 › Admin Manual Entry Page › renders manual entry heading 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      72 |   test("renders manual entry heading", async ({ page }) => {
+      73 |     const hasHeading = await page.getByRole("heading", { name: /manual entry/i }).count();
+    > 74 |     expect(hasHeading).toBeGreaterThan(0);
+         |                        ^
+      75 |   });
+      76 |
+      77 |   test("renders member phone lookup field", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-contributions.spec.ts:74:24
+
+    Error Context: test-results/admin-contributions-Admin--de010-enders-manual-entry-heading-chromium/error-context.md
+
+
+[46/275] [chromium] › e2e/admin-department-purposes-crud.spec.ts:5:7 › Department Purpose CRUD › staff can create, toggle, and delete purposes
+  27) [chromium] › e2e/admin-contributions.spec.ts:83:7 › Admin Manual Entry Page › renders category selector 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      83 |   test("renders category selector", async ({ page }) => {
+      84 |     const hasCategory = await page.getByText(/category/i).count();
+    > 85 |     expect(hasCategory).toBeGreaterThan(0);
+         |                         ^
+      86 |   });
+      87 |
+      88 |   test("renders amount input", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-contributions.spec.ts:85:25
+
+    Error Context: test-results/admin-contributions-Admin--3ab5d-e-renders-category-selector-chromium/error-context.md
+
+
+[47/275] [chromium] › e2e/admin-contributions.spec.ts:88:7 › Admin Manual Entry Page › renders amount input
+[48/275] [chromium] › e2e/admin-contributions.spec.ts:93:7 › Admin Manual Entry Page › submit button is present
+[49/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:105:7 › Admin Expenses — payout channel capture › Request Expense dialog defaults payout channel to Manual with no beneficiary fields
+  28) [chromium] › e2e/admin-contributions.spec.ts:93:7 › Admin Manual Entry Page › submit button is present 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      93 |   test("submit button is present", async ({ page }) => {
+      94 |     const hasSubmit = await page.getByRole("button", { name: /submit|record|save|add/i }).count();
+    > 95 |     expect(hasSubmit).toBeGreaterThan(0);
+         |                       ^
+      96 |   });
+      97 | });
+      98 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-contributions.spec.ts:95:23
+
+    Error Context: test-results/admin-contributions-Admin--249f7-ge-submit-button-is-present-chromium/error-context.md
+
+
+  29) [chromium] › e2e/admin-contributions.spec.ts:88:7 › Admin Manual Entry Page › renders amount input 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      88 |   test("renders amount input", async ({ page }) => {
+      89 |     const hasAmount = await page.getByText(/amount/i).count();
+    > 90 |     expect(hasAmount).toBeGreaterThan(0);
+         |                       ^
+      91 |   });
+      92 |
+      93 |   test("submit button is present", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-contributions.spec.ts:90:23
+
+    Error Context: test-results/admin-contributions-Admin--a4533-y-Page-renders-amount-input-chromium/error-context.md
+
+
+  30) [chromium] › e2e/admin-department-purposes-crud.spec.ts:5:7 › Department Purpose CRUD › staff can create, toggle, and delete purposes 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Camp Meeting')
+    Expected: visible
+    Error: strict mode violation: getByText('Camp Meeting') resolved to 2 elements:
+        1) <div class="font-medium">Camp Meeting</div> aka locator('div').filter({ hasText: /^Camp Meeting$/ })
+        2) <option value="p-1">Camp Meeting</option> aka locator('select')
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText('Camp Meeting')
+
+
+      192 |
+      193 |     await expect(page.getByRole("heading", { name: /department purposes/i })).toBeVisible();
+    > 194 |     await expect(page.getByText("Camp Meeting")).toBeVisible();
+          |                                                  ^
+      195 |
+      196 |     await page.getByLabel(/purpose name/i).fill("Transport");
+      197 |     await page.getByLabel(/purpose code/i).fill("TRAN");
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-department-purposes-crud.spec.ts:194:50
+
+    Error Context: test-results/admin-department-purposes--eae94--toggle-and-delete-purposes-chromium/error-context.md
+
+
+[50/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:149:7 › Admin Expenses — Disburse via KCB › an eligible expense row shows the Disburse via KCB action
+[51/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:113:7 › Admin Expenses — payout channel capture › selecting Mobile money reveals the beneficiary phone field
+[52/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:122:7 › Admin Expenses — payout channel capture › selecting Bank transfer reveals account number and bank code fields
+[53/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:132:7 › Admin Expenses — payout channel capture › switching back to Manual hides the beneficiary fields again
+[54/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:156:7 › Admin Expenses — Disburse via KCB › an expense without canDisburse does not show the action
+[55/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:167:7 › Admin Expenses — Disburse via KCB › clicking Disburse via KCB opens a confirmation dialog summarizing the payout, and Cancel closes it without submitting
+[56/275] [chromium] › e2e/admin-expense-disbursement.spec.ts:193:7 › Admin Expenses — Disburse via KCB › confirming disbursement submits the mutation and closes the dialog
+[57/275] [chromium] › e2e/admin-flow.spec.ts:13:7 › Admin — Access Control (Unauthenticated) › visiting /admin without auth redirects to /login
+[58/275] [chromium] › e2e/admin-flow.spec.ts:25:7 › Admin — Access Control (Unauthenticated) › visiting /admin/contributions without auth redirects to /login
+[59/275] [chromium] › e2e/admin-flow.spec.ts:35:7 › Admin — Access Control (Unauthenticated) › visiting /admin/members without auth redirects to /login
+[60/275] [chromium] › e2e/admin-flow.spec.ts:47:7 › Login Page — Present Before Admin Access › login page has correct structure when redirected from /admin
+[61/275] [chromium] › e2e/admin-group-scope.spec.ts:17:7 › Admin groups and group scope › group admin sees scoped contributions controls
+[62/275] [chromium] › e2e/admin-group-scope.spec.ts:5:7 › Admin groups and group scope › staff can navigate to Groups management page
+[63/275] [chromium] › e2e/admin-groups-crud.spec.ts:5:7 › Admin Groups CRUD › staff can create group and sees duplicate validation message
+[64/275] [chromium] › e2e/admin-groups-crud.spec.ts:113:7 › Admin Groups CRUD › staff can bulk add members to group
+[65/275] [chromium] › e2e/admin-groups-crud.spec.ts:222:7 › Admin Groups CRUD › members already in the group are disabled and cannot be re-added
+[66/275] [chromium] › e2e/admin-groups-crud.spec.ts:328:7 › Admin Groups CRUD › staff can remove a member from a group after confirming, and the member disappears from the list
+[67/275] [chromium] › e2e/admin-groups-crud.spec.ts:445:7 › Admin Groups CRUD › declining the confirmation dialog does not remove the member or call the mutation
+[68/275] [chromium] › e2e/admin-member-progress.spec.ts:190:7 › Admin Member Progress Reports tab › Member Progress tab is visible on Reports page
+[69/275] [chromium] › e2e/admin-member-progress.spec.ts:197:7 › Admin Member Progress Reports tab › clicking Member Progress tab switches mode
+[70/275] [chromium] › e2e/admin-member-progress.spec.ts:206:7 › Admin Member Progress Reports tab › URL param ?mode=progress opens the Progress tab directly
+[71/275] [chromium] › e2e/admin-member-progress.spec.ts:215:7 › Admin Member Progress Reports tab › Load Report button is disabled when no department is selected
+[72/275] [chromium] › e2e/admin-member-progress.spec.ts:224:7 › Admin Member Progress Reports tab › prompt text shown before first load
+[73/275] [chromium] › e2e/admin-member-progress.spec.ts:236:7 › Admin Member Progress Reports tab › empty state shown when report returns no members
+[74/275] [chromium] › e2e/admin-member-progress.spec.ts:267:7 › Admin Member Progress Reports tab › results render summary cards and member row after successful load
+[75/275] [chromium] › e2e/admin-member-progress.spec.ts:281:7 › Admin Member Progress Reports tab › Export Excel button fires generateContributionReport mutation
+[76/275] [chromium] › e2e/admin-member-progress.spec.ts:347:7 › Admin Member Progress Reports tab › chart/table toggle button renders in the filter panel area
+[77/275] [chromium] › e2e/admin-member-progress.spec.ts:357:7 › Admin Member Progress Reports tab › Break down by select renders with None/Purpose/Group options
+[78/275] [chromium] › e2e/admin-member-progress.spec.ts:365:7 › Admin Member Progress Reports tab › date range inputs are present in filter panel
+[79/275] [chromium] › e2e/admin-member-progress.spec.ts:373:7 › Admin Member Progress Reports tab › Time grouping select renders
+[80/275] [chromium] › e2e/admin-members.spec.ts:10:7 › Admin Members Page › renders members heading
+[81/275] [chromium] › e2e/admin-members.spec.ts:16:7 › Admin Members Page › renders statistics cards (total, active, inactive)
+  31) [chromium] › e2e/admin-members.spec.ts:16:7 › Admin Members Page › renders statistics cards (total, active, inactive) 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      19 |     const hasInactive = await page.getByText(/inactive members/i).count();
+      20 |
+    > 21 |     expect(hasTotal > 0 && hasActive > 0 && hasInactive > 0).toBeTruthy();
+         |                                                              ^
+      22 |   });
+      23 |
+      24 |   test("renders search and filter section", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-members.spec.ts:21:62
+
+    Error Context: test-results/admin-members-Admin-Member-37bb7-ards-total-active-inactive--chromium/error-context.md
+
+
+[82/275] [chromium] › e2e/admin-members.spec.ts:31:7 › Admin Members Page › renders import members button
+[83/275] [chromium] › e2e/admin-members.spec.ts:36:7 › Admin Members Page › renders members table or empty state
+[84/275] [chromium] › e2e/admin-members.spec.ts:45:7 › Admin Members Page › renders pagination controls when members exist
+[85/275] [chromium] › e2e/admin-members.spec.ts:24:7 › Admin Members Page › renders search and filter section
+  32) [chromium] › e2e/admin-members.spec.ts:31:7 › Admin Members Page › renders import members button 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      31 |   test("renders import members button", async ({ page }) => {
+      32 |     const hasImport = await page.getByText(/import members/i).count();
+    > 33 |     expect(hasImport).toBeGreaterThan(0);
+         |                       ^
+      34 |   });
+      35 |
+      36 |   test("renders members table or empty state", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-members.spec.ts:33:23
+
+    Error Context: test-results/admin-members-Admin-Member-23eed-nders-import-members-button-chromium/error-context.md
+
+
+  33) [chromium] › e2e/admin-members.spec.ts:36:7 › Admin Members Page › renders members table or empty state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      40 |     const hasLoading = await page.getByText(/loading members/i).count();
+      41 |
+    > 42 |     expect(hasTable > 0 || hasCards > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                                            ^
+      43 |   });
+      44 |
+      45 |   test("renders pagination controls when members exist", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-members.spec.ts:42:76
+
+    Error Context: test-results/admin-members-Admin-Member-f56b1-embers-table-or-empty-state-chromium/error-context.md
+
+
+  34) [chromium] › e2e/admin-members.spec.ts:45:7 › Admin Members Page › renders pagination controls when members exist 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      49 |
+      50 |     // Either pagination is shown or empty/loading state
+    > 51 |     expect(hasPagination > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                                 ^
+      52 |   });
+      53 |
+      54 |   test("import link navigates correctly", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-members.spec.ts:51:65
+
+    Error Context: test-results/admin-members-Admin-Member-94c1e-controls-when-members-exist-chromium/error-context.md
+
+
+[86/275] [chromium] › e2e/admin-members.spec.ts:54:7 › Admin Members Page › import link navigates correctly
+[87/275] [chromium] › e2e/admin-members.spec.ts:70:7 › Admin Members Import Page › renders import heading
+[88/275] [chromium] › e2e/admin-members.spec.ts:75:7 › Admin Members Import Page › renders file upload area
+[89/275] [chromium] › e2e/admin-members.spec.ts:82:7 › Admin Members Import Page › renders CSV format instructions
+[90/275] [chromium] › e2e/admin-members.spec.ts:87:7 › Admin Members Import Page › shows error when non-CSV file is uploaded
+  35) [chromium] › e2e/admin-members.spec.ts:82:7 › Admin Members Import Page › renders CSV format instructions 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      82 |   test("renders CSV format instructions", async ({ page }) => {
+      83 |     const hasInstructions = await page.getByText(/csv|format|column|header/i).count();
+    > 84 |     expect(hasInstructions).toBeGreaterThan(0);
+         |                             ^
+      85 |   });
+      86 |
+      87 |   test("shows error when non-CSV file is uploaded", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-members.spec.ts:84:29
+
+    Error Context: test-results/admin-members-Admin-Member-4d10f-ers-CSV-format-instructions-chromium/error-context.md
+
+
+  36) [chromium] › e2e/admin-members.spec.ts:70:7 › Admin Members Import Page › renders import heading 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      70 |   test("renders import heading", async ({ page }) => {
+      71 |     const hasHeading = await page.getByRole("heading", { name: /import/i }).count();
+    > 72 |     expect(hasHeading).toBeGreaterThan(0);
+         |                        ^
+      73 |   });
+      74 |
+      75 |   test("renders file upload area", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-members.spec.ts:72:24
+
+    Error Context: test-results/admin-members-Admin-Member-47f37-Page-renders-import-heading-chromium/error-context.md
+
+
+  37) [chromium] › e2e/admin-members.spec.ts:75:7 › Admin Members Import Page › renders file upload area 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      77 |       (await page.locator("input[type='file']").count()) +
+      78 |       (await page.getByText(/upload|drag|drop|csv/i).count());
+    > 79 |     expect(hasUpload).toBeGreaterThan(0);
+         |                       ^
+      80 |   });
+      81 |
+      82 |   test("renders CSV format instructions", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-members.spec.ts:79:23
+
+    Error Context: test-results/admin-members-Admin-Member-2a2ff-ge-renders-file-upload-area-chromium/error-context.md
+
+
+[91/275] [chromium] › e2e/admin-messaging.spec.ts:114:7 › Messaging — Global Staff › shows three tabs: Compose, Templates, History
+[92/275] [chromium] › e2e/admin-messaging.spec.ts:85:7 › Messaging — Unauthenticated › redirects to login
+[93/275] [chromium] › e2e/admin-messaging.spec.ts:108:7 › Messaging — Global Staff › shows Bulk Messaging heading
+[94/275] [chromium] › e2e/admin-messaging.spec.ts:92:7 › Messaging — Plain Member › redirects away from messaging page
+[95/275] [chromium] › e2e/admin-messaging.spec.ts:122:7 › Messaging — Global Staff › Compose tab shows AudienceBuilder with Departments and Groups
+[96/275] [chromium] › e2e/admin-messaging.spec.ts:131:7 › Messaging — Global Staff › Compose step shows Select Audience sub-heading
+  38) [chromium] › e2e/admin-messaging.spec.ts:114:7 › Messaging — Global Staff › shows three tabs: Compose, Templates, History 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('tab', { name: /compose/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('tab', { name: /compose/i })
+
+
+      115 |     await interceptGraphQL(page, "staff");
+      116 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    > 117 |     await expect(page.getByRole("tab", { name: /compose/i })).toBeVisible();
+          |                                                               ^
+      118 |     await expect(page.getByRole("tab", { name: /templates/i })).toBeVisible();
+      119 |     await expect(page.getByRole("tab", { name: /history/i })).toBeVisible();
+      120 |   });
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:117:63
+
+    Error Context: test-results/admin-messaging-Messaging--6f479-s-Compose-Templates-History-chromium/error-context.md
+
+
+[97/275] [chromium] › e2e/admin-messaging.spec.ts:138:7 › Messaging — Global Staff › Composer advances to step 2 on Next
+  39) [chromium] › e2e/admin-messaging.spec.ts:108:7 › Messaging — Global Staff › shows Bulk Messaging heading 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /bulk messaging/i })
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByRole('heading', { name: /bulk messaging/i })
+
+
+      109 |     await interceptGraphQL(page, "staff");
+      110 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    > 111 |     await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+          |                                                                          ^
+      112 |   });
+      113 |
+      114 |   test("shows three tabs: Compose, Templates, History", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:111:74
+
+    Error Context: test-results/admin-messaging-Messaging--b9d27-hows-Bulk-Messaging-heading-chromium/error-context.md
+
+
+[98/275] [chromium] › e2e/admin-messaging.spec.ts:150:7 › Messaging — Global Staff › Templates tab shows template and New Template button
+  40) [chromium] › e2e/admin-messaging.spec.ts:122:7 › Messaging — Global Staff › Compose tab shows AudienceBuilder with Departments and Groups 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Youth Ministry')
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByText('Youth Ministry')
+
+
+      124 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+      125 |     // Compose is the default tab — departments render immediately
+    > 126 |     await expect(page.getByText("Youth Ministry")).toBeVisible({ timeout: 8000 });
+          |                                                    ^
+      127 |     await expect(page.getByText("Music Ministry")).toBeVisible();
+      128 |     await expect(page.getByText("Choir")).toBeVisible();
+      129 |   });
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:126:52
+
+    Error Context: test-results/admin-messaging-Messaging--6d69b-with-Departments-and-Groups-chromium/error-context.md
+
+
+[99/275] [chromium] › e2e/admin-messaging.spec.ts:166:7 › Messaging — Global Staff › Messaging nav item is rendered for staff
+[100/275] [chromium] › e2e/admin-messaging.spec.ts:158:7 › Messaging — Global Staff › History tab shows recent campaign with status badge
+[101/275] [chromium] › e2e/admin-messaging.spec.ts:183:7 › Messaging — Department Admin (scoped) › can access messaging page
+  41) [chromium] › e2e/admin-messaging.spec.ts:131:7 › Messaging — Global Staff › Compose step shows Select Audience sub-heading 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/select audience/i)
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByText(/select audience/i)
+
+
+      133 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+      134 |     // AudienceBuilder always renders its heading on the compose step
+    > 135 |     await expect(page.getByText(/select audience/i)).toBeVisible({ timeout: 8000 });
+          |                                                      ^
+      136 |   });
+      137 |
+      138 |   test("Composer advances to step 2 on Next", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:135:54
+
+    Error Context: test-results/admin-messaging-Messaging--486bc-Select-Audience-sub-heading-chromium/error-context.md
+
+
+  42) [chromium] › e2e/admin-messaging.spec.ts:138:7 › Messaging — Global Staff › Composer advances to step 2 on Next 
+
+    TimeoutError: locator.waitFor: Timeout 8000ms exceeded.
+    Call log:
+      - waiting for getByText(/select audience/i) to be visible
+
+
+      140 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+      141 |     // Wait for AudienceBuilder to mount, then click Next
+    > 142 |     await page.getByText(/select audience/i).waitFor({ timeout: 8000 });
+          |                                              ^
+      143 |     // Use first() to avoid strict-mode violation if multiple "Next" buttons appear in DOM
+      144 |     const nextBtn = page.getByRole("button", { name: /next/i }).first();
+      145 |     await nextBtn.waitFor({ state: "visible", timeout: 5000 });
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:142:46
+
+    Error Context: test-results/admin-messaging-Messaging--0b3dc--advances-to-step-2-on-Next-chromium/error-context.md
+
+
+[102/275] [chromium] › e2e/admin-messaging.spec.ts:189:7 › Messaging — Department Admin (scoped) › sees available departments from API
+[103/275] [chromium] › e2e/admin-messaging.spec.ts:195:7 › Messaging — Department Admin (scoped) › Messaging Admin badge shown in sidebar
+  43) [chromium] › e2e/admin-messaging.spec.ts:166:7 › Messaging — Global Staff › Messaging nav item is rendered for staff 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /bulk messaging/i })
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByRole('heading', { name: /bulk messaging/i })
+
+
+      168 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+      169 |     // Wait for page content to confirm the role has loaded
+    > 170 |     await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+          |                                                                          ^
+      171 |     // The sidebar uses <Button> (rendered as <button>) with router.push(), not <a> tags.
+      172 |     // Scope the lookup to the <aside> to isolate it from any other "Bulk Messaging" text.
+      173 |     const navBtn = page.locator("aside").getByRole("button", { name: /bulk messaging/i });
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:170:74
+
+    Error Context: test-results/admin-messaging-Messaging--d0904--item-is-rendered-for-staff-chromium/error-context.md
+
+
+[104/275] [chromium] › e2e/admin-messaging.spec.ts:201:7 › Messaging — Department Admin (scoped) › History tab is accessible
+[105/275] [chromium] › e2e/admin-messaging.spec.ts:214:7 › Messaging — Group Admin (scoped) › can access messaging page
+  44) [chromium] › e2e/admin-messaging.spec.ts:183:7 › Messaging — Department Admin (scoped) › can access messaging page 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /bulk messaging/i })
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByRole('heading', { name: /bulk messaging/i })
+
+
+      184 |     await interceptGraphQL(page, "dept-admin");
+      185 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    > 186 |     await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+          |                                                                          ^
+      187 |   });
+      188 |
+      189 |   test("sees available departments from API", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:186:74
+
+    Error Context: test-results/admin-messaging-Messaging--d91a4-d-can-access-messaging-page-chromium/error-context.md
+
+
+[106/275] [chromium] › e2e/admin-messaging.spec.ts:220:7 › Messaging — Group Admin (scoped) › sees Groups section in audience builder
+  45) [chromium] › e2e/admin-messaging.spec.ts:189:7 › Messaging — Department Admin (scoped) › sees available departments from API 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Youth Ministry')
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByText('Youth Ministry')
+
+
+      190 |     await interceptGraphQL(page, "dept-admin");
+      191 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    > 192 |     await expect(page.getByText("Youth Ministry")).toBeVisible({ timeout: 8000 });
+          |                                                    ^
+      193 |   });
+      194 |
+      195 |   test("Messaging Admin badge shown in sidebar", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:192:52
+
+    Error Context: test-results/admin-messaging-Messaging--5035d-ilable-departments-from-API-chromium/error-context.md
+
+
+  46) [chromium] › e2e/admin-messaging.spec.ts:195:7 › Messaging — Department Admin (scoped) › Messaging Admin badge shown in sidebar 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/messaging admin/i)
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByText(/messaging admin/i)
+
+
+      196 |     await interceptGraphQL(page, "dept-admin");
+      197 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    > 198 |     await expect(page.getByText(/messaging admin/i)).toBeVisible({ timeout: 8000 });
+          |                                                      ^
+      199 |   });
+      200 |
+      201 |   test("History tab is accessible", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:198:54
+
+    Error Context: test-results/admin-messaging-Messaging--0647a-dmin-badge-shown-in-sidebar-chromium/error-context.md
+
+
+[107/275] [chromium] › e2e/admin-messaging.spec.ts:232:7 › Messaging — Member Typeahead › short query (1 char) shows no dropdown
+[108/275] [chromium] › e2e/admin-messaging.spec.ts:241:7 › Messaging — Member Typeahead › 2-char query triggers search and shows results
+[109/275] [chromium] › e2e/admin-messaging.spec.ts:254:7 › Messaging — Member Typeahead › selected member appears as chip
+[110/275] [chromium] › e2e/admin-overview.spec.ts:10:7 › Admin Overview Page › renders dashboard overview heading
+  47) [chromium] › e2e/admin-messaging.spec.ts:214:7 › Messaging — Group Admin (scoped) › can access messaging page 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /bulk messaging/i })
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByRole('heading', { name: /bulk messaging/i })
+
+
+      215 |     await interceptGraphQL(page, "group-admin");
+      216 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    > 217 |     await expect(page.getByRole("heading", { name: /bulk messaging/i })).toBeVisible({ timeout: 8000 });
+          |                                                                          ^
+      218 |   });
+      219 |
+      220 |   test("sees Groups section in audience builder", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:217:74
+
+    Error Context: test-results/admin-messaging-Messaging--7c038-d-can-access-messaging-page-chromium/error-context.md
+
+
+[111/275] [chromium] › e2e/admin-overview.spec.ts:30:7 › Admin Overview Page › renders recent contributions section
+[112/275] [chromium] › e2e/admin-overview.spec.ts:36:7 › Admin Overview Page › renders member stats cards
+[113/275] [chromium] › e2e/admin-overview.spec.ts:16:7 › Admin Overview Page › renders statistics cards
+  48) [chromium] › e2e/admin-messaging.spec.ts:220:7 › Messaging — Group Admin (scoped) › sees Groups section in audience builder 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Choir')
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 8000ms
+      - waiting for getByText('Choir')
+
+
+      221 |     await interceptGraphQL(page, "group-admin");
+      222 |     await page.goto("/admin/messaging", { waitUntil: "networkidle" });
+    > 223 |     await expect(page.getByText("Choir")).toBeVisible({ timeout: 8000 });
+          |                                           ^
+      224 |   });
+      225 | });
+      226 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-messaging.spec.ts:223:43
+
+    Error Context: test-results/admin-messaging-Messaging--dab6f-section-in-audience-builder-chromium/error-context.md
+
+
+  49) [chromium] › e2e/admin-overview.spec.ts:36:7 › Admin Overview Page › renders member stats cards 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      39 |     const hasLoading = await page.getByText(/loading/i).count();
+      40 |
+    > 41 |     expect(hasMembers > 0 || hasQuickStats > 0 || hasLoading > 0).toBeTruthy();
+         |                                                                   ^
+      42 |   });
+      43 |
+      44 |   test("recent contributions shows table or cards or empty state", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-overview.spec.ts:41:67
+
+    Error Context: test-results/admin-overview-Admin-Overv-739be--renders-member-stats-cards-chromium/error-context.md
+
+
+[114/275] [chromium] › e2e/admin-reports.spec.ts:16:7 › Admin Reports Page › renders report type selector
+  50) [chromium] › e2e/admin-overview.spec.ts:16:7 › Admin Overview Page › renders statistics cards 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      25 |       (hasToday > 0 && hasWeek > 0 && hasMonth > 0 && hasTotal > 0) ||
+      26 |         hasLoading > 0
+    > 27 |     ).toBeTruthy();
+         |       ^
+      28 |   });
+      29 |
+      30 |   test("renders recent contributions section", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-overview.spec.ts:27:7
+
+    Error Context: test-results/admin-overview-Admin-Overview-Page-renders-statistics-cards-chromium/error-context.md
+
+
+[115/275] [chromium] › e2e/admin-overview.spec.ts:44:7 › Admin Overview Page › recent contributions shows table or cards or empty state
+[116/275] [chromium] › e2e/admin-reports.spec.ts:10:7 › Admin Reports Page › renders reports heading
+  51) [chromium] › e2e/admin-reports.spec.ts:16:7 › Admin Reports Page › renders report type selector 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      16 |   test("renders report type selector", async ({ page }) => {
+      17 |     const hasReportType = await page.getByText(/report type|daily|weekly|monthly|custom/i).count();
+    > 18 |     expect(hasReportType).toBeGreaterThan(0);
+         |                           ^
+      19 |   });
+      20 |
+      21 |   test("renders format selector", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-reports.spec.ts:18:27
+
+    Error Context: test-results/admin-reports-Admin-Report-6669b-enders-report-type-selector-chromium/error-context.md
+
+
+[117/275] [chromium] › e2e/admin-reports.spec.ts:21:7 › Admin Reports Page › renders format selector
+  52) [chromium] › e2e/admin-overview.spec.ts:44:7 › Admin Overview Page › recent contributions shows table or cards or empty state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      48 |     const hasLoading = await page.getByText(/loading/i).count();
+      49 |
+    > 50 |     expect(hasTable > 0 || hasCards > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                                            ^
+      51 |   });
+      52 | });
+      53 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-overview.spec.ts:50:76
+
+    Error Context: test-results/admin-overview-Admin-Overv-42ae0-ble-or-cards-or-empty-state-chromium/error-context.md
+
+
+[118/275] [chromium] › e2e/admin-reports.spec.ts:26:7 › Admin Reports Page › renders generate report button
+  53) [chromium] › e2e/admin-reports.spec.ts:21:7 › Admin Reports Page › renders format selector ───
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      21 |   test("renders format selector", async ({ page }) => {
+      22 |     const hasFormat = await page.getByText(/format|excel|pdf|csv/i).count();
+    > 23 |     expect(hasFormat).toBeGreaterThan(0);
+         |                       ^
+      24 |   });
+      25 |
+      26 |   test("renders generate report button", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-reports.spec.ts:23:23
+
+    Error Context: test-results/admin-reports-Admin-Reports-Page-renders-format-selector-chromium/error-context.md
+
+
+[119/275] [chromium] › e2e/admin-reports.spec.ts:31:7 › Admin Reports Page › renders quick report cards
+[120/275] [chromium] › e2e/auth-flow.spec.ts:23:7 › Login Page — Accessibility & Structure › renders phone number label and input
+[121/275] [chromium] › e2e/auth-flow.spec.ts:18:7 › Login Page — Accessibility & Structure › renders "Member Login" heading
+  54) [chromium] › e2e/admin-reports.spec.ts:26:7 › Admin Reports Page › renders generate report button 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      26 |   test("renders generate report button", async ({ page }) => {
+      27 |     const hasGenerateBtn = await page.getByRole("button", { name: /generate|download/i }).count();
+    > 28 |     expect(hasGenerateBtn).toBeGreaterThan(0);
+         |                            ^
+      29 |   });
+      30 |
+      31 |   test("renders quick report cards", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-reports.spec.ts:28:28
+
+    Error Context: test-results/admin-reports-Admin-Report-9fa4d-ders-generate-report-button-chromium/error-context.md
+
+
+[122/275] [chromium] › e2e/auth-flow.spec.ts:31:7 › Login Page — Accessibility & Structure › renders "Send Verification Code" submit button
+  55) [chromium] › e2e/admin-reports.spec.ts:31:7 › Admin Reports Page › renders quick report cards 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      33 |     const hasCards = await page.locator('[class*="card"], [class*="Card"]').count();
+      34 |
+    > 35 |     expect(hasQuickReports > 0 || hasCards > 0).toBeTruthy();
+         |                                                 ^
+      36 |   });
+      37 | });
+      38 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/admin-reports.spec.ts:35:49
+
+    Error Context: test-results/admin-reports-Admin-Reports-Page-renders-quick-report-cards-chromium/error-context.md
+
+
+[123/275] [chromium] › e2e/auth-flow.spec.ts:27:7 › Login Page — Accessibility & Structure › renders +254 country code prefix
+[124/275] [chromium] › e2e/auth-flow.spec.ts:39:7 › Login Page — Accessibility & Structure › renders helper text mentioning 9-digit M-Pesa
+[125/275] [chromium] › e2e/auth-flow.spec.ts:50:7 › Login Page — Phone Number Validation (BVA) › submit button is disabled when phone is empty (below boundary)
+[126/275] [chromium] › e2e/auth-flow.spec.ts:35:7 › Login Page — Accessibility & Structure › renders "Back to Home" navigation link
+[127/275] [chromium] › e2e/auth-flow.spec.ts:55:7 › Login Page — Phone Number Validation (BVA) › submit button is disabled when phone has 8 digits (below boundary)
+[128/275] [chromium] › e2e/auth-flow.spec.ts:62:7 › Login Page — Phone Number Validation (BVA) › submit button is ENABLED when phone has exactly 9 digits (valid boundary)
+[129/275] [chromium] › e2e/auth-flow.spec.ts:69:7 › Login Page — Phone Number Validation (BVA) › input strips leading zero automatically
+[130/275] [chromium] › e2e/auth-flow.spec.ts:78:7 › Login Page — Phone Number Validation (BVA) › input does not accept non-numeric characters
+[131/275] [chromium] › e2e/auth-flow.spec.ts:87:7 › OTP Verification Page › redirects / shows no OTP form when no phone query param
+[132/275] [chromium] › e2e/auth-flow.spec.ts:99:7 › OTP Verification Page › shows OTP input when phone param is in URL
+[133/275] [chromium] › e2e/confirmation.spec.ts:4:7 › Confirmation Page › without params shows error or redirects
+[134/275] [chromium] › e2e/confirmation.spec.ts:15:7 › Confirmation Page › with contribution id shows details card
+[135/275] [chromium] › e2e/confirmation.spec.ts:26:7 › Confirmation Page › action buttons are present when page loads
+[136/275] [chromium] › e2e/contribution-flow.spec.ts:17:7 › Contribution Page — Structure › renders "Make a Contribution" or "Contribution" heading
+[137/275] [chromium] › e2e/contribution-flow.spec.ts:21:7 › Contribution Page — Structure › renders the phone number field with +254 prefix
+[138/275] [chromium] › e2e/contribution-flow.spec.ts:26:7 › Contribution Page — Structure › renders security/trust indicator (Secure or M-Pesa)
+[139/275] [chromium] › e2e/contribution-flow.spec.ts:41:7 › Contribution Page — Form Validation › "Review Contribution" button is present
+[140/275] [chromium] › e2e/contribution-flow.spec.ts:47:7 › Contribution Page — Form Validation › phone input accepts a valid 9-digit number
+[141/275] [chromium] › e2e/contribution-flow.spec.ts:53:7 › Contribution Page — Form Validation › department select is present and loads options
+[142/275] [chromium] › e2e/contribution-flow.spec.ts:71:7 › Contribution Page — Multi-Step Navigation › shows "Review Contribution" button on input step
+[143/275] [chromium] › e2e/contribution-flow.spec.ts:78:7 › Contribution Page — Multi-Step Navigation › does NOT show a "Cancel" button on the initial input step
+[144/275] [chromium] › e2e/dashboard-authenticated.spec.ts:10:7 › Dashboard -- Authenticated Content › renders dashboard heading with user name
+[145/275] [chromium] › e2e/dashboard-authenticated.spec.ts:16:7 › Dashboard -- Authenticated Content › renders summary cards
+  56) [chromium] › e2e/dashboard-authenticated.spec.ts:16:7 › Dashboard -- Authenticated Content › renders summary cards 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/total contributions/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/total contributions/i) resolved to 2 elements:
+        1) <h2 class="text-lg font-semibold">View total contributions and breakdown</h2> aka getByRole('heading', { name: 'View total contributions and' })
+        2) <div data-slot="card-title" class="text-xs sm:text-sm font-medium">Total Contributions</div> aka getByText('Total Contributions', { exact: true })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/total contributions/i)
+
+
+      15 |
+      16 |   test("renders summary cards", async ({ page }) => {
+    > 17 |     await expect(page.getByText(/total contributions/i)).toBeVisible();
+         |                                                          ^
+      18 |     await expect(page.getByText(/this month/i)).toBeVisible();
+      19 |     // "Status" appears in both card title and table header; use first()
+      20 |     await expect(page.getByText("Status").first()).toBeVisible();
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/dashboard-authenticated.spec.ts:17:58
+
+    Error Context: test-results/dashboard-authenticated-Da-0cfbf-ntent-renders-summary-cards-chromium/error-context.md
+
+
+  57) [chromium] › e2e/dashboard-authenticated.spec.ts:10:7 › Dashboard -- Authenticated Content › renders dashboard heading with user name 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/john doe/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/john doe/i) resolved to 3 elements:
+        1) <p class="font-medium truncate text-sidebar-foreground">John Doe</p> aka getByRole('complementary').getByText('John Doe')
+        2) <span class="text-sm text-muted-foreground">John Doe</span> aka getByRole('banner').getByText('John Doe')
+        3) <p class="text-sm text-muted-foreground">Welcome, John Doe</p> aka getByText('Welcome, John Doe')
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText(/john doe/i)
+
+
+      11 |     await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+      12 |     // Welcome message should show the user name
+    > 13 |     await expect(page.getByText(/john doe/i)).toBeVisible();
+         |                                               ^
+      14 |   });
+      15 |
+      16 |   test("renders summary cards", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/dashboard-authenticated.spec.ts:13:47
+
+    Error Context: test-results/dashboard-authenticated-Da-59559-oard-heading-with-user-name-chromium/error-context.md
+
+
+[146/275] [chromium] › e2e/dashboard-authenticated.spec.ts:36:7 › Dashboard -- Authenticated Content › header has action buttons
+  58) [chromium] › e2e/contribution-flow.spec.ts:47:7 › Contribution Page — Form Validation › phone input accepts a valid 9-digit number 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator:  getByLabel(/phone/i)
+    Expected: "797030300"
+    Received: ""
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveValue" with timeout 5000ms
+      - waiting for getByLabel(/phone/i)
+        9 × locator resolved to <input type="tel" maxlength="9" id="phoneNumber" data-slot="input" name="phoneNumber" placeholder="797030300" class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 h-10 md:h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-n…/>
+          - unexpected value ""
+
+
+      48 |     const phoneInput = page.getByLabel(/phone/i)
+      49 |     await phoneInput.fill('797030300')
+    > 50 |     await expect(phoneInput).toHaveValue('797030300')
+         |                              ^
+      51 |   })
+      52 |
+      53 |   test('department select is present and loads options', async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/contribution-flow.spec.ts:50:30
+
+    Error Context: test-results/contribution-flow-Contribu-8d101-epts-a-valid-9-digit-number-chromium/error-context.md
+
+
+[147/275] [chromium] › e2e/dashboard-authenticated.spec.ts:28:7 › Dashboard -- Authenticated Content › contribution history shows table, cards, empty, or loading state
+[148/275] [chromium] › e2e/dashboard-authenticated.spec.ts:23:7 › Dashboard -- Authenticated Content › renders contribution history section
+  59) [chromium] › e2e/dashboard-authenticated.spec.ts:36:7 › Dashboard -- Authenticated Content › header has action buttons 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      42 |
+      43 |     expect(hasContributeBtn > 0 || hasContributeIcon > 0).toBeTruthy();
+    > 44 |     expect(hasLogout > 0 || hasLogoutIcon > 0).toBeTruthy();
+         |                                                ^
+      45 |   });
+      46 |
+      47 |   test("logout clears session and redirects to login", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/dashboard-authenticated.spec.ts:44:48
+
+    Error Context: test-results/dashboard-authenticated-Da-12f47-t-header-has-action-buttons-chromium/error-context.md
+
+
+[149/275] [chromium] › e2e/dashboard-authenticated.spec.ts:47:7 › Dashboard -- Authenticated Content › logout clears session and redirects to login
+[150/275] [chromium] › e2e/dashboard-authenticated.spec.ts:59:7 › Dashboard -- Make Contribution navigation › Make Contribution button navigates to /contribute
+  60) [chromium] › e2e/dashboard-authenticated.spec.ts:28:7 › Dashboard -- Authenticated Content › contribution history shows table, cards, empty, or loading state 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      31 |     const hasEmpty = await page.getByText(/no contributions/i).count();
+      32 |     const hasLoading = await page.getByText(/loading contributions/i).count();
+    > 33 |     expect(hasTable > 0 || hasCards > 0 || hasEmpty > 0 || hasLoading > 0).toBeTruthy();
+         |                                                                            ^
+      34 |   });
+      35 |
+      36 |   test("header has action buttons", async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/dashboard-authenticated.spec.ts:33:76
+
+    Error Context: test-results/dashboard-authenticated-Da-5988b-ards-empty-or-loading-state-chromium/error-context.md
+
+
+[151/275] [chromium] › e2e/dashboard.spec.ts:22:7 › Dashboard — Access Control (Unauthenticated) › login page is shown with phone input when redirected from /dashboard
+[152/275] [chromium] › e2e/dashboard.spec.ts:39:7 › Dashboard — Page Structure (Authenticated shell) › ProtectedRoute shows spinner before redirecting (loading state)
+[153/275] [chromium] › e2e/dashboard.spec.ts:12:7 › Dashboard — Access Control (Unauthenticated) › visiting /dashboard without auth redirects to /login
+[154/275] [chromium] › e2e/error-states.spec.ts:15:7 › 404 -- Non-existent Routes › visiting /nonexistent shows 404 or redirects
+[155/275] [chromium] › e2e/error-states.spec.ts:24:7 › 404 -- Non-existent Routes › visiting /admin/nonexistent without auth redirects
+[156/275] [chromium] › e2e/error-states.spec.ts:35:7 › Public Pages -- Network Resilience › announcements page shows empty state when API is down
+[157/275] [chromium] › e2e/error-states.spec.ts:52:7 › Public Pages -- Network Resilience › events page shows empty state when API is down
+[158/275] [chromium] › e2e/error-states.spec.ts:69:7 › Public Pages -- Network Resilience › contribute page renders structure even when API is down
+[159/275] [chromium] › e2e/error-states.spec.ts:88:7 › Login Page › login page renders phone input
+[160/275] [chromium] › e2e/error-states.spec.ts:99:7 › Login Page › login page has submit button
+[161/275] [chromium] › e2e/error-states.spec.ts:111:7 › Contribute Page › contribute page renders without auth
+[162/275] [chromium] › e2e/homepage.spec.ts:17:7 › Homepage — Navigation › page title contains "Church" or "SDA"
+[163/275] [chromium] › e2e/homepage.spec.ts:21:7 › Homepage — Navigation › sticky navigation bar is visible
+[164/275] [chromium] › e2e/homepage.spec.ts:25:7 › Homepage — Navigation › navigation contains a "Give" or "Give Online" link
+[165/275] [chromium] › e2e/homepage.spec.ts:30:7 › Homepage — Navigation › navigation contains a "Member Login" link
+[166/275] [chromium] › e2e/homepage.spec.ts:34:7 › Homepage — Navigation › navigation contains "Devotionals" link
+[167/275] [chromium] › e2e/homepage.spec.ts:39:7 › Homepage — Navigation › navigation contains "Events" link
+[168/275] [chromium] › e2e/homepage.spec.ts:50:7 › Homepage — Hero Section › H1 contains "Seventh-Day" or "Adventist"
+[169/275] [chromium] › e2e/homepage.spec.ts:56:7 › Homepage — Hero Section › "Give Online" CTA button is visible in the hero
+[170/275] [chromium] › e2e/homepage.spec.ts:61:7 › Homepage — Hero Section › "Give Online" CTA links to /contribute
+[171/275] [chromium] › e2e/homepage.spec.ts:66:7 › Homepage — Hero Section › Service times card displays "Sabbath Service"
+[172/275] [chromium] › e2e/homepage.spec.ts:77:7 › Homepage — Content Sections › Announcements section heading is visible
+[173/275] [chromium] › e2e/homepage.spec.ts:81:7 › Homepage — Content Sections › Devotionals section heading is visible
+[174/275] [chromium] › e2e/homepage.spec.ts:85:7 › Homepage — Content Sections › Events section heading is visible
+[175/275] [chromium] › e2e/homepage.spec.ts:89:7 › Homepage — Content Sections › Watch & Listen section heading is visible
+[176/275] [chromium] › e2e/homepage.spec.ts:93:7 › Homepage — Content Sections › YouTube section does NOT contain a live iframe on initial load (lazy-embed)
+  61) [chromium] › e2e/homepage.spec.ts:77:7 › Homepage — Content Sections › Announcements section heading is visible 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /announcements/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /announcements/i })
+
+
+      76 |
+      77 |   test('Announcements section heading is visible', async ({ page }) => {
+    > 78 |     await expect(page.getByRole('heading', { name: /announcements/i })).toBeVisible()
+         |                                                                         ^
+      79 |   })
+      80 |
+      81 |   test('Devotionals section heading is visible', async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:78:73
+
+    Error Context: test-results/homepage-Homepage-—-Conten-71b62--section-heading-is-visible-chromium/error-context.md
+
+
+  62) [chromium] › e2e/homepage.spec.ts:93:7 › Homepage — Content Sections › YouTube section does NOT contain a live iframe on initial load (lazy-embed) 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 1
+
+       95 |     const iframes = page.locator('iframe')
+       96 |     const count = await iframes.count()
+    >  97 |     expect(count).toBe(0)
+          |                   ^
+       98 |   })
+       99 | })
+      100 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:97:19
+
+    Error Context: test-results/homepage-Homepage-—-Conten-22097-on-initial-load-lazy-embed--chromium/error-context.md
+
+
+[177/275] [chromium] › e2e/homepage.spec.ts:107:7 › Homepage — Footer › footer contains copyright text
+[178/275] [chromium] › e2e/homepage.spec.ts:113:7 › Homepage — Footer › footer contains "Give Online" link
+  63) [chromium] › e2e/homepage.spec.ts:85:7 › Homepage — Content Sections › Events section heading is visible 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /upcoming events/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /upcoming events/i })
+
+
+      84 |
+      85 |   test('Events section heading is visible', async ({ page }) => {
+    > 86 |     await expect(page.getByRole('heading', { name: /upcoming events/i })).toBeVisible()
+         |                                                                           ^
+      87 |   })
+      88 |
+      89 |   test('Watch & Listen section heading is visible', async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:86:75
+
+    Error Context: test-results/homepage-Homepage-—-Conten-84fb5--section-heading-is-visible-chromium/error-context.md
+
+
+  64) [chromium] › e2e/homepage.spec.ts:89:7 › Homepage — Content Sections › Watch & Listen section heading is visible 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /watch & listen/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('heading', { name: /watch & listen/i })
+
+
+      88 |
+      89 |   test('Watch & Listen section heading is visible', async ({ page }) => {
+    > 90 |     await expect(page.getByRole('heading', { name: /watch & listen/i })).toBeVisible()
+         |                                                                          ^
+      91 |   })
+      92 |
+      93 |   test('YouTube section does NOT contain a live iframe on initial load (lazy-embed)', async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:90:74
+
+    Error Context: test-results/homepage-Homepage-—-Conten-8d990--section-heading-is-visible-chromium/error-context.md
+
+
+[179/275] [chromium] › e2e/homepage.spec.ts:130:7 › Homepage — Mobile Navigation › clicking hamburger opens mobile nav
+[180/275] [chromium] › e2e/homepage.spec.ts:123:7 › Homepage — Mobile Navigation › hamburger menu button is visible on mobile
+  65) [chromium] › e2e/homepage.spec.ts:107:7 › Homepage — Footer › footer contains copyright text ─
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      100 |
+      101 | test.describe('Homepage — Footer', () => {
+    > 102 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      103 |     await page.goto('/')
+      104 |     await page.waitForLoadState('networkidle')
+      105 |   })
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:102:8
+
+    Error: page.waitForLoadState: Test timeout of 30000ms exceeded.
+
+      102 |   test.beforeEach(async ({ page }) => {
+      103 |     await page.goto('/')
+    > 104 |     await page.waitForLoadState('networkidle')
+          |                ^
+      105 |   })
+      106 |
+      107 |   test('footer contains copyright text', async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:104:16
+
+    Error Context: test-results/homepage-Homepage-—-Footer-footer-contains-copyright-text-chromium/error-context.md
+
+
+  66) [chromium] › e2e/homepage.spec.ts:113:7 › Homepage — Footer › footer contains "Give Online" link 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      100 |
+      101 | test.describe('Homepage — Footer', () => {
+    > 102 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      103 |     await page.goto('/')
+      104 |     await page.waitForLoadState('networkidle')
+      105 |   })
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:102:8
+
+    Error: page.waitForLoadState: Test timeout of 30000ms exceeded.
+
+      102 |   test.beforeEach(async ({ page }) => {
+      103 |     await page.goto('/')
+    > 104 |     await page.waitForLoadState('networkidle')
+          |                ^
+      105 |   })
+      106 |
+      107 |   test('footer contains copyright text', async ({ page }) => {
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:104:16
+
+    Error Context: test-results/homepage-Homepage-—-Footer-footer-contains-Give-Online-link-chromium/error-context.md
+
+
+[181/275] [chromium] › e2e/mobile-navigation.spec.ts:12:7 › Public Bottom Nav -- Mobile › bottom nav is visible on homepage
+[182/275] [chromium] › e2e/mobile-navigation.spec.ts:19:7 › Public Bottom Nav -- Mobile › bottom nav contains Home, Give, Events, Sermons links
+[183/275] [chromium] › e2e/mobile-navigation.spec.ts:28:7 › Public Bottom Nav -- Mobile › bottom nav has More button that opens menu
+  67) [chromium] › e2e/homepage.spec.ts:130:7 › Homepage — Mobile Navigation › clicking hamburger opens mobile nav 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForLoadState: Test timeout of 30000ms exceeded.
+
+      130 |   test('clicking hamburger opens mobile nav', async ({ page }) => {
+      131 |     await page.goto('/')
+    > 132 |     await page.waitForLoadState('networkidle')
+          |                ^
+      133 |     const hamburger = page.getByRole('button', { name: /toggle menu/i })
+      134 |     await hamburger.click()
+      135 |     // Mobile nav links should appear
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:132:16
+
+    Error Context: test-results/homepage-Homepage-—-Mobile-f925b--hamburger-opens-mobile-nav-chromium/error-context.md
+
+
+[184/275] [chromium] › e2e/mobile-navigation.spec.ts:48:7 › Public Bottom Nav -- Mobile › bottom nav is visible on /contribute
+  68) [chromium] › e2e/homepage.spec.ts:123:7 › Homepage — Mobile Navigation › hamburger menu button is visible on mobile 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForLoadState: Test timeout of 30000ms exceeded.
+
+      123 |   test('hamburger menu button is visible on mobile', async ({ page }) => {
+      124 |     await page.goto('/')
+    > 125 |     await page.waitForLoadState('networkidle')
+          |                ^
+      126 |     const hamburger = page.getByRole('button', { name: /toggle menu/i })
+      127 |     await expect(hamburger).toBeVisible()
+      128 |   })
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/homepage.spec.ts:125:16
+
+    Error Context: test-results/homepage-Homepage-—-Mobile-7dcc0-button-is-visible-on-mobile-chromium/error-context.md
+
+
+[185/275] [chromium] › e2e/mobile-navigation.spec.ts:40:7 › Public Bottom Nav -- Mobile › Give link navigates to /contribute
+[186/275] [chromium] › e2e/mobile-navigation.spec.ts:54:7 › Public Bottom Nav -- Mobile › bottom nav is visible on /events
+[187/275] [chromium] › e2e/mobile-navigation.spec.ts:64:7 › Public Bottom Nav -- Desktop (hidden) › bottom nav is NOT visible on desktop
+[188/275] [chromium] › e2e/mobile-navigation.spec.ts:84:7 › Admin Bottom Nav -- Mobile › admin bottom nav is visible on admin pages
+  69) [chromium] › e2e/mobile-navigation.spec.ts:28:7 › Public Bottom Nav -- Mobile › bottom nav has More button that opens menu 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('More').last()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText('More').last()
+
+
+      30 |
+      31 |     const moreBtn = page.getByText("More").last();
+    > 32 |     await expect(moreBtn).toBeVisible();
+         |                           ^
+      33 |     await moreBtn.click();
+      34 |
+      35 |     // More menu should show additional links
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/mobile-navigation.spec.ts:32:27
+
+    Error Context: test-results/mobile-navigation-Public-B-42022-More-button-that-opens-menu-chromium/error-context.md
+
+
+[189/275] [chromium] › e2e/mobile-responsiveness.spec.ts:100:7 › Mobile Responsiveness — Public Pages (375×812) › homepage renders without horizontal overflow
+[190/275] [chromium] › e2e/mobile-responsiveness.spec.ts:105:7 › Mobile Responsiveness — Public Pages (375×812) › homepage hero text is readable on mobile
+[191/275] [chromium] › e2e/mobile-responsiveness.spec.ts:110:7 › Mobile Responsiveness — Public Pages (375×812) › homepage CTA buttons are tappable on mobile
+  70) [chromium] › e2e/mobile-navigation.spec.ts:84:7 › Admin Bottom Nav -- Mobile › admin bottom nav is visible on admin pages 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      92 |     const hasMembers = await page.getByText("Members").count();
+      93 |
+    > 94 |     expect(hasOverview > 0 || hasFunds > 0 || hasMembers > 0).toBeTruthy();
+         |                                                               ^
+      95 |   });
+      96 | });
+      97 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/mobile-navigation.spec.ts:94:63
+
+    Error Context: test-results/mobile-navigation-Admin-Bo-2003b-v-is-visible-on-admin-pages-chromium/error-context.md
+
+
+[192/275] [chromium] › e2e/mobile-responsiveness.spec.ts:121:7 › Mobile Responsiveness — Public Pages (375×812) › homepage hero stacks vertically on mobile
+[193/275] [chromium] › e2e/mobile-responsiveness.spec.ts:137:7 › Mobile Responsiveness — Public Pages (375×812) › /contribute form inputs are full-width on mobile
+[194/275] [chromium] › e2e/mobile-responsiveness.spec.ts:131:7 › Mobile Responsiveness — Public Pages (375×812) › /contribute page has no overflow on mobile
+[195/275] [chromium] › e2e/mobile-responsiveness.spec.ts:151:7 › Mobile Responsiveness — Public Pages (375×812) › /events page has no overflow on mobile
+[196/275] [chromium] › e2e/mobile-responsiveness.spec.ts:156:7 › Mobile Responsiveness — Public Pages (375×812) › /sermons page has no overflow on mobile
+[197/275] [chromium] › e2e/mobile-responsiveness.spec.ts:161:7 › Mobile Responsiveness — Public Pages (375×812) › /announcements page has no overflow on mobile
+[198/275] [chromium] › e2e/mobile-responsiveness.spec.ts:166:7 › Mobile Responsiveness — Public Pages (375×812) › /devotionals page has no overflow on mobile
+[199/275] [chromium] › e2e/mobile-responsiveness.spec.ts:171:7 › Mobile Responsiveness — Public Pages (375×812) › bottom nav is visible and has adequate touch targets
+[200/275] [chromium] › e2e/mobile-responsiveness.spec.ts:190:7 › Mobile Responsiveness — Public Pages (375×812) › footer is present in the DOM on mobile
+[201/275] [chromium] › e2e/mobile-responsiveness.spec.ts:210:7 › Tablet Responsiveness — Public Pages (768×1024) › homepage content is usable on tablet
+[202/275] [chromium] › e2e/mobile-responsiveness.spec.ts:222:7 › Tablet Responsiveness — Public Pages (768×1024) › /contribute page content is usable on tablet
+[203/275] [chromium] › e2e/mobile-responsiveness.spec.ts:235:7 › Tablet Responsiveness — Public Pages (768×1024) › bottom nav visibility depends on breakpoint
+[204/275] [chromium] › e2e/mobile-responsiveness.spec.ts:258:7 › Mobile Responsiveness — Auth Pages (375×812) › /login page has no overflow and readable text
+[205/275] [chromium] › e2e/mobile-responsiveness.spec.ts:264:7 › Mobile Responsiveness — Auth Pages (375×812) › /login phone input is full-width on mobile
+[206/275] [chromium] › e2e/mobile-responsiveness.spec.ts:275:7 › Mobile Responsiveness — Auth Pages (375×812) › /login submit button is full-width and tappable
+[207/275] [chromium] › e2e/mobile-responsiveness.spec.ts:287:7 › Mobile Responsiveness — Auth Pages (375×812) › /verify-otp page has no overflow on mobile
+[208/275] [chromium] › e2e/mobile-responsiveness.spec.ts:300:7 › Mobile Responsiveness — Dashboard (375×812) › dashboard has no overflow on mobile
+[209/275] [chromium] › e2e/mobile-responsiveness.spec.ts:306:7 › Mobile Responsiveness — Dashboard (375×812) › dashboard text is readable on mobile
+[210/275] [chromium] › e2e/mobile-responsiveness.spec.ts:312:7 › Mobile Responsiveness — Dashboard (375×812) › dashboard cards stack vertically on mobile
+[211/275] [chromium] › e2e/mobile-responsiveness.spec.ts:336:7 › Mobile Responsiveness — Admin Pages (375×812) › admin overview has no overflow on mobile
+[212/275] [chromium] › e2e/mobile-responsiveness.spec.ts:342:7 › Mobile Responsiveness — Admin Pages (375×812) › admin sidebar is not visible on mobile
+[213/275] [chromium] › e2e/mobile-responsiveness.spec.ts:355:7 › Mobile Responsiveness — Admin Pages (375×812) › admin sidebar opens on hamburger click
+[214/275] [chromium] › e2e/mobile-responsiveness.spec.ts:371:7 › Mobile Responsiveness — Admin Pages (375×812) › admin contributions page has no overflow on mobile
+[215/275] [chromium] › e2e/mobile-responsiveness.spec.ts:377:7 › Mobile Responsiveness — Admin Pages (375×812) › admin members page has no overflow on mobile
+[216/275] [chromium] › e2e/mobile-responsiveness.spec.ts:383:7 › Mobile Responsiveness — Admin Pages (375×812) › admin categories page has no overflow on mobile
+[217/275] [chromium] › e2e/mobile-responsiveness.spec.ts:389:7 › Mobile Responsiveness — Admin Pages (375×812) › admin groups page has no overflow on mobile
+[218/275] [chromium] › e2e/mobile-responsiveness.spec.ts:395:7 › Mobile Responsiveness — Admin Pages (375×812) › admin reports page has no overflow on mobile
+[219/275] [chromium] › e2e/mobile-responsiveness.spec.ts:401:7 › Mobile Responsiveness — Admin Pages (375×812) › admin c2b-transactions page has no overflow on mobile
+[220/275] [chromium] › e2e/mobile-responsiveness.spec.ts:407:7 › Mobile Responsiveness — Admin Pages (375×812) › admin content page has no overflow on mobile
+[221/275] [chromium] › e2e/mobile-responsiveness.spec.ts:413:7 › Mobile Responsiveness — Admin Pages (375×812) › admin bottom nav is visible and tappable on mobile
+[222/275] [chromium] › e2e/mobile-responsiveness.spec.ts:433:7 › Mobile Responsiveness — Admin Pages (375×812) › admin overview stats cards are readable on mobile
+[223/275] [chromium] › e2e/mobile-responsiveness.spec.ts:439:7 › Mobile Responsiveness — Admin Pages (375×812) › admin manual-entry form fits mobile viewport
+[224/275] [chromium] › e2e/mobile-responsiveness.spec.ts:454:7 › Tablet Responsiveness — Admin Pages (768×1024) › admin overview renders properly on tablet
+[225/275] [chromium] › e2e/mobile-responsiveness.spec.ts:461:7 › Tablet Responsiveness — Admin Pages (768×1024) › admin contributions page adapts to tablet
+[226/275] [chromium] › e2e/mobile-responsiveness.spec.ts:467:7 › Tablet Responsiveness — Admin Pages (768×1024) › admin members page adapts to tablet
+[227/275] [chromium] › e2e/mobile-responsiveness.spec.ts:481:7 › Desktop Layout — Admin Pages (1280×720) › admin sidebar is visible on desktop
+[228/275] [chromium] › e2e/mobile-responsiveness.spec.ts:492:7 › Desktop Layout — Admin Pages (1280×720) › admin bottom nav is hidden on desktop
+[229/275] [chromium] › e2e/mobile-responsiveness.spec.ts:510:7 › Desktop Layout — Admin Pages (1280×720) › admin content area has proper left margin for sidebar
+[230/275] [chromium] › e2e/mobile-responsiveness.spec.ts:529:7 › Mobile Responsiveness — Group Admin (375×812) › group admin contributions view has no overflow on mobile
+[231/275] [chromium] › e2e/mobile-responsiveness.spec.ts:535:7 › Mobile Responsiveness — Group Admin (375×812) › group admin sees group filter dropdown on mobile
+[232/275] [chromium] › e2e/mobile-responsiveness.spec.ts:545:7 › Mobile Responsiveness — Group Admin (375×812) › group admin overview is readable on mobile
+[233/275] [chromium] › e2e/mobile-responsiveness.spec.ts:560:7 › Mobile Responsiveness — Confirmation (375×812) › /confirmation page has no overflow on mobile
+[234/275] [chromium] › e2e/mobile-responsiveness.spec.ts:565:7 › Mobile Responsiveness — Confirmation (375×812) › /confirmation text is readable on mobile
+[235/275] [chromium] › e2e/mobile-responsiveness.spec.ts:578:7 › Smallest viewport — iPhone SE (320×568) › homepage fits on iPhone SE without overflow
+[236/275] [chromium] › e2e/mobile-responsiveness.spec.ts:583:7 › Smallest viewport — iPhone SE (320×568) › homepage text is readable on iPhone SE
+[237/275] [chromium] › e2e/mobile-responsiveness.spec.ts:588:7 › Smallest viewport — iPhone SE (320×568) › /contribute page fits on iPhone SE
+[238/275] [chromium] › e2e/mobile-responsiveness.spec.ts:593:7 › Smallest viewport — iPhone SE (320×568) › /login page fits on iPhone SE
+[239/275] [chromium] › e2e/mobile-responsiveness.spec.ts:598:7 › Smallest viewport — iPhone SE (320×568) › admin overview fits on iPhone SE
+[240/275] [chromium] › e2e/mobile-responsiveness.spec.ts:604:7 › Smallest viewport — iPhone SE (320×568) › bottom nav items don't overlap on small screen
+[241/275] [chromium] › e2e/public-pages.spec.ts:8:7 › Announcements Page › page loads with correct heading
+[242/275] [chromium] › e2e/public-pages.spec.ts:12:7 › Announcements Page › navigation bar is visible
+[243/275] [chromium] › e2e/public-pages.spec.ts:16:7 › Announcements Page › back to home link is present
+[244/275] [chromium] › e2e/public-pages.spec.ts:22:7 › Announcements Page › renders announcement cards or empty state
+[245/275] [chromium] › e2e/public-pages.spec.ts:35:7 › Devotionals Page › page loads with correct heading
+[246/275] [chromium] › e2e/public-pages.spec.ts:39:7 › Devotionals Page › navigation bar is visible
+[247/275] [chromium] › e2e/public-pages.spec.ts:43:7 › Devotionals Page › back to home link is present
+[248/275] [chromium] › e2e/public-pages.spec.ts:49:7 › Devotionals Page › renders devotional cards or empty state
+[249/275] [chromium] › e2e/public-pages.spec.ts:61:7 › Events Page › page loads with correct heading
+[250/275] [chromium] › e2e/public-pages.spec.ts:65:7 › Events Page › navigation bar is visible
+[251/275] [chromium] › e2e/public-pages.spec.ts:69:7 › Events Page › back to home link is present
+[252/275] [chromium] › e2e/public-pages.spec.ts:75:7 › Events Page › renders event cards or empty state
+[253/275] [chromium] › e2e/public-pages.spec.ts:89:7 › Sermons Page › page loads with correct heading
+[254/275] [chromium] › e2e/public-pages.spec.ts:93:7 › Sermons Page › navigation bar is visible
+[255/275] [chromium] › e2e/public-pages.spec.ts:97:7 › Sermons Page › back to home link is present
+[256/275] [chromium] › e2e/public-pages.spec.ts:103:7 › Sermons Page › renders video content or empty state
+[257/275] [chromium] › e2e/pwa-update-real-sw.spec.ts:10:7 › PWA update with real service worker lifecycle › detects a new sw.js and forces update flow end-to-end
+[258/275] [chromium] › e2e/pwa-update.spec.ts:4:7 › PWA update prompt › shows mandatory update overlay when a waiting service worker exists
+[259/275] [chromium] › e2e/pwa-update.spec.ts:36:7 › PWA update prompt › version polling path raises the update overlay when backend build version changes
+[260/275] [chromium] › e2e/responsive-tables.spec.ts:7:7 › Responsive Tables -- Mobile Card View › dashboard contribution history shows card view on mobile
+[261/275] [chromium] › e2e/responsive-tables.spec.ts:26:7 › Responsive Tables -- Desktop Table View › dashboard contribution history shows table on desktop
+[262/275] [chromium] › e2e/role-access.spec.ts:12:7 › Unauthenticated Access -- Redirect to Login › visiting /dashboard without session redirects to /login
+  71) [chromium] › e2e/responsive-tables.spec.ts:26:7 › Responsive Tables -- Desktop Table View › dashboard contribution history shows table on desktop 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      34 |     const hasHistory = await page.getByText("Contribution History").count();
+      35 |
+    > 36 |     expect(hasTable > 0 || hasCards > 0 || hasEmpty > 0 || hasHistory > 0).toBeTruthy();
+         |                                                                            ^
+      37 |   });
+      38 | });
+      39 |
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/responsive-tables.spec.ts:36:76
+
+    Error Context: test-results/responsive-tables-Responsi-9b3ef-tory-shows-table-on-desktop-chromium/error-context.md
+
+
+[263/275] [chromium] › e2e/role-access.spec.ts:23:7 › Unauthenticated Access -- Redirect to Login › visiting /admin/contributions without session redirects
+[264/275] [chromium] › e2e/role-access.spec.ts:28:7 › Unauthenticated Access -- Redirect to Login › visiting /admin/members without session redirects
+[265/275] [chromium] › e2e/role-access.spec.ts:39:7 › Staff Role -- Full Access › can access admin overview
+[266/275] [chromium] › e2e/role-access.spec.ts:18:7 › Unauthenticated Access -- Redirect to Login › visiting /admin without session redirects to /login
+[267/275] [chromium] › e2e/role-access.spec.ts:47:7 › Staff Role -- Full Access › can access members page
+[268/275] [chromium] › e2e/role-access.spec.ts:54:7 › Staff Role -- Full Access › can access reports page
+[269/275] [chromium] › e2e/role-access.spec.ts:61:7 › Staff Role -- Full Access › can access category admins page
+[270/275] [chromium] › e2e/role-access.spec.ts:74:7 › Content Admin Role -- Content Access Only › can access announcements page
+[271/275] [chromium] › e2e/role-access.spec.ts:83:7 › Content Admin Role -- Content Access Only › cannot access members page (redirects or shows blank)
+[272/275] [chromium] › e2e/role-access.spec.ts:98:7 › Category Admin Role -- Limited Access › can access admin overview
+[273/275] [chromium] › e2e/role-access.spec.ts:105:7 › Category Admin Role -- Limited Access › cannot access category-admins management page
+[274/275] [chromium] › e2e/role-access.spec.ts:115:7 › Session Expiry › visiting dashboard without any session redirects to login
+[275/275] [chromium] › e2e/role-access.spec.ts:123:7 › Session Expiry › expired token does not show protected content
+  72) [chromium] › e2e/pwa-update-real-sw.spec.ts:10:7 › PWA update with real service worker lifecycle › detects a new sw.js and forces update flow end-to-end 
+
+    Test timeout of 120000ms exceeded.
+
+    Error: page.waitForFunction: Test timeout of 120000ms exceeded.
+
+      21 |
+      22 |       // Wait for an active worker to fully activate before trying to get page control.
+    > 23 |       await page.waitForFunction(async () => {
+         |                  ^
+      24 |         if (!('serviceWorker' in navigator)) return false
+      25 |         try {
+      26 |           const readyReg = await navigator.serviceWorker.ready
+        at /home/md/Tweny5/Kawangware/church-funds-system/church-funds-ui/e2e/pwa-update-real-sw.spec.ts:23:18
+
+    Error Context: test-results/pwa-update-real-sw-PWA-upd-235dd-rces-update-flow-end-to-end-chromium/error-context.md
+
+
+  72 failed
+    [chromium] › e2e/admin-categories.spec.ts:10:7 › Admin Category Admins Page › renders category admins heading 
+    [chromium] › e2e/admin-categories.spec.ts:16:7 › Admin Category Admins Page › renders statistics cards 
+    [chromium] › e2e/admin-categories.spec.ts:26:7 › Admin Category Admins Page › renders assign category admin form 
+    [chromium] › e2e/admin-categories.spec.ts:32:7 › Admin Category Admins Page › renders filter section 
+    [chromium] › e2e/admin-categories.spec.ts:37:7 › Admin Category Admins Page › renders current category admins list or empty state 
+    [chromium] › e2e/admin-categories.spec.ts:45:7 › Admin Category Admins Page › assign admin button is present 
+    [chromium] › e2e/admin-category-admins.spec.ts:10:7 › Admin Category Admins Page › renders Category Admins heading 
+    [chromium] › e2e/admin-category-admins.spec.ts:16:7 › Admin Category Admins Page › renders statistics cards 
+    [chromium] › e2e/admin-category-admins.spec.ts:22:7 › Admin Category Admins Page › renders assign category admin form 
+    [chromium] › e2e/admin-category-admins.spec.ts:27:7 › Admin Category Admins Page › renders member and category selectors 
+    [chromium] › e2e/admin-category-admins.spec.ts:39:7 › Admin Category Admins Page › renders filter by category section 
+    [chromium] › e2e/admin-category-admins.spec.ts:43:7 › Admin Category Admins Page › renders current category admins section 
+    [chromium] › e2e/admin-category-admins.spec.ts:47:7 › Admin Category Admins Page › shows empty state or admin list 
+    [chromium] › e2e/admin-category-admins.spec.ts:54:7 › Admin Category Admins Page › non-staff session is redirected away from page 
+    [chromium] › e2e/admin-content.spec.ts:16:7 › Admin Announcements Page › renders new announcement button 
+    [chromium] › e2e/admin-content.spec.ts:21:7 › Admin Announcements Page › renders statistics cards 
+    [chromium] › e2e/admin-content.spec.ts:34:7 › Admin Announcements Page › renders announcements list or empty state 
+    [chromium] › e2e/admin-content.spec.ts:55:7 › Admin Devotionals Page › renders new devotional button 
+    [chromium] › e2e/admin-content.spec.ts:60:7 › Admin Devotionals Page › renders devotionals list or empty state 
+    [chromium] › e2e/admin-content.spec.ts:81:7 › Admin Events Page › renders new event button ─────
+    [chromium] › e2e/admin-content.spec.ts:86:7 › Admin Events Page › renders events list or empty state 
+    [chromium] › e2e/admin-content.spec.ts:101:7 › Admin YouTube Page › renders youtube/sermons heading 
+    [chromium] › e2e/admin-content.spec.ts:106:7 › Admin YouTube Page › renders sync button ────────
+    [chromium] › e2e/admin-content.spec.ts:111:7 › Admin YouTube Page › renders videos list or empty state 
+    [chromium] › e2e/admin-contributions.spec.ts:72:7 › Admin Manual Entry Page › renders manual entry heading 
+    [chromium] › e2e/admin-contributions.spec.ts:77:7 › Admin Manual Entry Page › renders member phone lookup field 
+    [chromium] › e2e/admin-contributions.spec.ts:83:7 › Admin Manual Entry Page › renders category selector 
+    [chromium] › e2e/admin-contributions.spec.ts:88:7 › Admin Manual Entry Page › renders amount input 
+    [chromium] › e2e/admin-contributions.spec.ts:93:7 › Admin Manual Entry Page › submit button is present 
+    [chromium] › e2e/admin-department-purposes-crud.spec.ts:5:7 › Department Purpose CRUD › staff can create, toggle, and delete purposes 
+    [chromium] › e2e/admin-members.spec.ts:16:7 › Admin Members Page › renders statistics cards (total, active, inactive) 
+    [chromium] › e2e/admin-members.spec.ts:31:7 › Admin Members Page › renders import members button 
+    [chromium] › e2e/admin-members.spec.ts:36:7 › Admin Members Page › renders members table or empty state 
+    [chromium] › e2e/admin-members.spec.ts:45:7 › Admin Members Page › renders pagination controls when members exist 
+    [chromium] › e2e/admin-members.spec.ts:70:7 › Admin Members Import Page › renders import heading 
+    [chromium] › e2e/admin-members.spec.ts:75:7 › Admin Members Import Page › renders file upload area 
+    [chromium] › e2e/admin-members.spec.ts:82:7 › Admin Members Import Page › renders CSV format instructions 
+    [chromium] › e2e/admin-messaging.spec.ts:108:7 › Messaging — Global Staff › shows Bulk Messaging heading 
+    [chromium] › e2e/admin-messaging.spec.ts:114:7 › Messaging — Global Staff › shows three tabs: Compose, Templates, History 
+    [chromium] › e2e/admin-messaging.spec.ts:122:7 › Messaging — Global Staff › Compose tab shows AudienceBuilder with Departments and Groups 
+    [chromium] › e2e/admin-messaging.spec.ts:131:7 › Messaging — Global Staff › Compose step shows Select Audience sub-heading 
+    [chromium] › e2e/admin-messaging.spec.ts:138:7 › Messaging — Global Staff › Composer advances to step 2 on Next 
+    [chromium] › e2e/admin-messaging.spec.ts:166:7 › Messaging — Global Staff › Messaging nav item is rendered for staff 
+    [chromium] › e2e/admin-messaging.spec.ts:183:7 › Messaging — Department Admin (scoped) › can access messaging page 
+    [chromium] › e2e/admin-messaging.spec.ts:189:7 › Messaging — Department Admin (scoped) › sees available departments from API 
+    [chromium] › e2e/admin-messaging.spec.ts:195:7 › Messaging — Department Admin (scoped) › Messaging Admin badge shown in sidebar 
+    [chromium] › e2e/admin-messaging.spec.ts:214:7 › Messaging — Group Admin (scoped) › can access messaging page 
+    [chromium] › e2e/admin-messaging.spec.ts:220:7 › Messaging — Group Admin (scoped) › sees Groups section in audience builder 
+    [chromium] › e2e/admin-overview.spec.ts:16:7 › Admin Overview Page › renders statistics cards ──
+    [chromium] › e2e/admin-overview.spec.ts:36:7 › Admin Overview Page › renders member stats cards 
+    [chromium] › e2e/admin-overview.spec.ts:44:7 › Admin Overview Page › recent contributions shows table or cards or empty state 
+    [chromium] › e2e/admin-reports.spec.ts:16:7 › Admin Reports Page › renders report type selector 
+    [chromium] › e2e/admin-reports.spec.ts:21:7 › Admin Reports Page › renders format selector ─────
+    [chromium] › e2e/admin-reports.spec.ts:26:7 › Admin Reports Page › renders generate report button 
+    [chromium] › e2e/admin-reports.spec.ts:31:7 › Admin Reports Page › renders quick report cards ──
+    [chromium] › e2e/contribution-flow.spec.ts:47:7 › Contribution Page — Form Validation › phone input accepts a valid 9-digit number 
+    [chromium] › e2e/dashboard-authenticated.spec.ts:10:7 › Dashboard -- Authenticated Content › renders dashboard heading with user name 
+    [chromium] › e2e/dashboard-authenticated.spec.ts:16:7 › Dashboard -- Authenticated Content › renders summary cards 
+    [chromium] › e2e/dashboard-authenticated.spec.ts:28:7 › Dashboard -- Authenticated Content › contribution history shows table, cards, empty, or loading state 
+    [chromium] › e2e/dashboard-authenticated.spec.ts:36:7 › Dashboard -- Authenticated Content › header has action buttons 
+    [chromium] › e2e/homepage.spec.ts:77:7 › Homepage — Content Sections › Announcements section heading is visible 
+    [chromium] › e2e/homepage.spec.ts:85:7 › Homepage — Content Sections › Events section heading is visible 
+    [chromium] › e2e/homepage.spec.ts:89:7 › Homepage — Content Sections › Watch & Listen section heading is visible 
+    [chromium] › e2e/homepage.spec.ts:93:7 › Homepage — Content Sections › YouTube section does NOT contain a live iframe on initial load (lazy-embed) 
+    [chromium] › e2e/homepage.spec.ts:107:7 › Homepage — Footer › footer contains copyright text ───
+    [chromium] › e2e/homepage.spec.ts:113:7 › Homepage — Footer › footer contains "Give Online" link 
+    [chromium] › e2e/homepage.spec.ts:123:7 › Homepage — Mobile Navigation › hamburger menu button is visible on mobile 
+    [chromium] › e2e/homepage.spec.ts:130:7 › Homepage — Mobile Navigation › clicking hamburger opens mobile nav 
+    [chromium] › e2e/mobile-navigation.spec.ts:28:7 › Public Bottom Nav -- Mobile › bottom nav has More button that opens menu 
+    [chromium] › e2e/mobile-navigation.spec.ts:84:7 › Admin Bottom Nav -- Mobile › admin bottom nav is visible on admin pages 
+    [chromium] › e2e/pwa-update-real-sw.spec.ts:10:7 › PWA update with real service worker lifecycle › detects a new sw.js and forces update flow end-to-end 
+    [chromium] › e2e/responsive-tables.spec.ts:26:7 › Responsive Tables -- Desktop Table View › dashboard contribution history shows table on desktop 
+  203 passed (8.6m)
+EXIT_CODE=1

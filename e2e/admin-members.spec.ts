@@ -5,6 +5,9 @@ test.describe("Admin Members Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/members", { waitUntil: "networkidle" });
+    // "networkidle" resolves before React finishes rendering — wait for the
+    // heading so the bare .count() checks below don't race hydration.
+    await expect(page.getByRole("heading", { name: /members/i })).toBeVisible();
   });
 
   test("renders members heading", async ({ page }) => {
@@ -14,9 +17,11 @@ test.describe("Admin Members Page", () => {
   });
 
   test("renders statistics cards (total, active, inactive)", async ({ page }) => {
+    // Card titles are "Total Members", "Active", and "Inactive" (not "Active
+    // Members" / "Inactive Members") — see app/(dashboard)/admin/members/page.tsx.
     const hasTotal = await page.getByText(/total members/i).count();
-    const hasActive = await page.getByText(/active members/i).count();
-    const hasInactive = await page.getByText(/inactive members/i).count();
+    const hasActive = await page.getByText("Active", { exact: true }).count();
+    const hasInactive = await page.getByText("Inactive", { exact: true }).count();
 
     expect(hasTotal > 0 && hasActive > 0 && hasInactive > 0).toBeTruthy();
   });
@@ -29,7 +34,8 @@ test.describe("Admin Members Page", () => {
   });
 
   test("renders import members button", async ({ page }) => {
-    const hasImport = await page.getByText(/import members/i).count();
+    // Button text is just "Import" (with an upload icon), not "Import Members".
+    const hasImport = await page.getByRole("button", { name: /^import$/i }).count();
     expect(hasImport).toBeGreaterThan(0);
   });
 
@@ -65,6 +71,7 @@ test.describe("Admin Members Import Page", () => {
   test.beforeEach(async ({ page }) => {
     await injectSession(page, { role: "staff" });
     await page.goto("/admin/members/import", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: /import/i })).toBeVisible();
   });
 
   test("renders import heading", async ({ page }) => {

@@ -17,7 +17,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
   GET_EXPENSES,
@@ -26,6 +26,7 @@ import {
   APPROVE_EXPENSE,
   MARK_EXPENSE_PAID,
   VOID_EXPENSE,
+  INITIATE_KCB_DISBURSEMENT,
 } from "@/lib/graphql/expenses";
 import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,8 +43,19 @@ import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
-import { Filter, Plus, CheckCircle, XCircle, Banknote, Pencil, Receipt } from "lucide-react";
+import { Filter, Plus, CheckCircle, XCircle, Banknote, Pencil, Receipt, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { PayoutChannelFields, PAYOUT_CHANNELS, isValidKenyanPhone } from "./payout-channel-fields";
+
+interface KcbDisbursement {
+  id: string;
+  status: string;
+  kcbTransactionId: string | null;
+  resultDesc: string | null;
+  amount: string;
+  createdAt: string | null;
+  completedAt: string | null;
+}
 
 interface Expense {
   id: string;
@@ -63,8 +75,14 @@ interface Expense {
   requestedByMe: boolean;
   canApprove: boolean;
   canMarkPaid: boolean;
+  canDisburse: boolean;
   attachmentUrl: string | null;
   createdAt: string | null;
+  payoutChannel: string | null;
+  beneficiaryAccountNumber: string | null;
+  beneficiaryPhoneNumber: string | null;
+  beneficiaryBankCode: string | null;
+  kcbDisbursement: KcbDisbursement | null;
 }
 
 interface ExpensesData {
@@ -111,6 +129,9 @@ interface MarkPaidData {
 interface VoidExpenseData {
   voidExpense: MutationResponse;
 }
+interface InitiateDisbursementData {
+  initiateKcbDisbursement: MutationResponse;
+}
 
 const PAYMENT_METHODS = [
   { value: "mpesa", label: "M-Pesa" },
@@ -127,6 +148,8 @@ function getStatusLabel(status: string) {
       return "Requested";
     case "approved":
       return "Approved";
+    case "disbursing":
+      return "Disbursing";
     case "paid":
       return "Paid";
     case "rejected":
@@ -139,11 +162,16 @@ function getStatusLabel(status: string) {
 
 /** Map a workflow status to a StatusBadge variant. */
 function getStatusVariant(status: string): StatusVariant {
-  // "voided" is not in the shared map; treat it like a rejected/destructive state.
+  // "voided"/"disbursing" are not in the shared map; special-case them.
   if (status === "voided") return "destructive";
+  if (status === "disbursing") return "info";
   return statusToVariant(status);
 }
 
+/**
+ * Payout channel + conditional beneficiary fields. Shared between the
+ * request and edit dialogs so the two forms can't drift apart.
+ */
 /**
  * Dialog for raising a new expense request against a fund.
  */
@@ -167,6 +195,10 @@ function RequestExpenseDialog({
   const [referenceNumber, setReferenceNumber] = useState<string>("");
   const [purposeId, setPurposeId] = useState<string>("none");
   const [attachmentUrl, setAttachmentUrl] = useState<string>("");
+  const [payoutChannel, setPayoutChannel] = useState<string>("manual");
+  const [beneficiaryAccountNumber, setBeneficiaryAccountNumber] = useState<string>("");
+  const [beneficiaryPhoneNumber, setBeneficiaryPhoneNumber] = useState<string>("");
+  const [beneficiaryBankCode, setBeneficiaryBankCode] = useState<string>("");
   // "Simple recording": treasurers/admins can log already-spent money directly,
   // skipping the request→approve step. Hidden from department admins.
   const { isStaff } = useUserRole();
@@ -191,6 +223,10 @@ function RequestExpenseDialog({
     setPurposeId("none");
     setAttachmentUrl("");
     setAutoApprove(false);
+    setPayoutChannel("manual");
+    setBeneficiaryAccountNumber("");
+    setBeneficiaryPhoneNumber("");
+    setBeneficiaryBankCode("");
   };
 
   const handleSave = async () => {
@@ -211,6 +247,14 @@ function RequestExpenseDialog({
       toast.error("Payee is required");
       return;
     }
+    if (payoutChannel === "bank" && !beneficiaryAccountNumber.trim()) {
+      toast.error("Beneficiary account number is required for bank transfer");
+      return;
+    }
+    if (payoutChannel === "mobile_money" && !isValidKenyanPhone(beneficiaryPhoneNumber)) {
+      toast.error("Enter a valid beneficiary phone number (254XXXXXXXXX)");
+      return;
+    }
 
     try {
       const { data } = await createExpense({
@@ -225,6 +269,10 @@ function RequestExpenseDialog({
           purposeId: purposeId === "none" ? null : purposeId,
           attachmentUrl: attachmentUrl.trim() || null,
           autoApprove: isStaff ? autoApprove : false,
+          payoutChannel: payoutChannel === "manual" ? null : payoutChannel,
+          beneficiaryAccountNumber: payoutChannel === "bank" ? beneficiaryAccountNumber.trim() : null,
+          beneficiaryPhoneNumber: payoutChannel === "mobile_money" ? beneficiaryPhoneNumber.trim() : null,
+          beneficiaryBankCode: payoutChannel === "bank" ? beneficiaryBankCode.trim() : null,
         },
       });
       if (data?.createExpense.success) {
@@ -361,6 +409,18 @@ function RequestExpenseDialog({
             />
           </div>
 
+          <PayoutChannelFields
+            idPrefix="exp"
+            payoutChannel={payoutChannel}
+            setPayoutChannel={setPayoutChannel}
+            beneficiaryAccountNumber={beneficiaryAccountNumber}
+            setBeneficiaryAccountNumber={setBeneficiaryAccountNumber}
+            beneficiaryPhoneNumber={beneficiaryPhoneNumber}
+            setBeneficiaryPhoneNumber={setBeneficiaryPhoneNumber}
+            beneficiaryBankCode={beneficiaryBankCode}
+            setBeneficiaryBankCode={setBeneficiaryBankCode}
+          />
+
           {isStaff && (
             <div className="flex items-start gap-3 rounded-md border border-border bg-muted/40 p-3">
               <Checkbox
@@ -421,6 +481,10 @@ function EditExpenseDialog({
   const [referenceNumber, setReferenceNumber] = useState<string>("");
   const [purposeId, setPurposeId] = useState<string>("none");
   const [attachmentUrl, setAttachmentUrl] = useState<string>("");
+  const [payoutChannel, setPayoutChannel] = useState<string>("manual");
+  const [beneficiaryAccountNumber, setBeneficiaryAccountNumber] = useState<string>("");
+  const [beneficiaryPhoneNumber, setBeneficiaryPhoneNumber] = useState<string>("");
+  const [beneficiaryBankCode, setBeneficiaryBankCode] = useState<string>("");
   const [hydratedFor, setHydratedFor] = useState<string>("");
 
   // Hydrate the form whenever a new expense is opened for editing.
@@ -433,6 +497,10 @@ function EditExpenseDialog({
     setReferenceNumber(expense.referenceNumber ?? "");
     setPurposeId(expense.purpose?.id ?? "none");
     setAttachmentUrl(expense.attachmentUrl ?? "");
+    setPayoutChannel(expense.payoutChannel || "manual");
+    setBeneficiaryAccountNumber(expense.beneficiaryAccountNumber ?? "");
+    setBeneficiaryPhoneNumber(expense.beneficiaryPhoneNumber ?? "");
+    setBeneficiaryBankCode(expense.beneficiaryBankCode ?? "");
     setHydratedFor(expense.id);
   }
 
@@ -459,6 +527,14 @@ function EditExpenseDialog({
       toast.error("Payee is required");
       return;
     }
+    if (payoutChannel === "bank" && !beneficiaryAccountNumber.trim()) {
+      toast.error("Beneficiary account number is required for bank transfer");
+      return;
+    }
+    if (payoutChannel === "mobile_money" && !isValidKenyanPhone(beneficiaryPhoneNumber)) {
+      toast.error("Enter a valid beneficiary phone number (254XXXXXXXXX)");
+      return;
+    }
 
     try {
       const { data } = await updateExpense({
@@ -472,6 +548,10 @@ function EditExpenseDialog({
           referenceNumber: referenceNumber.trim() || null,
           purposeId: purposeId === "none" ? null : purposeId,
           attachmentUrl: attachmentUrl.trim() || null,
+          payoutChannel: payoutChannel === "manual" ? "" : payoutChannel,
+          beneficiaryAccountNumber: payoutChannel === "bank" ? beneficiaryAccountNumber.trim() : "",
+          beneficiaryPhoneNumber: payoutChannel === "mobile_money" ? beneficiaryPhoneNumber.trim() : "",
+          beneficiaryBankCode: payoutChannel === "bank" ? beneficiaryBankCode.trim() : "",
         },
       });
       if (data?.updateExpense.success) {
@@ -596,6 +676,18 @@ function EditExpenseDialog({
               onChange={(e) => setAttachmentUrl(e.target.value)}
             />
           </div>
+
+          <PayoutChannelFields
+            idPrefix="edit"
+            payoutChannel={payoutChannel}
+            setPayoutChannel={setPayoutChannel}
+            beneficiaryAccountNumber={beneficiaryAccountNumber}
+            setBeneficiaryAccountNumber={setBeneficiaryAccountNumber}
+            beneficiaryPhoneNumber={beneficiaryPhoneNumber}
+            setBeneficiaryPhoneNumber={setBeneficiaryPhoneNumber}
+            beneficiaryBankCode={beneficiaryBankCode}
+            setBeneficiaryBankCode={setBeneficiaryBankCode}
+          />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
@@ -688,6 +780,99 @@ function VoidExpenseDialog({
   );
 }
 
+/** Human label for a payout channel value. */
+function payoutChannelLabel(channel: string | null): string {
+  return PAYOUT_CHANNELS.find((c) => c.value === channel)?.label || "Manual";
+}
+
+/**
+ * Confirmation dialog before triggering a real KCB Buni payout. Money
+ * movement always requires an explicit confirm — no bare-button action like
+ * the existing "Mark Paid" (which only stamps a manual record, not real money).
+ */
+function DisburseExpenseDialog({
+  expense,
+  open,
+  onOpenChange,
+  onSaved,
+}: {
+  expense: Expense | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [initiateDisbursement, { loading }] = useMutation<InitiateDisbursementData>(
+    INITIATE_KCB_DISBURSEMENT
+  );
+
+  const handleConfirm = async () => {
+    if (!expense) return;
+    try {
+      const { data } = await initiateDisbursement({ variables: { id: expense.id } });
+      if (data?.initiateKcbDisbursement.success) {
+        toast.success(data.initiateKcbDisbursement.message || "Disbursement initiated");
+        onSaved();
+        onOpenChange(false);
+      } else {
+        toast.error(data?.initiateKcbDisbursement.message || "Failed to initiate disbursement");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to initiate disbursement");
+    }
+  };
+
+  const beneficiary =
+    expense?.payoutChannel === "bank"
+      ? `${expense.beneficiaryAccountNumber || "—"}${expense.beneficiaryBankCode ? ` (bank code ${expense.beneficiaryBankCode})` : ""}`
+      : expense?.beneficiaryPhoneNumber || "—";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Disburse via KCB</DialogTitle>
+          <DialogDescription>
+            This sends a real payment request to KCB. It cannot be undone once
+            KCB accepts it — double-check the details below.
+          </DialogDescription>
+        </DialogHeader>
+        {expense && (
+          <div className="space-y-2 rounded-md border border-border bg-muted/40 p-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Amount</span>
+              <span className="font-semibold">KES {Number.parseFloat(expense.amount).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Payee</span>
+              <span>{expense.payee}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Fund</span>
+              <span>{expense.category?.name || "—"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Channel</span>
+              <span>{payoutChannelLabel(expense.payoutChannel)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Beneficiary details</span>
+              <span className="font-mono">{beneficiary}</span>
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={loading}>
+            {loading ? "Sending..." : "Confirm & Disburse"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ExpensesPage() {
   const { isStaff, isCategoryAdmin } = useUserRole();
   // Both staff (admin/treasurer) and department (category) admins may raise
@@ -701,22 +886,39 @@ export default function ExpensesPage() {
   const [showRequestDialog, setShowRequestDialog] = useState<boolean>(false);
   const [editTarget, setEditTarget] = useState<Expense | null>(null);
   const [voidTarget, setVoidTarget] = useState<Expense | null>(null);
+  const [disburseTarget, setDisburseTarget] = useState<Expense | null>(null);
 
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const categories = categoriesData?.contributionCategories || [];
 
-  const { data, loading, error, refetch } = useQuery<ExpensesData>(GET_EXPENSES, {
-    variables: {
-      categoryId: categoryFilter === "all" ? null : categoryFilter,
-      status: statusFilter === "all" ? null : statusFilter,
-      startDate: startDate || null,
-      endDate: endDate || null,
-      limit: 100,
-      offset: 0,
-    },
-  });
+  const { data, loading, error, refetch, startPolling, stopPolling } = useQuery<ExpensesData>(
+    GET_EXPENSES,
+    {
+      variables: {
+        categoryId: categoryFilter === "all" ? null : categoryFilter,
+        status: statusFilter === "all" ? null : statusFilter,
+        startDate: startDate || null,
+        endDate: endDate || null,
+        limit: 100,
+        offset: 0,
+      },
+    }
+  );
 
   const expenses = data?.expenses || [];
+  const hasDisbursingRow = expenses.some((e) => e.status === "disbursing");
+
+  // While a KCB payout is in flight, poll so the row reflects the
+  // IPN-driven (or poller-driven) transition to paid/approved without a
+  // manual refresh. Stops as soon as nothing is disbursing.
+  useEffect(() => {
+    if (hasDisbursingRow) {
+      startPolling(4000);
+    } else {
+      stopPolling();
+    }
+    return () => stopPolling();
+  }, [hasDisbursingRow, startPolling, stopPolling]);
 
   const [approveExpense] = useMutation<ApproveExpenseData>(APPROVE_EXPENSE);
   const [markExpensePaid] = useMutation<MarkPaidData>(MARK_EXPENSE_PAID);
@@ -754,7 +956,7 @@ export default function ExpensesPage() {
   const canCancelOwn = (e: Expense) => e.status === "pending" && e.requestedByMe;
   const canVoidAsStaff = (e: Expense) => isStaff && e.status !== "paid" && (e.status === "pending" || e.status === "approved");
   const hasAnyAction = (e: Expense) =>
-    e.canApprove || e.canMarkPaid || canEdit(e) || canCancelOwn(e) || canVoidAsStaff(e);
+    e.canApprove || e.canMarkPaid || e.canDisburse || canEdit(e) || canCancelOwn(e) || canVoidAsStaff(e);
 
   // Total disbursed = approved + paid (money committed out of funds).
   const totalOut = expenses
@@ -926,7 +1128,10 @@ export default function ExpensesPage() {
                     <div key={e.id} className="border border-border rounded-lg p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">KES {Number.parseFloat(e.amount).toLocaleString()}</span>
-                        <StatusBadge variant={getStatusVariant(e.status)}>{getStatusLabel(e.status)}</StatusBadge>
+                        <StatusBadge variant={getStatusVariant(e.status)}>
+                          {e.status === "disbursing" && <Loader2 className="h-3 w-3 animate-spin" />}
+                          {getStatusLabel(e.status)}
+                        </StatusBadge>
                       </div>
                       <div className="text-sm font-medium">{e.payee}</div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -971,6 +1176,12 @@ export default function ExpensesPage() {
                             <Button size="sm" onClick={() => handleMarkPaid(e)}>
                               <Banknote className="h-3 w-3 mr-1" />
                               Mark Paid
+                            </Button>
+                          )}
+                          {e.canDisburse && (
+                            <Button size="sm" onClick={() => setDisburseTarget(e)}>
+                              <Send className="h-3 w-3 mr-1" />
+                              Disburse via KCB
                             </Button>
                           )}
                           {canEdit(e) && (
@@ -1064,7 +1275,10 @@ export default function ExpensesPage() {
                             KES {Number.parseFloat(e.amount).toLocaleString()}
                           </td>
                           <td className="p-3 text-center">
-                            <StatusBadge variant={getStatusVariant(e.status)}>{getStatusLabel(e.status)}</StatusBadge>
+                            <StatusBadge variant={getStatusVariant(e.status)}>
+                              {e.status === "disbursing" && <Loader2 className="h-3 w-3 animate-spin" />}
+                              {getStatusLabel(e.status)}
+                            </StatusBadge>
                           </td>
                           <td className="p-3 text-sm text-right">
                             {hasAnyAction(e) ? (
@@ -1079,6 +1293,12 @@ export default function ExpensesPage() {
                                   <Button size="sm" onClick={() => handleMarkPaid(e)}>
                                     <Banknote className="h-3 w-3 mr-1" />
                                     Mark Paid
+                                  </Button>
+                                )}
+                                {e.canDisburse && (
+                                  <Button size="sm" onClick={() => setDisburseTarget(e)}>
+                                    <Send className="h-3 w-3 mr-1" />
+                                    Disburse via KCB
                                   </Button>
                                 )}
                                 {canEdit(e) && (
@@ -1132,6 +1352,12 @@ export default function ExpensesPage() {
         isOwnRequest={voidIsOwnRequest}
         open={voidTarget !== null}
         onOpenChange={(v) => { if (!v) setVoidTarget(null); }}
+        onSaved={() => void refetch()}
+      />
+      <DisburseExpenseDialog
+        expense={disburseTarget}
+        open={disburseTarget !== null}
+        onOpenChange={(v) => { if (!v) setDisburseTarget(null); }}
         onSaved={() => void refetch()}
       />
     </AdminLayout>
