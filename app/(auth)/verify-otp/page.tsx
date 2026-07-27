@@ -88,6 +88,7 @@ function VerifyOtpContent() {
   };
 
   const handleSubmit = async (otpCode?: string) => {
+    if (isSubmitting) return;
     const code = otpCode || otp.join("");
 
     if (code.length !== 6) {
@@ -105,7 +106,12 @@ function VerifyOtpContent() {
       );
 
       if (result.success) {
-        if (result.isNewMember) {
+        if (result.needsPhoneLinking) {
+          toast.success("Email verified! Please link your phone number.");
+          sessionStorage.setItem("linking_token", result.linkingToken || "");
+          sessionStorage.setItem("gated_email", email);
+          router.push(`/link-phone?redirect=${encodeURIComponent(redirectTo)}`);
+        } else if (result.isNewMember) {
           toast.success("Identity verified! Complete your registration.");
           router.push("/register");
         } else {

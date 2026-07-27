@@ -25,7 +25,22 @@ interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phoneNumber: string | null, email: string | null, otpCode: string) => Promise<{ success: boolean; message: string; isNewMember?: boolean }>;
+  login: (phoneNumber: string | null, email: string | null, otpCode: string) => Promise<{
+    success: boolean;
+    message: string;
+    isNewMember?: boolean;
+    needsPhoneLinking?: boolean;
+    linkingToken?: string | null;
+  }>;
+  completeAuth: (result: {
+    accessToken: string;
+    refreshToken?: string | null;
+    userId: number;
+    memberId: number;
+    phoneNumber?: string | null;
+    email?: string | null;
+    fullName: string;
+  }) => void;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
 }
@@ -77,6 +92,8 @@ interface VerifyOtpPayload {
   fullName?: string;
   message: string;
   isNewMember?: boolean;
+  needsPhoneLinking?: boolean;
+  linkingToken?: string;
 }
 
 interface RefreshTokenPayload {
@@ -285,12 +302,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [accessToken]);
 
 
+  const completeAuth = useCallback(
+    (result: {
+      accessToken: string;
+      refreshToken?: string | null;
+      userId: number;
+      memberId: number;
+      phoneNumber?: string | null;
+      email?: string | null;
+      fullName: string;
+    }) => {
+      localStorage.setItem(TOKEN_KEY, result.accessToken);
+      if (result.refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
+      } else {
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+      }
+
+      const userData: User = {
+        userId: result.userId,
+        memberId: result.memberId,
+        phoneNumber: result.phoneNumber ?? "",
+        email: result.email ?? "",
+        fullName: result.fullName,
+      };
+      localStorage.setItem(USER_KEY, JSON.stringify(userData));
+
+      setAccessToken(result.accessToken);
+      setUser(userData);
+      setSessionCookie(true);
+    },
+    []
+  );
+
   const login = useCallback(
     async (
       phoneNumber: string | null,
       email: string | null,
       otpCode: string
-    ): Promise<{ success: boolean; message: string; isNewMember?: boolean }> => {
+    ): Promise<{
+      success: boolean;
+      message: string;
+      isNewMember?: boolean;
+      needsPhoneLinking?: boolean;
+      linkingToken?: string | null;
+    }> => {
       try {
         const { data } = await verifyOtpMutation({
           variables: { phoneNumber, email, otpCode },
@@ -302,30 +358,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const result = data.verifyOtp;
 
-        if (result.success && result.accessToken) {
-          // Store tokens
-          localStorage.setItem(TOKEN_KEY, result.accessToken);
-          if (result.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
+        if (result.success) {
+          if (result.needsPhoneLinking) {
+            return {
+              success: true,
+              message: result.message,
+              needsPhoneLinking: true,
+              linkingToken: result.linkingToken,
+              isNewMember: true,
+            };
+          }
 
-          // Store user info
-          const userData: User = {
-            userId: result.userId ?? 0,
-            memberId: result.memberId ?? 0,
-            phoneNumber: result.phoneNumber ?? phoneNumber ?? "",
-            email: result.email ?? email ?? "",
-            fullName: result.fullName ?? "",
-          };
-          localStorage.setItem(USER_KEY, JSON.stringify(userData));
+          if (result.accessToken) {
+            // Store tokens
+            localStorage.setItem(TOKEN_KEY, result.accessToken);
+            if (result.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
 
-          // Update state
-          setAccessToken(result.accessToken);
-          setUser(userData);
-          setSessionCookie(true);
+            // Store user info
+            const userData: User = {
+              userId: result.userId ?? 0,
+              memberId: result.memberId ?? 0,
+              phoneNumber: result.phoneNumber ?? phoneNumber ?? "",
+              email: result.email ?? email ?? "",
+              fullName: result.fullName ?? "",
+            };
+            localStorage.setItem(USER_KEY, JSON.stringify(userData));
 
-          return { success: true, message: result.message, isNewMember: result.isNewMember ?? false };
-        } else {
-          return { success: false, message: result.message };
+            // Update state
+            setAccessToken(result.accessToken);
+            setUser(userData);
+            setSessionCookie(true);
+
+            return { success: true, message: result.message, isNewMember: result.isNewMember ?? false };
+          }
         }
+        return { success: false, message: result.message };
       } catch (error: unknown) {
         console.error("Login error:", error);
         const errorMessage = error instanceof Error ? error.message : "Login failed";
@@ -401,6 +468,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user && !!accessToken,
     isLoading,
     login,
+    completeAuth,
     logout,
     refreshAccessToken,
   };

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { COMPLETE_REGISTRATION, REGISTRATION_OPTIONS } from "@/lib/graphql/auth-mutations";
+import { COMPLETE_REGISTRATION, REGISTRATION_OPTIONS, REGISTER_WITH_PHONE_LINKING } from "@/lib/graphql/auth-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,12 +37,19 @@ interface Group {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, completeAuth } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [departmentId, setDepartmentId] = useState<string>("");
   const [groupId, setGroupId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationToken, setRegistrationToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setRegistrationToken(sessionStorage.getItem("registration_token"));
+    }
+  }, []);
 
   const { data: options, loading: optionsLoading } = useQuery<{
     registrationDepartments: Department[];
@@ -57,19 +64,33 @@ export default function RegisterPage() {
     };
   }>(COMPLETE_REGISTRATION);
 
-  // Redirect unauthenticated users to login. This must run in an effect, not
-  // during render: this is a static-prerendered client page, and on the server
-  // `isAuthenticated` is always false, so a render-time `router.replace` fires
-  // during prerendering and throws "location is not defined". Mirrors the
-  // pattern used by <ProtectedRoute />.
+  const [registerWithPhoneLinking] = useMutation<{
+    registerWithPhoneLinking: {
+      success: boolean;
+      message: string;
+      accessToken?: string;
+      refreshToken?: string;
+      userId?: number;
+      memberId?: number;
+      phoneNumber?: string;
+      email?: string;
+      fullName?: string;
+    };
+  }>(REGISTER_WITH_PHONE_LINKING);
+
+  // Redirect only if not authenticated AND there is no registration token in storage
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace("/login");
+    if (!authLoading) {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem("registration_token") : null;
+      if (!isAuthenticated && !token) {
+        router.replace("/login");
+      }
     }
   }, [authLoading, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     const trimmedFirst = firstName.trim();
     const trimmedLast = lastName.trim();
@@ -80,6 +101,50 @@ export default function RegisterPage() {
     }
 
     setIsSubmitting(true);
+
+    if (registrationToken) {
+      try {
+        const { data } = await registerWithPhoneLinking({
+          variables: {
+            registrationToken,
+            firstName: trimmedFirst,
+            lastName: trimmedLast,
+            departmentId: departmentId || null,
+            groupId: groupId || null,
+          },
+        });
+
+        const result = data?.registerWithPhoneLinking;
+
+        if (result?.success && result.accessToken) {
+          completeAuth({
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            userId: result.userId ?? 0,
+            memberId: result.memberId ?? 0,
+            phoneNumber: result.phoneNumber,
+            email: result.email,
+            fullName: result.fullName ?? `${trimmedFirst} ${trimmedLast}`,
+          });
+
+          // Clean up tokens
+          sessionStorage.removeItem("registration_token");
+          sessionStorage.removeItem("linking_token");
+          sessionStorage.removeItem("gated_email");
+
+          toast.success(`Welcome, ${result.fullName || trimmedFirst}!`);
+          router.push("/dashboard");
+        } else {
+          toast.error(result?.message || "Registration failed");
+        }
+      } catch (error) {
+        console.error("Registration error:", error);
+        toast.error("Registration failed. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     try {
       const { data } = await completeRegistration({
@@ -118,10 +183,9 @@ export default function RegisterPage() {
   const departments = options?.registrationDepartments || [];
   const groups = options?.registrationGroups || [];
 
-  // While auth is resolving, or for unauthenticated visitors (who the effect
-  // above is redirecting to /login), render nothing rather than flashing the
-  // registration form.
-  if (authLoading || !isAuthenticated) {
+  const hasToken = typeof window !== "undefined" && !!sessionStorage.getItem("registration_token");
+
+  if (authLoading || (!isAuthenticated && !hasToken)) {
     return null;
   }
 

@@ -35,6 +35,10 @@ export const VERIFY_OTP = gql`
       email
       fullName
       isNewMember
+      needsPhoneLinking
+      linkingToken
+      needsRegistration
+      registrationToken
     }
   }
 `;
@@ -106,6 +110,60 @@ export const LOGOUT = gql`
     logout(refreshToken: $refreshToken) {
       success
       message
+    }
+  }
+`;
+
+/**
+ * Check and link phone number
+ */
+export const CHECK_AND_LINK_PHONE = gql`
+  mutation CheckAndLinkPhone($phoneNumber: String!, $linkingToken: String!) {
+    checkAndLinkPhone(phoneNumber: $phoneNumber, linkingToken: $linkingToken) {
+      success
+      message
+      accessToken
+      refreshToken
+      userId
+      memberId
+      phoneNumber
+      email
+      fullName
+      isNewMember
+      needsRegistration
+      registrationToken
+    }
+  }
+`;
+
+/**
+ * Register with phone linking
+ */
+export const REGISTER_WITH_PHONE_LINKING = gql`
+  mutation RegisterWithPhoneLinking(
+    $registrationToken: String!
+    $firstName: String!
+    $lastName: String!
+    $departmentId: ID
+    $groupId: ID
+  ) {
+    registerWithPhoneLinking(
+      registrationToken: $registrationToken
+      firstName: $firstName
+      lastName: $lastName
+      departmentId: $departmentId
+      groupId: $groupId
+    ) {
+      success
+      message
+      accessToken
+      refreshToken
+      userId
+      memberId
+      phoneNumber
+      email
+      fullName
+      isNewMember
     }
   }
 `;

@@ -26,9 +26,9 @@ function renderPage() { return render(<VerifyOtpPage />) }
 describe('VerifyOtpPage', () => {
   beforeEach(() => { mockPush.mockClear(); mockLogin.mockClear(); mockToastError.mockClear() })
 
-  it('renders Verify Your Phone heading', () => {
+  it('renders Verify Your Identity heading', () => {
     renderPage()
-    expect(screen.getByText(/verify your phone/i)).toBeInTheDocument()
+    expect(screen.getByText(/verify your identity/i)).toBeInTheDocument()
   })
 
   it('renders 6 OTP digit inputs', () => {
@@ -70,7 +70,7 @@ describe('VerifyOtpPage', () => {
     for (let i = 0; i < 6; i++) {
       fireEvent.change(inputs[i], { target: { value: String(i + 1) } })
     }
-    await waitFor(() => expect(mockLogin).toHaveBeenCalledWith('254798765432', '123456'))
+    await waitFor(() => expect(mockLogin).toHaveBeenCalledWith('254798765432', null, '123456'))
   })
 
   it('navigates to /dashboard on successful login', async () => {

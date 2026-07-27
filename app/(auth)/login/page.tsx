@@ -190,29 +190,47 @@ function LoginContent() {
                   Email Address
                 </button>
               </div>
-
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber" className="text-base font-medium">Phone Number</Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
-                      +254
+                {channel === "sms" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber" className="text-base font-medium">Phone Number</Label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
+                        +254
+                      </div>
+                      <Input
+                        id="phoneNumber"
+                        type="tel"
+                        placeholder="798765432"
+                        value={phoneNumber}
+                        onChange={handlePhoneChange}
+                        required
+                        disabled={isSubmitting}
+                        className="text-lg pl-16 h-12"
+                      />
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Enter your 9-digit M-Pesa number (e.g., 798765432)
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-base font-medium">Email Address</Label>
                     <Input
-                      id="phoneNumber"
-                      type="tel"
-                      placeholder="798765432"
-                      value={phoneNumber}
-                      onChange={handlePhoneChange}
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={isSubmitting}
-                      className="text-lg pl-16 h-12"
+                      className="text-lg h-12"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your registered email address
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Enter your 9-digit M-Pesa number (e.g., 798765432)
-                  </p>
-                </div>
+                )}
 
                 <Button
                   type="submit"
