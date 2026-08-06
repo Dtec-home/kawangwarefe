@@ -10,16 +10,18 @@ import { AdminLayout } from "@/components/layouts/admin-layout";
 import { useQuery } from "@apollo/client/react";
 import { GET_DASHBOARD_STATS, GET_ALL_CONTRIBUTIONS } from "@/lib/graphql/admin-queries";
 import { useTour } from "@/hooks/use-tour";
-import { ADMIN_DASHBOARD_TOUR_CONFIG } from "@/lib/tours/tour-configs";
+import { buildAdminDashboardTourConfig } from "@/lib/tours/tour-configs";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
-import { DollarSign, TrendingUp, Users, Calendar, HelpCircle, Wallet, Receipt } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Calendar, Wallet, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useEffect, useMemo } from "react";
 
 interface DashboardStats {
   todayTotal: string;
@@ -105,9 +107,17 @@ function AdminDashboardContent() {
     },
   });
 
+  // Refresh (v2): copy now adapts to the viewer's actual admin scope (Dept
+  // Admin / Group Admin / Content Admin see wording about their own scope
+  // instead of generic "full staff" language) — see buildAdminDashboardTourConfig.
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, adminCategories, adminGroupNames } = useUserRole();
+  const adminDashboardTourConfig = useMemo(
+    () => buildAdminDashboardTourConfig({ isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, adminCategories, adminGroupNames }),
+    [isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, adminCategories, adminGroupNames]
+  );
   const { start: startAdminTour, isReady } = useTour({
-    tourKey: "admin_dashboard",
-    steps: ADMIN_DASHBOARD_TOUR_CONFIG.steps || [],
+    tourKey: "admin_dashboard_v2",
+    steps: adminDashboardTourConfig.steps || [],
     autoStart: false,
   });
 
@@ -172,15 +182,7 @@ function AdminDashboardContent() {
           title="Dashboard Overview"
           description="View statistics and recent activity"
           actions={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => startAdminTour()}
-              title="View admin guide"
-            >
-              <HelpCircle className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Tour</span>
-            </Button>
+            <ReplayTourButton onClick={() => startAdminTour()} disabled={!isReady} />
           }
         />
       </div>

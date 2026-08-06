@@ -18,6 +18,10 @@ import { Progress } from "@/components/ui/progress";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { FileUpload } from "@/components/admin/file-upload";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_MEMBERS_IMPORT_TOUR_CONFIG } from "@/lib/tours/configs/admin-members-import";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Upload,
   Download,
@@ -25,7 +29,8 @@ import {
   XCircle,
   AlertCircle,
   ArrowLeft,
-  Users
+  Users,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -58,6 +63,12 @@ function MemberImportPageContent() {
 
   const [importMembers] = useMutation<ImportMembersResult>(IMPORT_MEMBERS);
   const [getTemplate] = useMutation<GetTemplateResult>(GET_MEMBER_IMPORT_TEMPLATE);
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_members_import_v1",
+    steps: ADMIN_MEMBERS_IMPORT_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
@@ -166,7 +177,7 @@ function MemberImportPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex items-center gap-2">
+        <div data-tour="import-header" className="flex items-center gap-2">
           <Link href="/admin/members">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
@@ -177,16 +188,19 @@ function MemberImportPageContent() {
             title="Import Members"
             description="Upload a CSV or Excel file to import members in bulk"
             actions={
-              <Button variant="outline" onClick={handleDownloadTemplate}>
-                <Download className="h-4 w-4 mr-2" />
-                Download Template
-              </Button>
+              <>
+                <Button variant="outline" onClick={handleDownloadTemplate}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Template
+                </Button>
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+              </>
             }
           />
         </div>
 
         {/* Instructions */}
-        <Card>
+        <Card data-tour="import-instructions">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
@@ -225,9 +239,29 @@ function MemberImportPageContent() {
         </Alert>
 
         {/* File Upload */}
-        <Card>
+        <Card data-tour="import-upload">
           <CardHeader>
-            <CardTitle>Upload File</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Upload File
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground"
+                    aria-label="CSV format help"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-left">
+                  Required columns: first_name, last_name, phone_number (0712345678 or
+                  254712345678). Optional: email, group_name, is_group_admin, plus one
+                  column per department that tracks member numbers (e.g. WELFARE). Max
+                  5,000 rows. See the &quot;Bulk-importing members&quot; article in the
+                  Help Center for the full format.
+                </TooltipContent>
+              </Tooltip>
+            </CardTitle>
             <CardDescription>
               Select a CSV or Excel file containing member data
             </CardDescription>

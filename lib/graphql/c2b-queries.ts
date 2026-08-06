@@ -53,6 +53,27 @@ export const GET_C2B_TRANSACTION_STATS = gql`
 `;
 
 /**
+ * STK Push transactions escalated to 'stale' after sitting at 'pending' for
+ * 24h without a resolved status — fell outside the STK Query sweep window
+ * and need manual review (e.g. a direct Safaricom lookup, or writing off).
+ */
+export const GET_STALE_MPESA_TRANSACTIONS = gql`
+  query GetStaleMpesaTransactions {
+    staleMpesaTransactions {
+      id
+      phoneNumber
+      amount
+      status
+      checkoutRequestId
+      merchantRequestId
+      mpesaReceiptNumber
+      transactionDate
+      resultDesc
+    }
+  }
+`;
+
+/**
  * Resolve an unmatched C2B transaction by splitting the amount across
  * one or more departments/purposes.  All allocation amounts must sum
  * exactly to the transaction total.

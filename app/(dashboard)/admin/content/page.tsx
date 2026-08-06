@@ -16,6 +16,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_CONTENT_TOUR_CONFIG } from "@/lib/tours/configs/admin-content";
 import {
   Megaphone,
   BookOpen,
@@ -69,18 +72,28 @@ const contentSections = [
 
 function ContentHubPage() {
   const router = useRouter();
+  const { start: startTour, isReady } = useTour({
+    tourKey: "admin_content_v1",
+    steps: ADMIN_CONTENT_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
 
   return (
     <AdminProtectedRoute requiredAccess="content-admin">
       <AdminLayout>
         <div className="space-y-6">
-          <PageHeader
-            title="Church Content"
-            description="Manage all church content — announcements, devotionals, events, and videos — from one place."
-          />
+          <div data-tour="content-hub-header">
+            <PageHeader
+              title="Church Content"
+              description="Manage all church content — announcements, devotionals, events, and videos — from one place."
+              actions={
+                <ReplayTourButton onClick={() => startTour()} disabled={!isReady} />
+              }
+            />
+          </div>
 
           {/* Content Cards Grid */}
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div data-tour="content-hub-grid" className="grid gap-6 sm:grid-cols-2">
             {contentSections.map((section) => {
               const Icon = section.icon;
               return (

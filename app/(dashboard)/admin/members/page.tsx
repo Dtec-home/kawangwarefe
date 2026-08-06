@@ -45,6 +45,9 @@ import {
 } from "@/components/ui/dialog";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_MEMBERS_TOUR_CONFIG } from "@/lib/tours/configs/admin-members";
 import {
   Search,
   Users,
@@ -639,6 +642,12 @@ function MembersPageContent() {
 
   useEffect(() => { setPage(0); }, [searchTerm, statusFilter]);
 
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_members_v1",
+    steps: ADMIN_MEMBERS_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
+
   const { data, loading, error: queryError, refetch } = useQuery<MembersData>(GET_MEMBERS_LIST, {
     variables: {
       search: searchTerm || null,
@@ -731,7 +740,13 @@ function MembersPageContent() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <PageHeader title="Members" description="View and manage church members" />
+        <div data-tour="members-header">
+          <PageHeader
+            title="Members"
+            description="View and manage church members"
+            actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+          />
+        </div>
 
         {/* Statistics Cards */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -787,7 +802,7 @@ function MembersPageContent() {
         )}
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="members-filters">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="h-5 w-5" />
@@ -830,7 +845,7 @@ function MembersPageContent() {
               >
                 Clear Filters
               </Button>
-              <div className="flex gap-2">
+              <div data-tour="members-actions" className="flex gap-2">
                 <Link href="/admin/members/import">
                   <Button variant="outline">
                     <Upload className="h-4 w-4 mr-2" />
@@ -844,7 +859,7 @@ function MembersPageContent() {
         </Card>
 
         {/* Members Table */}
-        <Card>
+        <Card data-tour="members-table">
           <CardHeader>
             <CardTitle>All Members</CardTitle>
             <CardDescription>

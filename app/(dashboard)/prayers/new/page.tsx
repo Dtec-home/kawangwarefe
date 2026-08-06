@@ -18,6 +18,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -42,6 +43,9 @@ import {
 } from "@/lib/graphql/prayer-mutations";
 import { Empty } from "@/components/ui/empty";
 import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
+import { useTour } from "@/hooks/use-tour";
+import { PRAYERS_NEW_TOUR_CONFIG } from "@/lib/tours/configs/prayers-new";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 
 type Visibility = "team" | "public" | "private";
 
@@ -75,6 +79,11 @@ function NewPrayerContent() {
 
   const [submit, { loading }] = useMutation<SubmitData>(SUBMIT_PRAYER_REQUEST);
   const { data, refetch } = useQuery<MyData>(GET_MY_PRAYER_REQUESTS);
+  const { start: startPrayerTour, isReady: isPrayerTourReady } = useTour({
+    tourKey: "prayers_new_v1",
+    steps: PRAYERS_NEW_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,11 +122,17 @@ function NewPrayerContent() {
   return (
     <div className="max-w-2xl mx-auto py-6 space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader data-tour="prayer-header">
           <CardTitle>Submit a Prayer Request</CardTitle>
           <CardDescription>
             Your pastors and prayer team will lift up your request.
           </CardDescription>
+          <CardAction>
+            <ReplayTourButton
+              onClick={() => startPrayerTour()}
+              disabled={!isPrayerTourReady}
+            />
+          </CardAction>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -142,7 +157,7 @@ function NewPrayerContent() {
                 required
               />
             </div>
-            <div>
+            <div data-tour="prayer-visibility">
               <Label htmlFor="prayer-visibility">Visibility</Label>
               <Select
                 value={visibility}
@@ -158,7 +173,7 @@ function NewPrayerContent() {
                 </SelectContent>
               </Select>
             </div>
-            <label className="flex items-center gap-2 text-sm">
+            <label data-tour="prayer-anonymous" className="flex items-center gap-2 text-sm">
               <Checkbox
                 checked={isAnonymous}
                 onCheckedChange={(v) => setIsAnonymous(Boolean(v))}
@@ -186,7 +201,7 @@ function NewPrayerContent() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="prayer-history">
         <CardHeader>
           <CardTitle>My Requests</CardTitle>
         </CardHeader>

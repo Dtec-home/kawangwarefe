@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { HelpButton } from "@/components/help/HelpButton";
 import { GET_ME } from "@/lib/graphql/profile-mutations";
 import {
   LayoutDashboard,
@@ -332,6 +333,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               {/* Right: ThemeToggle (F8.1) + about + member-view switch */}
               <div className="flex items-center gap-1.5">
                 <ThemeToggle variant="button" size="icon" />
+                <HelpButton size="icon" />
                 <Button
                   variant="ghost"
                   size="icon-mobile"

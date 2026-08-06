@@ -12,6 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_GROUPS_TOUR_CONFIG } from "@/lib/tours/configs/admin-groups";
 import { CheckCircle, AlertCircle, Plus, Pencil, Trash2, Save, X, Users, UserPlus } from "lucide-react";
 import { BulkAddMembersModal } from "@/components/groups/bulk-add-members-modal";
 import { GroupMembersModal } from "@/components/groups/group-members-modal";
@@ -61,6 +64,12 @@ export default function GroupsManagementPage() {
 
   const { data, loading, refetch } = useQuery<GetGroupsData>(GET_GROUPS_LIST);
   const groups = useMemo(() => data?.groupsList ?? [], [data]);
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_groups_v1",
+    steps: ADMIN_GROUPS_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
 
   const [createGroup, { loading: creating }] = useMutation<CreateGroupData>(CREATE_GROUP);
   const [updateGroup, { loading: updating }] = useMutation<UpdateGroupData>(UPDATE_GROUP);
@@ -172,10 +181,13 @@ export default function GroupsManagementPage() {
     <AdminProtectedRoute>
       <AdminLayout>
         <div className="space-y-6">
-          <PageHeader
-            title="Groups"
-            description="Manage church groups without Django admin access."
-          />
+          <div data-tour="groups-header">
+            <PageHeader
+              title="Groups"
+              description="Manage church groups without Django admin access."
+              actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+            />
+          </div>
 
           {success && (
             <Alert>
@@ -193,7 +205,7 @@ export default function GroupsManagementPage() {
             </Alert>
           )}
 
-          <Card>
+          <Card data-tour="groups-create">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -219,7 +231,7 @@ export default function GroupsManagementPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="groups-list">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />

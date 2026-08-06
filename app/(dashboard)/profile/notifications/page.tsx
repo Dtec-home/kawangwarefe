@@ -19,6 +19,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -33,9 +34,17 @@ import {
   NotificationPreferences,
   notificationPreferencesSchema,
 } from "@/lib/notifications/notification-preferences-schema";
+import { useTour } from "@/hooks/use-tour";
+import { PROFILE_NOTIFICATIONS_TOUR_CONFIG } from "@/lib/tours/configs/profile-notifications";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 
 function NotificationPreferencesContent() {
   const { preferences, save } = useNotificationPreferences();
+  const { start: startNotificationsTour, isReady: isNotificationsTourReady } = useTour({
+    tourKey: "profile_notifications_v1",
+    steps: PROFILE_NOTIFICATIONS_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
 
   // The hook reads stored prefs via a lazy initialiser, so `preferences` is
   // already correct on first client render — seed the form directly.
@@ -61,16 +70,22 @@ function NotificationPreferencesContent() {
   return (
     <div className="max-w-2xl mx-auto py-6 space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader data-tour="notifications-header">
           <CardTitle>Notification Preferences</CardTitle>
           <CardDescription>
             Choose which updates you&apos;d like to receive. Saved on this
             device.
           </CardDescription>
+          <CardAction>
+            <ReplayTourButton
+              onClick={() => startNotificationsTour()}
+              disabled={!isNotificationsTourReady}
+            />
+          </CardAction>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <ul className="divide-y divide-border">
+            <ul data-tour="notifications-channels" className="divide-y divide-border">
               {NOTIFICATION_CHANNELS.map((channel) => (
                 <li
                   key={channel.key}

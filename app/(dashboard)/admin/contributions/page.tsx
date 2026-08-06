@@ -23,6 +23,9 @@ import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_CONTRIBUTIONS_TOUR_CONFIG } from "@/lib/tours/configs/admin-contributions";
 import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
 import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight, Pencil, Receipt } from "lucide-react";
 import Link from "next/link";
@@ -240,6 +243,12 @@ export default function ContributionsPage() {
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [bookReceiptTarget, setBookReceiptTarget] = useState<Contribution | null>(null);
 
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_contributions_v1",
+    steps: ADMIN_CONTRIBUTIONS_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
+
   // Get categories
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const categories = categoriesData?.contributionCategories || [];
@@ -375,22 +384,27 @@ export default function ContributionsPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <PageHeader
-          title="Contributions"
-          description="View and manage all church contributions"
-          actions={
-            <Link href="/admin/contributions/manual-entry">
-              <Button className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Manual Entry
-              </Button>
-            </Link>
-          }
-        />
+        <div data-tour="contributions-header">
+          <PageHeader
+            title="Contributions"
+            description="View and manage all church contributions"
+            actions={
+              <>
+                <Link href="/admin/contributions/manual-entry">
+                  <Button className="w-full sm:w-auto">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Manual Entry
+                  </Button>
+                </Link>
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+              </>
+            }
+          />
+        </div>
 
         {/* Statistics Cards */}
         {stats && !isGroupScopedView && (
-          <div className="grid md:grid-cols-4 gap-4">
+          <div data-tour="contributions-stats" className="grid md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
@@ -454,7 +468,7 @@ export default function ContributionsPage() {
         )}
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="contributions-filters">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -651,7 +665,7 @@ export default function ContributionsPage() {
         </Card>
 
         {/* Contributions Table */}
-        <Card>
+        <Card data-tour="contributions-table">
           <CardHeader>
             <CardTitle>All Contributions</CardTitle>
             <CardDescription>

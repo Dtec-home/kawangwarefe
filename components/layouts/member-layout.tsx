@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { HelpButton } from "@/components/help/HelpButton";
 import { BottomNav } from "@/components/layouts/bottom-nav";
 import {
   LayoutDashboard,
@@ -197,6 +198,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
               {/* Desktop: ThemeToggle + user name on right (F7.1) */}
               <div className="hidden lg:flex items-center gap-2">
                 <ThemeToggle variant="button" size="icon" />
+                <HelpButton size="icon" />
                 <span className="text-sm text-muted-foreground">{user?.fullName}</span>
               </div>
               {/* Balances hamburger width on mobile */}

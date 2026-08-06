@@ -1,64 +1,81 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
-// Mock Apollo
+// Mutable so individual tests can override what the stale-STK query returns
+// without disturbing the other three queries this page fires.
+let mockStaleMpesaTransactions: any[] = []
+
+// Mock Apollo. Distinguish the stale-STK-transactions query from the other
+// three queries this page fires by inspecting the GraphQL operation body
+// (same idiom as __tests__/app/admin/categories.test.tsx).
 vi.mock('@apollo/client/react', () => ({
-  useQuery: vi.fn().mockImplementation(() => ({
-    data: {
-      contributionCategories: [
-        { id: '1', name: 'Tithe', code: 'TITHE' },
-        { id: '2', name: 'Offering', code: 'OFFER' },
-      ],
-      c2bTransactionStats: {
-        totalAmount: '250000.00',
-        totalCount: 60,
-        processedCount: 50,
-        unmatchedCount: 7,
-        failedCount: 3,
-      },
-      c2bTransactions: {
-        items: [
-          {
-            id: 'tx1',
-            transId: 'MPESA001',
-            transTime: '2025-03-20T10:30:00Z',
-            transAmount: '5000.00',
-            billRefNumber: 'TITHE',
-            msisdn: '254712345678',
-            customerName: 'John Kamau',
-            firstName: 'John',
-            middleName: '',
-            lastName: 'Kamau',
-            status: 'processed',
-            matchedCategoryCode: 'TITHE',
-            matchMethod: 'exact',
-            createdAt: '2025-03-20T10:30:00Z',
-          },
-          {
-            id: 'tx2',
-            transId: 'MPESA002',
-            transTime: '2025-03-19T14:00:00Z',
-            transAmount: '2000.00',
-            billRefNumber: 'UNKNOWN',
-            msisdn: '254798765432',
-            customerName: 'Jane Wanjiku',
-            firstName: 'Jane',
-            middleName: '',
-            lastName: 'Wanjiku',
-            status: 'unmatched',
-            matchedCategoryCode: '',
-            matchMethod: '',
-            createdAt: '2025-03-19T14:00:00Z',
-          },
+  useQuery: vi.fn().mockImplementation((query: any) => {
+    const body = query?.loc?.source?.body || ''
+    if (body.includes('GetStaleMpesaTransactions')) {
+      return {
+        data: { staleMpesaTransactions: mockStaleMpesaTransactions },
+        loading: false,
+        error: null,
+        refetch: vi.fn(),
+      }
+    }
+    return {
+      data: {
+        contributionCategories: [
+          { id: '1', name: 'Tithe', code: 'TITHE' },
+          { id: '2', name: 'Offering', code: 'OFFER' },
         ],
-        total: 2,
-        hasMore: false,
+        c2bTransactionStats: {
+          totalAmount: '250000.00',
+          totalCount: 60,
+          processedCount: 50,
+          unmatchedCount: 7,
+          failedCount: 3,
+        },
+        c2bTransactions: {
+          items: [
+            {
+              id: 'tx1',
+              transId: 'MPESA001',
+              transTime: '2025-03-20T10:30:00Z',
+              transAmount: '5000.00',
+              billRefNumber: 'TITHE',
+              msisdn: '254712345678',
+              customerName: 'John Kamau',
+              firstName: 'John',
+              middleName: '',
+              lastName: 'Kamau',
+              status: 'processed',
+              matchedCategoryCode: 'TITHE',
+              matchMethod: 'exact',
+              createdAt: '2025-03-20T10:30:00Z',
+            },
+            {
+              id: 'tx2',
+              transId: 'MPESA002',
+              transTime: '2025-03-19T14:00:00Z',
+              transAmount: '2000.00',
+              billRefNumber: 'UNKNOWN',
+              msisdn: '254798765432',
+              customerName: 'Jane Wanjiku',
+              firstName: 'Jane',
+              middleName: '',
+              lastName: 'Wanjiku',
+              status: 'unmatched',
+              matchedCategoryCode: '',
+              matchMethod: '',
+              createdAt: '2025-03-19T14:00:00Z',
+            },
+          ],
+          total: 2,
+          hasMore: false,
+        },
       },
-    },
-    loading: false,
-    error: null,
-    refetch: vi.fn(),
-  })),
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    }
+  }),
   useMutation: () => [vi.fn(), { loading: false }],
 }))
 
@@ -100,6 +117,10 @@ vi.mock('react-hot-toast', () => ({
 import C2BTransactionsPage from '@/app/(dashboard)/admin/c2b-transactions/page'
 
 describe('C2BTransactionsPage', () => {
+  beforeEach(() => {
+    mockStaleMpesaTransactions = []
+  })
+
   it('renders the heading', () => {
     render(<C2BTransactionsPage />)
     expect(screen.getByText('C2B Transactions')).toBeInTheDocument()
@@ -130,5 +151,32 @@ describe('C2BTransactionsPage', () => {
   it('renders Refresh button', () => {
     render(<C2BTransactionsPage />)
     expect(screen.getByRole('button', { name: /Refresh/i })).toBeInTheDocument()
+  })
+
+  it('renders an empty state when no STK transactions are stale', () => {
+    render(<C2BTransactionsPage />)
+    expect(screen.getByText('Stale STK Transactions')).toBeInTheDocument()
+    expect(screen.getByText('Nothing needs review')).toBeInTheDocument()
+  })
+
+  it('renders stale STK transactions when present', () => {
+    mockStaleMpesaTransactions = [
+      {
+        id: 'stk1',
+        phoneNumber: '254711000111',
+        amount: '250.00',
+        status: 'stale',
+        checkoutRequestId: 'ws_CO_STALE001',
+        merchantRequestId: 'merchant_STALE001',
+        mpesaReceiptNumber: null,
+        transactionDate: null,
+        resultDesc: null,
+      },
+    ]
+    render(<C2BTransactionsPage />)
+    expect(screen.getByText('Stale STK Transactions')).toBeInTheDocument()
+    expect(screen.queryByText('Nothing needs review')).not.toBeInTheDocument()
+    expect(screen.getByText('254711000111')).toBeInTheDocument()
+    expect(screen.getByText('ws_CO_STALE001')).toBeInTheDocument()
   })
 })

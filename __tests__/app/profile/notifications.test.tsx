@@ -6,6 +6,20 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 
+// The page now also calls useTour() (for the "Replay tour" button), which
+// queries/mutates tutorial-completion state via Apollo — mock it the same
+// way the sibling family/prayers page tests do, since this page has no
+// other Apollo usage of its own.
+vi.mock('@apollo/client/react', () => ({
+  useQuery: () => ({ loading: false, error: null, data: { isTutorialCompleted: false } }),
+  useMutation: () => [vi.fn().mockResolvedValue({ data: {} }), { loading: false }],
+}))
+
+vi.mock('driver.js', () => ({
+  driver: () => ({ drive: vi.fn(), destroy: vi.fn() }),
+}))
+vi.mock('driver.js/dist/driver.css', () => ({}))
+
 vi.mock('@/components/auth/protected-route', () => ({
   ProtectedRoute: ({ children }: any) =>
     React.createElement('div', null, children),

@@ -38,6 +38,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { RoleBadge } from "@/components/ui/status-badge";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_CATEGORY_ADMINS_TOUR_CONFIG } from "@/lib/tours/configs/admin-category-admins";
 import {
   Shield,
   UserPlus,
@@ -112,6 +115,12 @@ function CategoryAdminsPageContent() {
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [assignCategory, setAssignCategory] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_category_admins_v1",
+    steps: ADMIN_CATEGORY_ADMINS_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
 
   // Fetch categories
   const { data: categoriesData } = useQuery<CategoriesData>(
@@ -222,10 +231,13 @@ function CategoryAdminsPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <PageHeader
-          title="Department Admins"
-          description="Assign members as administrators for specific contribution departments"
-        />
+        <div data-tour="category-admins-header">
+          <PageHeader
+            title="Department Admins"
+            description="Assign members as administrators for specific contribution departments"
+            actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+          />
+        </div>
 
         {/* Statistics */}
         <div className="grid md:grid-cols-3 gap-4">
@@ -280,7 +292,7 @@ function CategoryAdminsPageContent() {
         </div>
 
         {/* Assign New Department Admin */}
-        <Card>
+        <Card data-tour="category-admins-assign">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
@@ -392,7 +404,7 @@ function CategoryAdminsPageContent() {
         </Card>
 
         {/* Department Admins List */}
-        <Card>
+        <Card data-tour="category-admins-list">
           <CardHeader>
             <CardTitle>Current Department Admins</CardTitle>
             <CardDescription>

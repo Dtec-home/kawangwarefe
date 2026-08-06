@@ -103,6 +103,15 @@ export const CONTRIBUTION_FLOW_TOUR_CONFIG: Config = {
       },
     },
     {
+      element: '[data-tour="contribution-multi-department-hint"]',
+      popover: {
+        title: 'One Payment, Multiple Departments',
+        description: 'Tap "Add another fund" to split a single M-Pesa payment across several departments or purposes — everything combines into one total charge and one prompt on your phone.',
+        side: 'bottom',
+        align: 'center',
+      },
+    },
+    {
       element: '[data-tour="contribution-review-btn"]',
       popover: {
         title: 'Review & Continue',
@@ -163,6 +172,108 @@ export const ADMIN_DASHBOARD_TOUR_CONFIG: Config = {
     },
   ],
 };
+
+/**
+ * Role-aware variant of the Admin Dashboard tour.
+ *
+ * The static ADMIN_DASHBOARD_TOUR_CONFIG above stays as the generic/full-staff
+ * copy (and keeps the existing tour-configs test — which imports it directly
+ * as a plain `Config` — passing unchanged). The Admin Overview page instead
+ * calls this builder with the viewer's `useUserRole()` scope so Dept Admins,
+ * Group Admins, and Content Admins see wording about *their* scope rather
+ * than generic "full staff" language. Targets the same four `data-tour`
+ * anchors as the static config, so it's a drop-in replacement on that page.
+ */
+export interface AdminDashboardTourScope {
+  isStaff: boolean;
+  isCategoryAdmin: boolean;
+  isGroupAdmin: boolean;
+  isContentAdmin: boolean;
+  adminCategories: Array<{ name: string }>;
+  adminGroupNames: string[];
+}
+
+function joinNames(names: string[]): string {
+  if (names.length === 0) return '';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+}
+
+export function buildAdminDashboardTourConfig(scope: AdminDashboardTourScope): Config {
+  const deptNames = scope.adminCategories.map((c) => c.name).filter(Boolean);
+  const groupNames = scope.adminGroupNames.filter(Boolean);
+
+  let headerDescription = 'Your control center for finance, members, and activity insights.';
+  let statsDescription = 'Track daily, weekly, and monthly contribution totals with trends.';
+  let contributionsDescription = 'Review the latest contributions and their statuses.';
+  let membersDescription = 'Monitor member totals and quick stats for health checks.';
+
+  if (scope.isStaff) {
+    // Full staff keeps the generic copy above — they see everything.
+  } else if (scope.isCategoryAdmin && deptNames.length > 0) {
+    const scopeLabel = joinNames(deptNames);
+    const plural = deptNames.length > 1;
+    headerDescription = `Your control center for ${scopeLabel} — giving and activity for the department${plural ? 's' : ''} you manage.`;
+    statsDescription = 'These totals cover the whole church; open Contributions in the sidebar and filter by department for a scoped view.';
+    contributionsDescription = `Review the latest contributions here, or filter to ${scopeLabel} from the Contributions page.`;
+    membersDescription = 'Member totals here are church-wide; your department reporting lives under Reports in the sidebar.';
+  } else if (scope.isGroupAdmin && groupNames.length > 0) {
+    const scopeLabel = joinNames(groupNames);
+    const plural = groupNames.length > 1;
+    headerDescription = `Your control center for ${scopeLabel} — giving and activity for the group${plural ? 's' : ''} you lead.`;
+    statsDescription = 'These totals cover the whole church; the Contributions page automatically scopes to the group(s) you lead.';
+    contributionsDescription = `Review the latest contributions here — Contributions in the sidebar scopes automatically to ${scopeLabel}.`;
+    membersDescription = 'Member totals here are church-wide; your group reporting lives under Reports in the sidebar.';
+  } else if (scope.isContentAdmin) {
+    headerDescription = 'This overview covers church-wide finance and membership stats. Your own scope — Devotionals, Events, and YouTube — lives under Content in the sidebar.';
+  }
+
+  return {
+    showProgress: true,
+    allowClose: true,
+    overlayOpacity: 0.5,
+    stagePadding: 10,
+    steps: [
+      {
+        element: '[data-tour="admin-header"]',
+        popover: {
+          title: 'Admin Dashboard',
+          description: headerDescription,
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="admin-stats"]',
+        popover: {
+          title: 'Financial Overview',
+          description: statsDescription,
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="admin-contributions"]',
+        popover: {
+          title: 'Recent Contributions',
+          description: contributionsDescription,
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '[data-tour="admin-members"]',
+        popover: {
+          title: 'Member Snapshot',
+          description: membersDescription,
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+    ],
+  };
+}
 
 /**
  * Tour Step Helpers - Reusable configurations

@@ -43,7 +43,11 @@ import { useUserRole } from "@/lib/hooks/use-user-role";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
-import { Filter, Plus, CheckCircle, XCircle, Banknote, Pencil, Receipt, Send, Loader2 } from "lucide-react";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_EXPENSES_TOUR_CONFIG } from "@/lib/tours/configs/admin-expenses";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Filter, Plus, CheckCircle, XCircle, Banknote, Pencil, Receipt, Send, Loader2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { PayoutChannelFields, PAYOUT_CHANNELS, isValidKenyanPhone } from "./payout-channel-fields";
 
@@ -374,7 +378,27 @@ function RequestExpenseDialog({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="exp-ref">Reference Number</Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="exp-ref">Reference Number</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground"
+                      aria-label="What is Reference Number for?"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-64">
+                      For your own records only (e.g. an M-Pesa code or cheque
+                      number). It&apos;s separate from the beneficiary details
+                      in the Payout Channel section below.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <Input
                 id="exp-ref"
                 placeholder="e.g. M-Pesa code / cheque #"
@@ -888,6 +912,12 @@ export default function ExpensesPage() {
   const [voidTarget, setVoidTarget] = useState<Expense | null>(null);
   const [disburseTarget, setDisburseTarget] = useState<Expense | null>(null);
 
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_expenses_v1",
+    steps: ADMIN_EXPENSES_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
+
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const categories = categoriesData?.contributionCategories || [];
 
@@ -977,21 +1007,26 @@ export default function ExpensesPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <PageHeader
-          title="Expenses"
-          description="Request, approve and pay money out of church funds"
-          actions={
-            canRequest ? (
-              <Button onClick={() => setShowRequestDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Request Expense
-              </Button>
-            ) : undefined
-          }
-        />
+        <div data-tour="expenses-header">
+          <PageHeader
+            title="Expenses"
+            description="Request, approve and pay money out of church funds"
+            actions={
+              <>
+                {canRequest && (
+                  <Button onClick={() => setShowRequestDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Request Expense
+                  </Button>
+                )}
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+              </>
+            }
+          />
+        </div>
 
         {/* Summary card */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4" data-tour="expenses-summary">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Approved + Paid (filtered)</CardTitle>
@@ -1005,7 +1040,7 @@ export default function ExpensesPage() {
         </div>
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="expenses-filters">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Filter className="h-4 w-4" />
@@ -1084,7 +1119,7 @@ export default function ExpensesPage() {
         </Card>
 
         {/* Expenses table */}
-        <Card>
+        <Card data-tour="expenses-table">
           <CardHeader>
             <CardTitle>All Expenses</CardTitle>
             <CardDescription>

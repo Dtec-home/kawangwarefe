@@ -22,6 +22,9 @@ import { Empty } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_DEVOTIONALS_TOUR_CONFIG } from "@/lib/tours/configs/admin-devotionals";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import {
   Dialog,
   DialogContent,
@@ -112,6 +115,12 @@ function DevotionalsManagementPageContent() {
 
   const { data, loading, refetch } = useQuery<{ devotionals: Devotional[] }>(GET_ALL_DEVOTIONALS, {
     variables: { limit: 1000 },
+  });
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_devotionals_v1",
+    steps: ADMIN_DEVOTIONALS_TOUR_CONFIG.steps || [],
+    autoStart: true,
   });
 
   const [createDevotional, { loading: creating }] = useMutation<{ createDevotional: DevotionalMutationResponse }>(CREATE_DEVOTIONAL);
@@ -375,19 +384,24 @@ function DevotionalsManagementPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Devotionals"
-          description="Manage daily devotionals and inspirational content"
-          actions={
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Devotional
-            </Button>
-          }
-        />
+        <div data-tour="devotionals-header">
+          <PageHeader
+            title="Devotionals"
+            description="Manage daily devotionals and inspirational content"
+            actions={
+              <>
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+                <Button onClick={() => setShowCreateDialog(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Devotional
+                </Button>
+              </>
+            }
+          />
+        </div>
 
         {/* Statistics */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div data-tour="devotionals-stats" className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -440,7 +454,7 @@ function DevotionalsManagementPageContent() {
         )}
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="devotionals-filters">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Filter className="h-5 w-5" />
@@ -515,7 +529,7 @@ function DevotionalsManagementPageContent() {
         </Card>
 
         {/* Devotionals List */}
-        <Card>
+        <Card data-tour="devotionals-list">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">

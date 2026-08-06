@@ -10,6 +10,8 @@
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
 import { OnboardingCarousel } from "@/components/onboarding/OnboardingCarousel";
+import { useOnboarding } from "@/lib/hooks/use-onboarding";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useQuery } from "@apollo/client/react";
 import { GET_MY_CONTRIBUTIONS } from "@/lib/graphql/queries";
@@ -21,7 +23,7 @@ import { WELCOME_TOUR_CONFIG } from "@/lib/tours/tour-configs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, DollarSign, Calendar, Shield, FolderKey, Receipt, HelpCircle } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, Shield, FolderKey, Receipt } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
@@ -86,6 +88,14 @@ function DashboardContent() {
     steps: WELCOME_TOUR_CONFIG.steps || [],
     autoStart: false,
   });
+  // First-run sequencing: the onboarding carousel must be dismissed/completed
+  // before the driver.js welcome tour auto-starts, so members never see both
+  // at once. `onboardingComplete` covers "already dismissed on a prior
+  // visit" (backend-synced); `onboardingJustFinished` covers "dismissed just
+  // now, in this render" via the carousel's onComplete callback.
+  const { isComplete: onboardingComplete } = useOnboarding();
+  const [onboardingJustFinished, setOnboardingJustFinished] = useState(false);
+  const onboardingDismissed = onboardingComplete || onboardingJustFinished;
 
   const { data, loading, error } = useQuery<ContributionsData>(GET_MY_CONTRIBUTIONS, {
     variables: {
@@ -111,16 +121,18 @@ function DashboardContent() {
   // Calculate contributions early for useEffect dependency
   const contributions = data?.myContributions || [];
 
-  // Auto-start welcome tour for new users (optional - remove if not wanted)
+  // Auto-start welcome tour for new users — but only after the onboarding
+  // carousel has been dismissed/completed, so the two first-run overlays
+  // never fire simultaneously (carousel first, then the element tour).
   useEffect(() => {
-    if (isReady && contributions.length === 0) {
+    if (isReady && onboardingDismissed && contributions.length === 0) {
       // Auto-start for new users with no contributions
       const timer = setTimeout(() => {
         startWelcomeTour();
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isReady, contributions.length, startWelcomeTour]);
+  }, [isReady, onboardingDismissed, contributions.length, startWelcomeTour]);
 
   // Group contributions by contributionGroupId
   const contributionGroups = useMemo<ContributionGroup[]>(() => {
@@ -180,9 +192,11 @@ function DashboardContent() {
   return (
     <ProtectedRoute>
       <MemberLayout>
-        {/* First-run intro overlay; self-gates via localStorage so it
-            renders at most once per device. */}
-        <OnboardingCarousel />
+        {/* First-run intro overlay; self-gates via the backend-synced
+            onboarding_carousel_v1 tutorial state so it renders at most once
+            per member. onComplete flips the local gate immediately so the
+            welcome tour below can start right after, not simultaneously. */}
+        <OnboardingCarousel onComplete={() => setOnboardingJustFinished(true)} />
         <div className="-m-4 sm:-m-6 lg:-m-8 min-h-full bg-gradient-to-br from-muted to-muted/60">
           {/* Header */}
           <header data-tour="dashboard-header" className="bg-card border-b border-border">
@@ -192,17 +206,11 @@ function DashboardContent() {
                   <h1 className="text-2xl font-bold">My Dashboard</h1>
                   <p className="text-sm text-muted-foreground">Welcome, {user?.fullName}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
+                <ReplayTourButton
                   onClick={() => startWelcomeTour()}
                   disabled={!isReady}
-                  title="Replay the dashboard walkthrough"
                   className="self-start"
-                >
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Tour</span>
-                </Button>
+                />
               </div>
             </div>
           </header>

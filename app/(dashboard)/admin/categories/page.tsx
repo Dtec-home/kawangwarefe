@@ -33,6 +33,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_CATEGORIES_TOUR_CONFIG } from "@/lib/tours/configs/admin-categories";
 import {
   Plus,
   Pencil,
@@ -293,6 +296,12 @@ function CategoryManagementPageContent() {
   );
   const [fundSettingsTarget, setFundSettingsTarget] = useState<FundExpenseSettings | null>(null);
 
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_categories_v1",
+    steps: ADMIN_CATEGORIES_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
+
   const [createCategory, { loading: creating }] = useMutation<CreateCategoryData>(CREATE_CATEGORY);
   const [updateCategory, { loading: updating }] = useMutation<UpdateCategoryData>(UPDATE_CATEGORY);
   const [deleteCategory, { loading: deleting }] = useMutation<DeleteCategoryData>(DELETE_CATEGORY);
@@ -483,19 +492,24 @@ function CategoryManagementPageContent() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <PageHeader
-          title="Contribution Departments"
-          description="Manage contribution departments (e.g., Tithe, Offering, Building Fund)"
-          actions={
-            <Button onClick={() => { setShowCreateForm(!showCreateForm); clearMessages(); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Department
-            </Button>
-          }
-        />
+        <div data-tour="categories-header">
+          <PageHeader
+            title="Contribution Departments"
+            description="Manage contribution departments (e.g., Tithe, Offering, Building Fund)"
+            actions={
+              <>
+                <Button onClick={() => { setShowCreateForm(!showCreateForm); clearMessages(); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Department
+                </Button>
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+              </>
+            }
+          />
+        </div>
 
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-4">
+        <div data-tour="categories-stats" className="grid md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Departments</CardTitle>
@@ -740,7 +754,7 @@ function CategoryManagementPageContent() {
         )}
 
         {/* Departments List */}
-        <Card>
+        <Card data-tour="categories-list">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FolderOpen className="h-5 w-5" />

@@ -23,6 +23,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PageHeader } from "@/components/ui/page-header";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_RECEIPT_SETTINGS_TOUR_CONFIG } from "@/lib/tours/configs/admin-receipt-settings";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { ArrowLeft, CheckCircle, AlertCircle, Save } from "lucide-react";
 import Link from "next/link";
 
@@ -75,6 +78,12 @@ function ReceiptSettingsPageContent() {
     { refetchQueries: [{ query: GET_NEXT_RECEIPT_NUMBER }] }
   );
 
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_receipt_settings_v1",
+    steps: ADMIN_RECEIPT_SETTINGS_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -126,16 +135,19 @@ function ReceiptSettingsPageContent() {
   return (
     <AdminLayout>
       <div className="space-y-6 max-w-2xl">
-        <div className="flex items-center gap-2">
+        <div data-tour="receipt-settings-header" className="flex items-center gap-2">
           <Link href="/admin/contributions/manual-entry">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <PageHeader
-            title="Receipt Book Settings"
-            description="Configure the auto-incrementing manual receipt numbers"
-          />
+          <div className="flex-1">
+            <PageHeader
+              title="Receipt Book Settings"
+              description="Configure the auto-incrementing manual receipt numbers"
+              actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+            />
+          </div>
         </div>
 
         {success && (
@@ -154,7 +166,7 @@ function ReceiptSettingsPageContent() {
           </Alert>
         )}
 
-        <Card>
+        <Card data-tour="receipt-settings-card">
           <CardHeader>
             <CardTitle>Receipt Sequence</CardTitle>
             <CardDescription>
@@ -216,7 +228,7 @@ function ReceiptSettingsPageContent() {
                 </p>
               </div>
 
-              <Button type="submit" disabled={submitting || loading}>
+              <Button data-tour="receipt-settings-save" type="submit" disabled={submitting || loading}>
                 {submitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>

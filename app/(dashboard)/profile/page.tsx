@@ -18,6 +18,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -35,6 +36,17 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   GET_CONTRIBUTION_CATEGORIES,
   GET_MY_CONTRIBUTION_STATS,
 } from "@/lib/graphql/queries";
@@ -43,9 +55,14 @@ import {
   GET_ME,
   UPDATE_MEMBER_PROFILE,
 } from "@/lib/graphql/profile-mutations";
+import { RESET_ALL_TUTORIALS } from "@/lib/graphql/tutorial-mutations";
+import { ONBOARDING_STORAGE_KEY } from "@/lib/hooks/use-onboarding";
 import { uploadAvatar } from "@/lib/profile/avatar-upload";
 import { useAuth } from "@/lib/auth/auth-context";
-import { Camera, UserRound, Users, Bell } from "lucide-react";
+import { useTour } from "@/hooks/use-tour";
+import { PROFILE_TOUR_CONFIG } from "@/lib/tours/configs/profile";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { Camera, UserRound, Users, Bell, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { useRouter } from "next/navigation";
@@ -95,6 +112,13 @@ interface UpdateProfileData {
       department: { id: string; name: string } | null;
       groups: GroupItem[];
     } | null;
+  };
+}
+
+interface ResetAllTutorialsData {
+  resetAllTutorials: {
+    success: boolean;
+    message: string;
   };
 }
 
@@ -169,6 +193,35 @@ function ProfileContent() {
     UPDATE_MEMBER_PROFILE,
     { refetchQueries: [{ query: GET_ME }] }
   );
+
+  const [resetAllTutorials, { loading: resettingTutorials }] =
+    useMutation<ResetAllTutorialsData>(RESET_ALL_TUTORIALS);
+
+  const { start: startProfileTour, isReady: isProfileTourReady } = useTour({
+    tourKey: "profile_v1",
+    steps: PROFILE_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
+
+  const handleResetTutorials = async () => {
+    try {
+      const { data } = await resetAllTutorials();
+      const result = data?.resetAllTutorials;
+      if (result?.success) {
+        // Clear the onboarding carousel's local fast-path cache too, so it
+        // (and the driver.js tours) re-surface right away instead of
+        // waiting for the next backend sync — see lib/hooks/use-onboarding.ts.
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+        }
+        toast.success("All tutorials reset — they'll show again as you revisit each page.");
+      } else {
+        toast.error(result?.message || "Could not reset tutorials");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unexpected error");
+    }
+  };
 
   // First paint after the `me` query resolves: seed the form from current state.
   if (
@@ -304,14 +357,20 @@ function ProfileContent() {
   return (
     <div className="max-w-2xl mx-auto py-6 space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader data-tour="profile-header">
           <CardTitle>My Profile</CardTitle>
           <CardDescription>
             Update the department and groups you belong to.
           </CardDescription>
+          <CardAction>
+            <ReplayTourButton
+              onClick={() => startProfileTour()}
+              disabled={!isProfileTourReady}
+            />
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center gap-4">
+          <div data-tour="profile-avatar" className="flex items-center gap-4">
             <div
               aria-label="Profile picture"
               className="w-20 h-20 rounded-full overflow-hidden bg-muted flex items-center justify-center"
@@ -381,7 +440,7 @@ function ProfileContent() {
             <p className="font-medium">{me.phoneNumber}</p>
           </div>
 
-          <Card id="contribution-totals" tabIndex={-1}>
+          <Card id="contribution-totals" data-tour="profile-totals" tabIndex={-1}>
             <CardHeader>
               <CardTitle className="text-base">My Contribution Breakdown</CardTitle>
               <CardDescription>
@@ -490,7 +549,7 @@ function ProfileContent() {
             </CardContent>
           </Card>
 
-          <div>
+          <div data-tour="profile-department">
             <Label htmlFor="department">Department</Label>
             <Select
               value={departmentId ?? ""}
@@ -541,7 +600,7 @@ function ProfileContent() {
             )}
           </div>
 
-          <div className="flex justify-between items-center gap-2 flex-wrap">
+          <div data-tour="profile-links" className="flex justify-between items-center gap-2 flex-wrap">
             <div className="flex gap-2 flex-wrap">
               <Button
                 type="button"
@@ -564,6 +623,41 @@ function ProfileContent() {
               {saving ? "Saving…" : "Save changes"}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Tutorials &amp; walkthroughs</CardTitle>
+          <CardDescription>
+            Replay the first-run intro and every page&apos;s guided tour, as if you were seeing
+            them for the first time.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button type="button" variant="outline" disabled={resettingTutorials}>
+                <RotateCcw className="h-4 w-4 mr-2" />
+                {resettingTutorials ? "Resetting…" : "Replay all tutorials"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Replay all tutorials?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This resets the intro carousel and every guided tour you&apos;ve already
+                  dismissed, so they show again the next time you visit those pages.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetTutorials}>
+                  Reset tutorials
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>

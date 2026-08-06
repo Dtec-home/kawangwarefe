@@ -37,6 +37,7 @@ vi.mock('@apollo/client/react', () => ({
     data: { messageCampaign: campaign, messageCampaignRecipients: recipients },
     loading: false, error: null,
   }),
+  useMutation: () => [vi.fn(), { loading: false }],
 }))
 
 vi.mock('@/components/auth/admin-protected-route', () => ({

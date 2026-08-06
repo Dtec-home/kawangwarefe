@@ -17,6 +17,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -30,6 +31,9 @@ import { ADD_CHILD, GET_MY_DEPENDENTS } from "@/lib/graphql/family-mutations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useTour } from "@/hooks/use-tour";
+import { PROFILE_FAMILY_TOUR_CONFIG } from "@/lib/tours/configs/profile-family";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 
 interface Dependent {
   id: string;
@@ -60,6 +64,12 @@ function FamilyContent() {
   );
   const [addChild, { loading: submitting }] =
     useMutation<AddChildData>(ADD_CHILD);
+
+  const { start: startFamilyTour, isReady: isFamilyTourReady } = useTour({
+    tourKey: "profile_family_v1",
+    steps: PROFILE_FAMILY_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -101,14 +111,20 @@ function FamilyContent() {
   return (
     <div className="max-w-2xl mx-auto py-6 space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader data-tour="family-header">
           <CardTitle>My Family</CardTitle>
           <CardDescription>
             Add children under your care. They will not authenticate separately;
             you remain responsible for their church records and giving.
           </CardDescription>
+          <CardAction>
+            <ReplayTourButton
+              onClick={() => startFamilyTour()}
+              disabled={!isFamilyTourReady}
+            />
+          </CardAction>
         </CardHeader>
-        <CardContent>
+        <CardContent data-tour="family-list">
           {loading && !data && (
             <div className="space-y-3" aria-hidden="true">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -144,7 +160,7 @@ function FamilyContent() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="family-add-form">
         <CardHeader>
           <CardTitle>Add a child</CardTitle>
           <CardDescription>

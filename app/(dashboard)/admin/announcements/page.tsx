@@ -17,6 +17,9 @@ import {
 import { SortableList } from "@/components/ui/sortable-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_ANNOUNCEMENTS_TOUR_CONFIG } from "@/lib/tours/configs/admin-announcements";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
@@ -126,6 +129,11 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 function AnnouncementsManagementPageContent() {
   const { confirm, ConfirmDialog } = useConfirmDialog();
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_announcements_v1",
+    steps: ADMIN_ANNOUNCEMENTS_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -490,12 +498,16 @@ function AnnouncementsManagementPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          data-tour="announcements-header"
+          className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        >
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Announcements</h1>
             <p className="text-muted-foreground">Manage church announcements and notices</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
             <Button
               variant="outline"
               onClick={() => setShowBulkDialog(true)}
@@ -512,7 +524,7 @@ function AnnouncementsManagementPageContent() {
         </div>
 
         {/* Statistics */}
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div data-tour="announcements-stats" className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -581,7 +593,7 @@ function AnnouncementsManagementPageContent() {
         )}
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="announcements-filters">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Filter className="h-5 w-5" />
@@ -644,7 +656,7 @@ function AnnouncementsManagementPageContent() {
         </Card>
 
         {/* Announcements List */}
-        <Card>
+        <Card data-tour="announcements-list">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">

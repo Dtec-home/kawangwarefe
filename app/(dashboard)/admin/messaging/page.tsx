@@ -13,30 +13,44 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_MESSAGING_TOUR_CONFIG } from "@/lib/tours/configs/admin-messaging";
 import { CampaignComposer } from "@/components/messaging/CampaignComposer";
 import { TemplateManager } from "@/components/messaging/TemplateManager";
 import { CampaignHistory } from "@/components/messaging/CampaignHistory";
 import { QuickSendComposer } from "@/components/messaging/QuickSendComposer";
 
 function MessagingContent() {
+  const { start: startTour, isReady } = useTour({
+    tourKey: "admin_messaging_v1",
+    steps: ADMIN_MESSAGING_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
+
   return (
     <div className="space-y-6">
-      <PageHeader title="Messaging" />
+      <div data-tour="messaging-header">
+        <PageHeader
+          title="Messaging"
+          actions={<ReplayTourButton onClick={() => startTour()} disabled={!isReady} />}
+        />
+      </div>
 
       <Tabs defaultValue="quick">
-        <TabsList>
+        <TabsList data-tour="messaging-tabs">
           <TabsTrigger value="quick" className="gap-1.5">
             <Zap className="h-3.5 w-3.5" />
             Quick Send
           </TabsTrigger>
-          <TabsTrigger value="compose">New Campaign</TabsTrigger>
+          <TabsTrigger value="compose" data-tour="messaging-tab-compose">New Campaign</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="history" data-tour="messaging-tab-history">History</TabsTrigger>
         </TabsList>
 
         {/* Quick Send — write once, pick recipients, send */}
         <TabsContent value="quick">
-          <Card>
+          <Card data-tour="messaging-quick-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-warning" />

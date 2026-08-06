@@ -31,6 +31,10 @@ import {
   MultiCategorySelector,
   CategoryAmount,
 } from "@/components/forms/multi-category-selector";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_MANUAL_ENTRY_TOUR_CONFIG } from "@/lib/tours/configs/admin-manual-entry";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Save,
   Search,
@@ -41,6 +45,7 @@ import {
   UserX,
   Plus,
   Settings,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -90,6 +95,12 @@ function ManualContributionPageContent() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_manual_entry_v1",
+    steps: ADMIN_MANUAL_ENTRY_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
 
   // Next auto-assigned book receipt number (read-only hint, still overridable).
   const { data: nextReceiptData } = useQuery<NextReceiptNumberResult>(
@@ -227,7 +238,7 @@ function ManualContributionPageContent() {
     <AdminLayout>
       <div className="space-y-6 max-w-3xl">
         {/* Page Header */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-tour="manual-entry-header">
           <Link href="/admin/contributions">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
@@ -237,6 +248,7 @@ function ManualContributionPageContent() {
             title="Manual Contribution Entry"
             description="Record contributions from envelopes, cash, or manual entries"
             className="flex-1"
+            actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
           />
         </div>
 
@@ -263,7 +275,7 @@ function ManualContributionPageContent() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Member Lookup */}
-          <Card>
+          <Card data-tour="manual-entry-identity">
             <CardHeader>
               <CardTitle>Member Information</CardTitle>
               <CardDescription>
@@ -372,7 +384,7 @@ function ManualContributionPageContent() {
           </Card>
 
           {/* Contribution Details */}
-          <Card>
+          <Card data-tour="manual-entry-details">
             <CardHeader>
               <CardTitle>Contribution Details</CardTitle>
               <CardDescription>
@@ -382,7 +394,28 @@ function ManualContributionPageContent() {
             <CardContent className="space-y-4">
               {/* Entry Type */}
               <div className="space-y-2">
-                <Label htmlFor="entryType">Entry Type</Label>
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="entryType">Entry Type</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label="What does each entry type mean?"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-64">
+                        &ldquo;Local Evangelism/Loose Money&rdquo; is the display
+                        label for the &ldquo;cash&rdquo; entry type. &ldquo;Manual
+                        Entry&rdquo; is a catch-all for any other manually recorded
+                        contribution.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <Select value={entryType} onValueChange={setEntryType}>
                   <SelectTrigger id="entryType">
                     <SelectValue />
@@ -406,7 +439,7 @@ function ManualContributionPageContent() {
               </div>
 
               {/* Receipt Number */}
-              <div className="space-y-2">
+              <div className="space-y-2" data-tour="manual-entry-receipt">
                 <Label htmlFor="receipt">Receipt Number (Optional)</Label>
                 <Input
                   id="receipt"
@@ -439,7 +472,7 @@ function ManualContributionPageContent() {
           </Card>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3" data-tour="manual-entry-actions">
             <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
               {submitting ? (
                 <>

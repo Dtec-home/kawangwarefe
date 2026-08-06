@@ -31,6 +31,9 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_LEADERS_TOUR_CONFIG } from "@/lib/tours/configs/admin-leaders";
 import {
   Plus,
   Pencil,
@@ -364,6 +367,11 @@ function SortableLeaderRow({
 
 function LeadersManagementPageContent() {
   const { confirm, ConfirmDialog } = useConfirmDialog();
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_leaders_v1",
+    steps: ADMIN_LEADERS_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [success, setSuccess] = useState("");
@@ -582,27 +590,30 @@ function LeadersManagementPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex items-center justify-between">
+        <div data-tour="leaders-header" className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Leaders &amp; About</h1>
             <p className="text-muted-foreground">
               Manage the leadership team shown on the public About and home pages
             </p>
           </div>
-          <Button
-            onClick={() => {
-              setShowCreateForm(!showCreateForm);
-              setNewForm(emptyForm);
-              clearMessages();
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Leader
-          </Button>
+          <div className="flex items-center gap-2">
+            <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+            <Button
+              onClick={() => {
+                setShowCreateForm(!showCreateForm);
+                setNewForm(emptyForm);
+                clearMessages();
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Leader
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-4">
+        <div data-tour="leaders-stats" className="grid md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
@@ -678,7 +689,7 @@ function LeadersManagementPageContent() {
         )}
 
         {/* Leaders List */}
-        <Card>
+        <Card data-tour="leaders-list">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />

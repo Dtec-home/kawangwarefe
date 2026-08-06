@@ -30,6 +30,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_REPORTS_TOUR_CONFIG } from "@/lib/tours/configs/admin-reports";
 import { toast } from "sonner";
 
 interface Category {
@@ -247,6 +250,12 @@ function ReportsPageContent() {
   const [progressExpandedMembers, setProgressExpandedMembers] = useState<Set<string>>(new Set());
   const [progressSortBy, setProgressSortBy] = useState<"total" | "name" | "count">("total");
   const [progressChartMemberId, setProgressChartMemberId] = useState<string | null>(null);
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_reports_v1",
+    steps: ADMIN_REPORTS_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
 
   const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
   const allCategories = categoriesData?.contributionCategories || [];
@@ -594,9 +603,15 @@ function ReportsPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <PageHeader title="Reports" description="Generate and download contribution reports" />
+        <div data-tour="reports-header">
+          <PageHeader
+            title="Reports"
+            description="Generate and download contribution reports"
+            actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+          />
+        </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" data-tour="reports-modes">
           <Button
             variant={reportMode === "overview" ? "default" : "outline"}
             onClick={() => setReportMode("overview")}
@@ -931,7 +946,10 @@ function ReportsPageContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 p-3">
+            <div
+              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/40 p-3"
+              data-tour="reports-filters"
+            >
               <div>
                 <p className="text-sm font-medium">Active Filters</p>
                 <div className="mt-1 flex flex-wrap gap-2">
@@ -1062,7 +1080,7 @@ function ReportsPageContent() {
 
             {!routingReportLoading && routingSummary && (
               <>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-tour="reports-results">
                   <Card>
                     <CardContent className="pt-6">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Completed</p>

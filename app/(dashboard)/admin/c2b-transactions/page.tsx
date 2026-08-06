@@ -13,6 +13,7 @@ import { useQuery, useLazyQuery, useMutation } from "@apollo/client/react";
 import {
   GET_C2B_TRANSACTIONS,
   GET_C2B_TRANSACTION_STATS,
+  GET_STALE_MPESA_TRANSACTIONS,
   RESOLVE_UNMATCHED_C2B,
 } from "@/lib/graphql/c2b-queries";
 import {
@@ -47,12 +48,17 @@ import {
   RefreshCw,
   Plus,
   Trash2,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge, type StatusVariant } from "@/components/ui/status-badge";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_C2B_TRANSACTIONS_TOUR_CONFIG } from "@/lib/tours/configs/admin-c2b-transactions";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /* ── Types ───────────────────────────────────────────────────── */
 
@@ -91,6 +97,18 @@ interface AllocationRow {
   categoryId: string;
   purposeId: string;
   amount: string;
+}
+
+interface StaleMpesaTransaction {
+  id: string;
+  phoneNumber: string;
+  amount: string;
+  status: string;
+  checkoutRequestId: string;
+  merchantRequestId: string;
+  mpesaReceiptNumber: string | null;
+  transactionDate: string | null;
+  resultDesc: string | null;
 }
 
 /* ── Helpers ─────────────────────────────────────────────────── */
@@ -182,9 +200,29 @@ function AllocationRowItem({
 
       {/* Purpose */}
       <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">
-          Purpose{needsPurpose ? (purposeRequired ? "" : " (optional)") : ""}
-        </Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-xs text-muted-foreground">
+            Purpose{needsPurpose ? (purposeRequired ? "" : " (optional)") : ""}
+          </Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="Why does the Purpose field change?"
+              >
+                <Info className="h-3 w-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-64">
+                Some departments require a purpose here, some make it
+                optional, and others don&apos;t show it at all — it depends
+                on how the department is configured.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
         {needsPurpose && row.categoryId ? (
           purposesLoading ? (
             <p className="text-xs text-muted-foreground pt-2">Loading…</p>
@@ -445,6 +483,12 @@ export default function C2BTransactionsPage() {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
 
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_c2b_transactions_v1",
+    steps: ADMIN_C2B_TRANSACTIONS_TOUR_CONFIG.steps || [],
+    autoStart: false,
+  });
+
   const { data: categoriesData } = useQuery<{ contributionCategories: Category[] }>(
     GET_CONTRIBUTION_CATEGORIES
   );
@@ -479,27 +523,37 @@ export default function C2BTransactionsPage() {
   const total = data?.c2bTransactions.total ?? 0;
   const hasMore = data?.c2bTransactions.hasMore ?? false;
 
-  const refetchAll = () => { refetchTx(); refetchStats(); };
+  const { data: staleData, loading: staleLoading, refetch: refetchStale } = useQuery<{
+    staleMpesaTransactions: StaleMpesaTransaction[];
+  }>(GET_STALE_MPESA_TRANSACTIONS);
+  const staleTransactions = staleData?.staleMpesaTransactions ?? [];
+
+  const refetchAll = () => { refetchTx(); refetchStats(); refetchStale(); };
   const handleResolved = () => { setPage(0); refetchAll(); };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <PageHeader
-          title="C2B Transactions"
-          description="M-Pesa Pay Bill payments — review and resolve unmatched transactions"
-          actions={
-            <Button variant="outline" onClick={refetchAll}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          }
-        />
+        <div data-tour="c2b-header">
+          <PageHeader
+            title="C2B Transactions"
+            description="M-Pesa Pay Bill payments — review and resolve unmatched transactions"
+            actions={
+              <>
+                <Button variant="outline" onClick={refetchAll}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+              </>
+            }
+          />
+        </div>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-tour="c2b-stats">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Received</CardTitle>
@@ -572,7 +626,7 @@ export default function C2BTransactionsPage() {
         )}
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="c2b-filters">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" /> Filters
@@ -606,7 +660,7 @@ export default function C2BTransactionsPage() {
         </Card>
 
         {/* Transactions Table */}
-        <Card>
+        <Card data-tour="c2b-table">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="h-5 w-5" /> Pay Bill Transactions
@@ -766,6 +820,62 @@ export default function C2BTransactionsPage() {
                   </div>
                 </div>
               </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Stale STK transactions — needs manual review */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-warning" /> Stale STK Transactions
+            </CardTitle>
+            <CardDescription>
+              STK Push payments still &quot;pending&quot; 24h after the customer was
+              prompted — Safaricom&apos;s status was never confirmed and the automatic
+              sweep has given up. Look these up directly with Safaricom, or write them off.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {staleLoading && (
+              <div className="space-y-3">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
+                ))}
+              </div>
+            )}
+            {!staleLoading && staleTransactions.length === 0 && (
+              <Empty
+                icon={CheckCircle}
+                title="Nothing needs review"
+                description="No STK transactions have gone stale."
+              />
+            )}
+            {!staleLoading && staleTransactions.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-3 font-medium">Phone</th>
+                      <th className="text-right p-3 font-medium">Amount</th>
+                      <th className="text-left p-3 font-medium">Checkout Request ID</th>
+                      <th className="text-left p-3 font-medium">Last Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {staleTransactions.map((tx) => (
+                      <tr key={tx.id} className="border-b hover:bg-muted/60">
+                        <td className="p-3 font-mono">{tx.phoneNumber}</td>
+                        <td className="p-3 text-right font-semibold">{fmtAmount(tx.amount)}</td>
+                        <td className="p-3 font-mono text-xs">{tx.checkoutRequestId}</td>
+                        <td className="p-3 text-xs text-muted-foreground">
+                          {tx.resultDesc || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>

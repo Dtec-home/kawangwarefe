@@ -17,6 +17,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_CATEGORY_PURPOSES_TOUR_CONFIG } from "@/lib/tours/configs/admin-category-purposes";
 import { CheckCircle, AlertCircle, Plus, Trash2, ArrowLeft, Pencil, ListChecks } from "lucide-react";
 import { GET_DEPARTMENT_PURPOSES, GET_CATEGORY_ALLOCATIONS } from "@/lib/graphql/queries";
 import {
@@ -147,6 +150,12 @@ export default function DepartmentPurposesPage() {
   const [createPurpose, { loading: creating }] = useMutation<CreatePurposeData>(CREATE_DEPARTMENT_PURPOSE);
   const [updatePurpose] = useMutation<UpdatePurposeData>(UPDATE_DEPARTMENT_PURPOSE);
   const [deletePurpose, { loading: deleting }] = useMutation<DeletePurposeData>(DELETE_DEPARTMENT_PURPOSE);
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_category_purposes_v1",
+    steps: ADMIN_CATEGORY_PURPOSES_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
 
   const [createAlloc, { loading: creatingAlloc }] = useMutation<CreateAllocData>(CREATE_PURPOSE_ALLOCATION);
   const [updateAlloc] = useMutation<UpdateAllocData>(UPDATE_PURPOSE_ALLOCATION);
@@ -397,18 +406,23 @@ export default function DepartmentPurposesPage() {
     <AdminProtectedRoute>
       <AdminLayout>
         <div className="space-y-6">
-          <PageHeader
-            title="Department Purposes"
-            description="Manage giving purposes for this department."
-            actions={
-              <Link href="/admin/categories">
-                <Button variant="outline">
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Back to Departments
-                </Button>
-              </Link>
-            }
-          />
+          <div data-tour="purposes-header">
+            <PageHeader
+              title="Department Purposes"
+              description="Manage giving purposes for this department."
+              actions={
+                <>
+                  <Link href="/admin/categories">
+                    <Button variant="outline">
+                      <ArrowLeft className="h-4 w-4 mr-1" />
+                      Back to Departments
+                    </Button>
+                  </Link>
+                  <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+                </>
+              }
+            />
+          </div>
 
           {success && (
             <Alert>
@@ -426,7 +440,7 @@ export default function DepartmentPurposesPage() {
             </Alert>
           )}
 
-          <Card>
+          <Card data-tour="purposes-add">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -481,7 +495,7 @@ export default function DepartmentPurposesPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="purposes-list">
             <CardHeader>
               <CardTitle>Current Purposes ({purposes.length})</CardTitle>
             </CardHeader>
@@ -624,7 +638,7 @@ export default function DepartmentPurposesPage() {
           </Card>
           {/* Auto-Split Allocation Section */}
           {purposes.length >= 1 && (
-            <Card>
+            <Card data-tour="purposes-allocations">
               <CardHeader>
                 <CardTitle>Auto-Split Allocations</CardTitle>
                 <CardDescription>

@@ -27,6 +27,9 @@ import { Empty } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_EVENTS_TOUR_CONFIG } from "@/lib/tours/configs/admin-events";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import {
   Dialog,
   DialogContent,
@@ -179,6 +182,12 @@ function EventsManagementPageContent() {
 
   const { data, loading, refetch } = useQuery<{ events: Event[] }>(GET_ALL_EVENTS, {
     variables: { limit: 1000 },
+  });
+
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_events_v1",
+    steps: ADMIN_EVENTS_TOUR_CONFIG.steps || [],
+    autoStart: true,
   });
 
   const { data: categoriesData } = useQuery<{ contributionCategories: Category[] }>(
@@ -489,19 +498,24 @@ function EventsManagementPageContent() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Events"
-          description="Manage church events and gatherings"
-          actions={
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Event
-            </Button>
-          }
-        />
+        <div data-tour="events-header">
+          <PageHeader
+            title="Events"
+            description="Manage church events and gatherings"
+            actions={
+              <>
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+                <Button onClick={() => setShowCreateDialog(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Event
+                </Button>
+              </>
+            }
+          />
+        </div>
 
         {/* Statistics */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div data-tour="events-stats" className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Total Events</CardTitle>
@@ -537,7 +551,7 @@ function EventsManagementPageContent() {
         </div>
 
         {/* Filters */}
-        <Card>
+        <Card data-tour="events-filters">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Filter className="h-5 w-5" />
@@ -608,7 +622,7 @@ function EventsManagementPageContent() {
         </Card>
 
         {/* Events List */}
-        <Card>
+        <Card data-tour="events-list">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">

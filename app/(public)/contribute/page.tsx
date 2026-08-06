@@ -9,12 +9,13 @@ import { useTour } from "@/hooks/use-tour";
 import { CONTRIBUTION_FLOW_TOUR_CONFIG } from "@/lib/tours/tour-configs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { ArrowLeft } from "lucide-react";
 
 export default function ContributePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const { start: startContributionTour } = useTour({
+  const { start: startContributionTour, isReady: isContributionTourReady } = useTour({
     tourKey: "contribution_flow",
     steps: CONTRIBUTION_FLOW_TOUR_CONFIG.steps || [],
     autoStart: false,
@@ -78,15 +79,10 @@ export default function ContributePage() {
       <main className="container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
+            <ReplayTourButton
               onClick={() => startContributionTour()}
-              title="View contribution guide"
-            >
-              <HelpCircle className="w-4 h-4 mr-2" />
-              How to Contribute
-            </Button>
+              disabled={!isContributionTourReady}
+            />
           </div>
 
           <div data-tour="contribution-form" className="animate-slide-up">

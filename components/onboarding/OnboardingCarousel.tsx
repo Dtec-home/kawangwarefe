@@ -5,8 +5,10 @@
  *
  * A skippable, multi-slide intro overlay shown to first-time members — the
  * web counterpart of the mobile app's intro slides. Slides are data-driven so
- * copy/imagery can change without touching the component (DRY/OCP). The
- * localStorage flag (via `useOnboarding`) guarantees it appears only once.
+ * copy/imagery can change without touching the component (DRY/OCP).
+ * Completion is tracked backend-side (tutorial key `onboarding_carousel_v1`,
+ * see `useOnboarding`) so it appears only once per member, consistently
+ * across devices; a localStorage flag is kept only as a fast-path cache.
  */
 
 import { useState } from "react";

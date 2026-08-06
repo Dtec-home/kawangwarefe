@@ -20,7 +20,9 @@ import { MultiCategorySelector, CategoryAmount } from "./multi-category-selector
 import { ContributionSummary } from "./contribution-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ArrowRight, CheckCircle2, Check } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, ArrowRight, CheckCircle2, Check, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { GET_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
@@ -504,6 +506,30 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
                 data-tour="contribution-categories"
                 className="space-y-2 max-h-[clamp(180px,40dvh,420px)] overflow-y-auto overflow-x-hidden -mx-1 px-1 pb-1"
               >
+                <div
+                  data-tour="contribution-multi-department-hint"
+                  className="flex items-center gap-1.5"
+                >
+                  <Label className="text-sm font-medium text-foreground">
+                    Departments &amp; Purposes
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="About splitting one payment across multiple departments"
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      You can add multiple departments or purposes here — they&apos;ll
+                      all be combined into a single M-Pesa prompt for one total
+                      payment.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <MultiCategorySelector
                   contributions={contributions}
                   phoneNumber={phoneNumber}

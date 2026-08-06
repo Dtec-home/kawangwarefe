@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_PRAYERS_TOUR_CONFIG } from "@/lib/tours/configs/admin-prayers";
 import { StatusBadge, type StatusVariant } from "@/components/ui/status-badge";
 import {
   Select,
@@ -64,6 +67,11 @@ const STATUS_VARIANT: Record<string, StatusVariant> = {
 
 function AdminPrayersContent() {
   const [filter, setFilter] = useState<PrayerStatus | "">("");
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_prayers_v1",
+    steps: ADMIN_PRAYERS_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
   const { data, loading, refetch } = useQuery<GetRowsData>(GET_PRAYER_REQUESTS, {
     variables: { status: filter || null },
     fetchPolicy: "cache-and-network",
@@ -93,9 +101,14 @@ function AdminPrayersContent() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Prayer Requests" />
+      <div data-tour="prayers-header">
+        <PageHeader
+          title="Prayer Requests"
+          actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+        />
+      </div>
 
-      <Card>
+      <Card data-tour="prayers-filter">
         <CardHeader>
           <CardTitle>Filter</CardTitle>
         </CardHeader>
@@ -118,7 +131,7 @@ function AdminPrayersContent() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="prayers-list">
         <CardHeader>
           <CardTitle>Requests ({rows.length})</CardTitle>
         </CardHeader>

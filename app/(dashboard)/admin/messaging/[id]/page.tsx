@@ -23,6 +23,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { useTour } from "@/hooks/use-tour";
+import { ADMIN_MESSAGING_DETAIL_TOUR_CONFIG } from "@/lib/tours/configs/admin-messaging-detail";
 import {
   StatusBadge,
   statusToVariant,
@@ -99,6 +102,12 @@ function CampaignDetailContent() {
   const params = useParams<{ id: string }>();
   const campaignId = params?.id ?? "";
 
+  const { start: startTour, isReady: isTourReady } = useTour({
+    tourKey: "admin_messaging_detail_v1",
+    steps: ADMIN_MESSAGING_DETAIL_TOUR_CONFIG.steps || [],
+    autoStart: true,
+  });
+
   const { data, loading } = useQuery<DetailData>(GET_MESSAGE_CAMPAIGN, {
     variables: { campaignId },
     pollInterval: 4000,
@@ -146,17 +155,22 @@ function CampaignDetailContent() {
         >
           ← Back to messaging
         </Link>
-        <PageHeader
-          title={`Campaign #${campaign.id} — ${campaign.template.name}`}
-          actions={
-            <StatusBadge variant={campaignStatusVariant(campaign.status)}>
-              {campaign.status}
-            </StatusBadge>
-          }
-        />
+        <div data-tour="campaign-detail-header">
+          <PageHeader
+            title={`Campaign #${campaign.id} — ${campaign.template.name}`}
+            actions={
+              <div className="flex items-center gap-2">
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+                <StatusBadge variant={campaignStatusVariant(campaign.status)}>
+                  {campaign.status}
+                </StatusBadge>
+              </div>
+            }
+          />
+        </div>
       </div>
 
-      <Card>
+      <Card data-tour="campaign-detail-progress">
         <CardHeader>
           <CardTitle>Progress</CardTitle>
           <CardDescription>
@@ -171,7 +185,7 @@ function CampaignDetailContent() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="campaign-detail-recipients">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recipients ({recipients.length})</CardTitle>
           <Button
