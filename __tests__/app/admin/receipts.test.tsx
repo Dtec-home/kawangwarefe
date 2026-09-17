@@ -9,6 +9,7 @@ const { state, mockVoid, mockRefetch, toastMock, pushMock } = vi.hoisted(() => (
     canVoidReceipts: true,
     receipts: [] as unknown[],
     totalCount: 0,
+    voidRequests: [] as unknown[],
     queryCalls: [] as Array<{ body: string; variables: Record<string, unknown> | undefined }>,
   },
   mockVoid: vi.fn(),
@@ -22,7 +23,10 @@ vi.mock('@apollo/client/react', () => ({
     const body = doc?.loc?.source?.body || ''
     state.queryCalls.push({ body, variables: options?.variables })
     return {
-      data: { receipts: { items: state.receipts, totalCount: state.totalCount } },
+      data: {
+        receipts: { items: state.receipts, totalCount: state.totalCount },
+        voidRequests: body.includes('voidRequests') ? state.voidRequests : undefined,
+      },
       loading: false,
       error: undefined,
       refetch: mockRefetch,
@@ -37,6 +41,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: pushMock, replace: vi.fn() }),
   usePathname: () => '/admin/receipts',
   useSearchParams: () => new URLSearchParams(),
+}))
+
+vi.mock('@/lib/hooks/use-pending-void-request-count', () => ({
+  usePendingVoidRequestCount: ({ enabled }: { enabled: boolean }) => (enabled ? 2 : 0),
 }))
 
 vi.mock('@/lib/hooks/use-user-role', () => ({
@@ -248,5 +256,27 @@ describe('ReceiptsPage', () => {
       expect(toastMock.error).toHaveBeenCalledWith('Permission denied: only a treasurer or admin can void receipts')
     )
     expect(mockRefetch).not.toHaveBeenCalled()
+  })
+
+  it('shows the Void requests tab with its pending count for treasurers/admins', () => {
+    state.voidRequests = [
+      {
+        id: '5', requestedByName: 'Tom Recorder', reason: 'Typed 5000 instead of 500', status: 'pending',
+        decidedByName: null, decidedAt: null, decisionNote: '', createdAt: '2026-09-17T08:00:00Z',
+        receipt: { id: '11', number: '20260917-0003', receiptDate: '2026-09-17', channel: 'cash', status: 'issued', totalAmount: '5000.00', giverName: null, memberName: 'Mary Wanjiru' },
+      },
+    ]
+    render(<ReceiptsPage />)
+    const tab = screen.getByRole('tab', { name: /Void requests/ })
+    expect(within(tab).getByLabelText('2 pending')).toBeInTheDocument()
+    fireEvent.mouseDown(tab)
+    expect(screen.getByText('Typed 5000 instead of 500')).toBeInTheDocument()
+  })
+
+  it('has no Void requests tab without canVoidReceipts', () => {
+    state.canVoidReceipts = false
+    render(<ReceiptsPage />)
+    expect(screen.queryByRole('tab', { name: /Void requests/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('table')).toBeInTheDocument()
   })
 })

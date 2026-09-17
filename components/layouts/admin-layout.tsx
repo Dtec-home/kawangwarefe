@@ -12,6 +12,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@apollo/client/react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useUserRole, type AdminFeature } from "@/lib/hooks/use-user-role";
+import { usePendingVoidRequestCount } from "@/lib/hooks/use-pending-void-request-count";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { HelpButton } from "@/components/help/HelpButton";
@@ -71,7 +72,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, isPureRecorder, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, isPureRecorder, canVoidReceipts, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  // T2.6 — pending receipt void requests (treasurer/admin only)
+  const pendingVoidRequests = usePendingVoidRequestCount({ enabled: !!canVoidReceipts });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Errors ignored — the sidebar falls back to the user-initial icon if the
   // authenticated member can't be loaded.
@@ -266,6 +269,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/50"
                           }`} />
                           <span className="text-sm">{item.name}</span>
+                          {item.feature === "receipts" && pendingVoidRequests > 0 && (
+                            <span
+                              className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-xs font-semibold leading-none text-white"
+                              aria-label={`${pendingVoidRequests} pending void requests`}
+                            >
+                              {pendingVoidRequests}
+                            </span>
+                          )}
                         </Button>
                       );
                     })}
