@@ -6,7 +6,7 @@ export const TREASURER_STATEMENT_DEPARTMENTS_ARTICLE: HelpArticle = {
   category: "Treasury",
   roles: ["admin"],
   relatedRoute: "/admin/categories",
-  body: `The columns of the Treasurer's Cash Statement come from your departments — nothing is fixed in the system. Set each department up once, and new departments appear on the statement automatically. The treasurer decides the values. Saving the department edit form needs the admin role, so if you are a treasurer without it, ask an admin to enter them.
+  body: `The columns of the Treasurer's Cash Statement come from your departments — nothing is fixed in the system. Set each department up once, and new departments appear on the statement automatically. The treasurer decides the values. Treasurers can edit a department and save Trust fund and Statement order; changing any other department field needs the admin role.
 
 **Trust fund (remitted to conference)**
 On Admin → Categories, edit a department and switch on "Trust fund (remitted to conference)" for money that goes to the conference — for example Tithe, Combined Offering, Camp Meeting Offering, Thanksgiving Offering, Conference Evangelism and Station Fund. Leave it off for local funds such as Church Budget, Building, Local Evangelism, Sabbath School, Choir or Welfare. Each department shows a Trust or Local badge in the list.

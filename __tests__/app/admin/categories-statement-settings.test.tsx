@@ -5,7 +5,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 
-const { mockCreate, mockUpdate, toastMock } = vi.hoisted(() => ({
+const { mockCreate, mockUpdate, toastMock, roleMock } = vi.hoisted(() => ({
+  roleMock: { isAdmin: true, isTreasurer: false },
   mockCreate: vi.fn(),
   mockUpdate: vi.fn(),
   toastMock: { success: vi.fn(), error: vi.fn() },
@@ -36,6 +37,7 @@ vi.mock('@apollo/client/react', () => ({
 }))
 
 vi.mock('sonner', () => ({ toast: toastMock }))
+vi.mock('@/lib/hooks/use-user-role', () => ({ useUserRole: () => roleMock }))
 vi.mock('@/components/layouts/admin-layout', () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
@@ -123,6 +125,25 @@ describe('Categories page — Cash Statement settings', () => {
     await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1))
     const { variables } = mockUpdate.mock.calls[0][0]
     expect(variables).toMatchObject({ categoryId: '1', isTrustFund: false, statementOrder: 3 })
+  })
+
+  it('a treasurer (not admin) sends only the Cash Statement settings', async () => {
+    roleMock.isAdmin = false
+    roleMock.isTreasurer = true
+    try {
+      mockUpdate.mockResolvedValue({ data: { updateCategory: { success: true, message: 'Updated' } } })
+      render(<CategoryManagementPage />)
+      const titheRow = screen.getByText('Tithe').closest('div[class*="border"]') as HTMLElement
+      fireEvent.click(within(titheRow).getByRole('button', { name: /^Edit$/i }))
+      fireEvent.change(screen.getByLabelText('Statement order'), { target: { value: '5' } })
+      fireEvent.click(screen.getByRole('button', { name: /^Save$/i }))
+
+      await waitFor(() => expect(mockUpdate).toHaveBeenCalledTimes(1))
+      expect(mockUpdate.mock.calls[0][0].variables).toEqual({ categoryId: '1', isTrustFund: true, statementOrder: 5 })
+    } finally {
+      roleMock.isAdmin = true
+      roleMock.isTreasurer = false
+    }
   })
 
   it('surfaces a backend refusal via toast', async () => {

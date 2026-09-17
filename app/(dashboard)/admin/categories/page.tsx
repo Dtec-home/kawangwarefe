@@ -53,6 +53,7 @@ import {
 import { StatementColumnsPreviewDialog } from "@/components/treasury/statement-columns-preview";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 
 type Audience = "all" | "adult" | "children";
 type RoutingMode = "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
@@ -329,6 +330,7 @@ function CategoryManagementPageContent() {
 
   const [createCategory, { loading: creating }] = useMutation<CreateCategoryData>(CREATE_CATEGORY);
   const [updateCategory, { loading: updating }] = useMutation<UpdateCategoryData>(UPDATE_CATEGORY);
+  const { isAdmin, isTreasurer } = useUserRole();
   const [deleteCategory, { loading: deleting }] = useMutation<DeleteCategoryData>(DELETE_CATEGORY);
 
   const clearMessages = () => {
@@ -453,8 +455,11 @@ function CategoryManagementPageContent() {
     }
 
     try {
+      // Treasurers (without admin) may only change the Cash Statement settings;
+      // the backend refuses any other field from them.
+      const statementOnly = isTreasurer && !isAdmin;
       const { data } = await updateCategory({
-        variables: {
+        variables: statementOnly ? { categoryId, isTrustFund: editIsTrustFund, statementOrder } : {
           categoryId,
           name: editName.trim(),
           code: editCode.trim().toUpperCase(),
