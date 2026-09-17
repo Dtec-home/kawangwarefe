@@ -94,6 +94,15 @@ describe('ReportsPage', () => {
     expect(screen.getByText(/Generate & Download Report/)).toBeInTheDocument()
   })
 
+  it("renders the Treasurer's Cash Statement card first in Exports mode", () => {
+    render(<ReportsPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Exports' }))
+    const cashStatement = screen.getByText("Treasurer's Cash Statement")
+    const generateReport = screen.getByText('Generate Report')
+    expect(cashStatement.compareDocumentPosition(generateReport) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Preview columns/i })).toBeInTheDocument()
+  })
+
   it('renders quick report action cards in Exports mode', () => {
     render(<ReportsPage />)
     fireEvent.click(screen.getByRole('button', { name: 'Exports' }))
