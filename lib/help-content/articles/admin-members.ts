@@ -17,7 +17,7 @@ Search by name, phone number, or member number, and filter to Active Only or Ina
 
 **Each member row**
 - **Edit** — update name, phone, and email inline.
-- **Roles** (shield icon) — toggle admin, treasurer, pastor, content_admin, or member.
+- **Roles** (shield icon) — toggle admin, treasurer, pastor, content_admin, recorder, or member. Recorder is for people who only record cash/envelope giving — see "Assigning the Recorder role".
 - **Groups** (people icon) — check/uncheck which groups the member belongs to.
 - **Department numbers** (hash icon, only shown when at least one department tracks a member identifier) — set the member's number for departments like Welfare that track a per-member number. Enable this per department under Admin → Categories → edit → "Track a per-member number".
 - **Activate/Deactivate** — toggles the member's active status; a confirmation dialog appears first.
