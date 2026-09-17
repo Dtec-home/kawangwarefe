@@ -56,3 +56,20 @@ export async function resolvePostLoginRedirect(explicitRedirect: string | null |
   if (explicitRedirect) return explicitRedirect;
   return (await fetchIsPureRecorder()) ? RECORDER_LANDING : DEFAULT_LANDING;
 }
+
+/** Where the middleware sends signed-in visitors of /login and /verify-otp. */
+export const POST_LOGIN_PATH = "/post-login";
+
+const AUTH_ROUTES = ["/login", "/verify-otp", POST_LOGIN_PATH];
+
+/**
+ * A same-origin path that is safe to redirect to, or null. Rejects absolute
+ * and protocol-relative URLs (open redirects) and the auth routes themselves
+ * (redirect loops).
+ */
+export function safeRedirectPath(value: string | null | undefined): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return null;
+  const pathname = value.split(/[?#]/)[0];
+  if (AUTH_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) return null;
+  return value;
+}

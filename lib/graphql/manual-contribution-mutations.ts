@@ -54,6 +54,8 @@ export const CREATE_MANUAL_CONTRIBUTION = gql`
  * sharing one contribution group and one system receipt (`receiptNumber`,
  * YYYYMMDD-NNNN). The `receiptNumber` argument is only a typed old book
  * number. Supports walk-in givers (Ticket 7) via optional phoneNumber + giverName.
+ * `idempotencyKey` (T5.3): repeating a key returns the first result with
+ * `idempotentReplay: true` instead of recording the gift twice.
  */
 export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
   mutation CreateManualMultiContribution(
@@ -64,6 +66,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
     $transactionDate: String
     $notes: String
     $giverName: String
+    $idempotencyKey: String
   ) {
     createManualMultiContribution(
       contributions: $contributions
@@ -73,6 +76,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
       transactionDate: $transactionDate
       notes: $notes
       giverName: $giverName
+      idempotencyKey: $idempotencyKey
     ) {
       success
       message
@@ -81,6 +85,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
       receiptNumber
       isGuest
       smsSent
+      idempotentReplay
     }
   }
 `;

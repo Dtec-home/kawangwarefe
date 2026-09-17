@@ -3,6 +3,7 @@
  *
  * Mobile-first — used on phones during Sabbath service. Works the same for
  * staff (RR-9) and pure recorders (RR-3..RR-6); the backend enforces access.
+ * A collection session banner (T5.3) sits above the tabs.
  */
 
 "use client";
@@ -17,6 +18,7 @@ import {
   type RecorderEntryType,
 } from "@/components/recorder/record-gift-form";
 import { TodaysEntries } from "@/components/recorder/todays-entries";
+import { CollectionSessionBanner } from "@/components/recorder/collection-session-banner";
 import { useActiveEntryUnlocks } from "@/lib/hooks/use-active-entry-unlocks";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import {
@@ -24,6 +26,10 @@ import {
   type MyRecordedReceiptsData,
   type MyRecordedReceiptsVars,
 } from "@/lib/graphql/recorder-queries";
+import {
+  GET_MY_OPEN_COLLECTION_SESSION,
+  type MyOpenCollectionSessionData,
+} from "@/lib/graphql/collection-session-queries";
 
 const ENTRY_TYPE_STORAGE_KEY = "recorder.entryType";
 
@@ -51,6 +57,11 @@ export function RecorderWorkspace() {
     { fetchPolicy: "cache-and-network", notifyOnNetworkStatusChange: false }
   );
   const today = data?.myRecordedReceipts;
+  const sessionQuery = useQuery<MyOpenCollectionSessionData>(GET_MY_OPEN_COLLECTION_SESSION, {
+    fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: false,
+  });
+  const refetchSession = sessionQuery.refetch;
 
   const setEntryType = (next: RecorderEntryType) => {
     setEntryTypeState(next);
@@ -61,11 +72,19 @@ export function RecorderWorkspace() {
     }
   };
 
+  const refreshSession = useCallback(() => {
+    refetchSession().catch(() => {
+      /* the banner hides itself when the session is unavailable */
+    });
+  }, [refetchSession]);
+
+  // After each save both today's list and the session totals change.
   const refresh = useCallback(() => {
     refetch().catch(() => {
       /* shown by the list's error state */
     });
-  }, [refetch]);
+    refreshSession();
+  }, [refetch, refreshSession]);
 
   // Refresh when the recorder comes back to the tab/app (e.g. after printing).
   useEffect(() => {
@@ -88,6 +107,12 @@ export function RecorderWorkspace() {
   return (
     <div className="mx-auto w-full max-w-xl space-y-4">
       <PageHeader title="Record giving" description="Cash and envelope gifts, with a receipt for every giver." />
+      <CollectionSessionBanner
+        session={sessionQuery.data ? sessionQuery.data.myOpenCollectionSession : undefined}
+        loading={sessionQuery.loading}
+        unavailable={!!sessionQuery.error}
+        onChanged={refreshSession}
+      />
       <Tabs value={tab} onValueChange={changeTab} className="space-y-4">
         <TabsList className="grid h-11 w-full grid-cols-2">
           <TabsTrigger value="record" className="h-9">

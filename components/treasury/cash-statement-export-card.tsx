@@ -5,6 +5,8 @@
  * Sabbath (default: the most recent Saturday in Nairobi) or a date range,
  * PDF or Excel, US Letter or A4 → generateCashStatement → download.
  * A collapsible period summary (T4.1, T4.2) follows the chosen range.
+ * For a single date the certification status and Certify / Unlock actions
+ * are shown (T5.3).
  */
 
 import { useState } from "react";
@@ -17,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PeriodSummary } from "@/components/treasury/period-summary";
 import { StatementColumnsPreviewDialog } from "@/components/treasury/statement-columns-preview";
+import { StatementCertificationControl } from "@/components/treasury/statement-certification";
 import {
   GENERATE_CASH_STATEMENT,
   type GenerateCashStatementData,
@@ -141,15 +144,18 @@ export function CashStatementExportCard() {
         </div>
 
         {mode === "single" ? (
-          <div className="space-y-2 sm:max-w-xs">
-            <Label htmlFor="cash-statement-date">Date</Label>
-            <Input
-              id="cash-statement-date"
-              type="date"
-              value={singleDate}
-              onChange={(e) => setSingleDate(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">Defaults to the most recent Sabbath.</p>
+          <div className="space-y-3">
+            <div className="space-y-2 sm:max-w-xs">
+              <Label htmlFor="cash-statement-date">Date</Label>
+              <Input
+                id="cash-statement-date"
+                type="date"
+                value={singleDate}
+                onChange={(e) => setSingleDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Defaults to the most recent Sabbath.</p>
+            </div>
+            {singleDate && <StatementCertificationControl date={singleDate} />}
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 sm:max-w-lg">

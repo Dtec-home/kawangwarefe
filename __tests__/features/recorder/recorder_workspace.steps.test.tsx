@@ -37,6 +37,8 @@ import {
 } from '@/lib/graphql/manual-contribution-mutations'
 import { GET_CONTRIBUTION_CATEGORIES, GET_PAYBILL_INSTRUCTION_MESSAGE } from '@/lib/graphql/queries'
 import { GET_MY_RECORDED_RECEIPTS, REQUEST_RECEIPT_VOID } from '@/lib/graphql/recorder-queries'
+import { GET_MY_OPEN_COLLECTION_SESSION } from '@/lib/graphql/collection-session-queries'
+import { equal } from '@wry/equality'
 import { RecorderWorkspace } from '@/components/recorder/recorder-workspace'
 
 const feature = loadFeature('./recorder_workspace.feature', { loadRelativePath: true })
@@ -100,6 +102,11 @@ function baseMocks(world: World): MockedResponse[] {
       maxUsageCount: 50,
     },
     {
+      request: { query: GET_MY_OPEN_COLLECTION_SESSION, variables: () => true },
+      result: { data: { myOpenCollectionSession: null } },
+      maxUsageCount: 50,
+    },
+    {
       request: { query: GET_MY_RECORDED_RECEIPTS, variables: () => true },
       result: () => ({
         data: {
@@ -120,7 +127,14 @@ function baseMocks(world: World): MockedResponse[] {
 
 function createMock(variables: Record<string, unknown>, receiptNumber: string, smsSent: boolean): MockedResponse {
   return {
-    request: { query: CREATE_MANUAL_MULTI_CONTRIBUTION, variables },
+    request: {
+      query: CREATE_MANUAL_MULTI_CONTRIBUTION,
+      // Every submission carries a client idempotency key (T5.3)
+      variables: (actual: Record<string, unknown>) => {
+        const { idempotencyKey, ...rest } = actual
+        return typeof idempotencyKey === 'string' && idempotencyKey.length > 0 && equal(rest, variables)
+      },
+    },
     result: {
       data: {
         createManualMultiContribution: {
@@ -132,6 +146,7 @@ function createMock(variables: Record<string, unknown>, receiptNumber: string, s
           receiptNumber,
           isGuest: false,
           smsSent,
+          idempotentReplay: false,
         },
       },
     },

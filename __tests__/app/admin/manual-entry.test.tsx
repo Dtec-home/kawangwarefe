@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 // Apollo mock: returns categories for the department selector.
@@ -7,7 +7,7 @@ const createMock = vi.fn().mockResolvedValue({
 })
 const { unlockState, toastMock } = vi.hoisted(() => ({
   unlockState: { unlockDates: [] as string[] },
-  toastMock: { success: vi.fn(), error: vi.fn() },
+  toastMock: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }))
 const lookupMock = vi.fn().mockResolvedValue({
   data: { lookupMemberByPhone: { found: false } },
@@ -259,5 +259,67 @@ describe('ManualEntryPage', () => {
     const { variables } = createMock.mock.calls[0][0]
     expect(variables.transactionDate).toBe('2026-08-29')
     expect(variables.receiptNumber).toBe('1043')
+  })
+
+  // T5.3 — idempotent submissions
+  describe('idempotency key', () => {
+    const issued = {
+      data: { createManualMultiContribution: { success: true, message: 'ok', receiptNumber: '20260917-0012', idempotentReplay: false } },
+    }
+    afterEach(() => {
+      createMock.mockReset()
+      createMock.mockResolvedValue(issued)
+    })
+
+    it('reuses the same key when retrying after a network error', async () => {
+      createMock.mockReset()
+      createMock.mockRejectedValueOnce(new Error('Failed to fetch')).mockResolvedValueOnce(issued)
+      render(<ManualEntryPage />)
+      await fillValidEntry()
+      fireEvent.click(screen.getByRole('button', { name: /Save Contribution/i }))
+
+      expect(await screen.findByText('Failed to fetch')).toBeInTheDocument()
+      expect(screen.getByText(/Retrying will not record it twice/)).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+
+      await waitFor(() => expect(createMock).toHaveBeenCalledTimes(2))
+      const first = createMock.mock.calls[0][0].variables.idempotencyKey
+      const second = createMock.mock.calls[1][0].variables.idempotencyKey
+      expect(first).toMatch(/^[0-9a-f-]{36}$/)
+      expect(second).toBe(first)
+      expect(await screen.findByRole('link', { name: '20260917-0012' })).toBeInTheDocument()
+    })
+
+    it('uses a new key for the next entry', async () => {
+      createMock.mockReset()
+      createMock.mockResolvedValue(issued)
+      render(<ManualEntryPage />)
+      await fillValidEntry()
+      fireEvent.click(screen.getByRole('button', { name: /Save Contribution/i }))
+      await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1))
+      await screen.findByRole('link', { name: '20260917-0012' })
+      fireEvent.click(screen.getByRole('button', { name: /^Add Another$/ }))
+      await fillValidEntry()
+      fireEvent.click(screen.getByRole('button', { name: /Save Contribution/i }))
+      await waitFor(() => expect(createMock).toHaveBeenCalledTimes(2))
+      expect(createMock.mock.calls[1][0].variables.idempotencyKey).not.toBe(
+        createMock.mock.calls[0][0].variables.idempotencyKey
+      )
+    })
+
+    it('shows the original receipt with an "Already recorded" toast on a replay', async () => {
+      createMock.mockReset()
+      createMock.mockResolvedValue({
+        data: { createManualMultiContribution: { success: true, message: 'Duplicate', receiptNumber: '20260917-0009', idempotentReplay: true } },
+      })
+      toastMock.info.mockClear()
+      render(<ManualEntryPage />)
+      await fillValidEntry()
+      fireEvent.click(screen.getByRole('button', { name: /Save Contribution/i }))
+      expect(await screen.findByRole('link', { name: '20260917-0009' })).toBeInTheDocument()
+      expect(screen.getByText('Already recorded')).toBeInTheDocument()
+      expect(toastMock.info).toHaveBeenCalledWith('Already recorded', expect.anything())
+      expect(toastMock.success).not.toHaveBeenCalled()
+    })
   })
 })

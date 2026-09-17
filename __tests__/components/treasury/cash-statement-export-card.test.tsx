@@ -18,6 +18,9 @@ vi.mock('@apollo/client/react', () => ({
 }))
 vi.mock('sonner', () => ({ toast: toastMock }))
 vi.mock('@/lib/download-base64-file', () => ({ downloadBase64File: mockDownload }))
+vi.mock('@/components/treasury/statement-certification', () => ({
+  StatementCertificationControl: ({ date }: { date: string }) => <div data-testid="certification-stub">{date}</div>,
+}))
 vi.mock('@/components/treasury/period-summary', () => ({
   PeriodSummary: (props: { dateFrom: string; dateTo: string; refreshKey?: number }) => {
     summaryProps.push(props)
@@ -208,5 +211,16 @@ describe('CashStatementExportCard', () => {
       fireEvent.click(generateButton())
       await waitFor(() => expect(screen.getByTestId('period-summary-stub')).toHaveTextContent('#1'))
     })
+  })
+
+  // T5.3 — certification status for a single date
+  it('shows certification for the chosen single date only', () => {
+    useClock(WEDNESDAY)
+    render(<CashStatementExportCard />)
+    expect(screen.getByTestId('certification-stub')).toHaveTextContent('2026-09-12')
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-09-05' } })
+    expect(screen.getByTestId('certification-stub')).toHaveTextContent('2026-09-05')
+    pick('Period', 'Date range')
+    expect(screen.queryByTestId('certification-stub')).not.toBeInTheDocument()
   })
 })

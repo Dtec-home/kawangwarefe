@@ -6,12 +6,17 @@
  * to /record → they request a void → a treasurer approves it in
  * /admin/receipts?tab=void-requests → the recorder's list shows VOID.
  *
+ * A second journey (T5.3): a signed-in recorder visiting /login lands on
+ * /record → starts a collection session → records a gift → closes & counts
+ * with a variance reason.
+ *
  * GraphQL is intercepted with a small stateful fake (like
  * admin-receipts.spec.ts), so only the Next dev server is needed. The persona
  * answering `currentUserRole` is switched mid-test to play the treasurer.
  */
 
 import { test, expect, Page } from "@playwright/test";
+import { injectSession } from "./helpers/auth";
 
 /** A JWT-shaped token the client can decode (the signature is fake). */
 function fakeJwt(): string {
@@ -75,6 +80,9 @@ async function interceptGraphQL(page: Page) {
     voidRequests: [] as Array<Record<string, unknown>>,
     createCalls: [] as Array<Record<string, unknown>>,
     voidRequestCalls: [] as Array<Record<string, unknown>>,
+    session: null as Record<string, unknown> | null,
+    openSessionCalls: [] as Array<Record<string, unknown>>,
+    closeSessionCalls: [] as Array<Record<string, unknown>>,
   };
 
   await page.route(/\/graphql\/?$/, async (route, request) => {
@@ -149,10 +157,59 @@ async function interceptGraphQL(page: Page) {
             giver: { __typename: "MemberLookupGiverType", id: "7", displayName: "Mary Wanjiru" },
           },
         });
+      case "MyOpenCollectionSession":
+        return respond({ myOpenCollectionSession: state.session });
+      case "OpenCollectionSession": {
+        state.openSessionCalls.push(variables);
+        state.session = {
+          __typename: "CollectionSessionType",
+          id: "31",
+          date: today,
+          name: String(variables.name),
+          status: "open",
+          openedByName: "Rita Recorder",
+          countedCash: null,
+          countedBreakdown: [],
+          varianceReason: "",
+          recordedTotal: "0.00",
+          variance: null,
+          receiptCount: 0,
+          closedByName: null,
+          closedAt: null,
+          confirmedByName: null,
+          confirmedAt: null,
+          createdAt: new Date().toISOString(),
+        };
+        return respond({
+          openCollectionSession: {
+            __typename: "CollectionSessionResponse",
+            success: true,
+            message: "Collection session opened",
+            session: state.session,
+          },
+        });
+      }
+      case "CloseCollectionSession": {
+        state.closeSessionCalls.push(variables);
+        const closed = { ...state.session, status: "closed", countedCash: variables.countedCash };
+        state.session = null;
+        return respond({
+          closeCollectionSession: {
+            __typename: "CollectionSessionResponse",
+            success: true,
+            message: "Collection session closed",
+            session: closed,
+          },
+        });
+      }
       case "CreateManualMultiContribution": {
         state.createCalls.push(variables);
         const lines = (variables.contributions as Array<{ categoryId: string; amount: string }>) ?? [];
         const total = lines.reduce((sum, l) => sum + Number(l.amount), 0);
+        if (state.session) {
+          state.session.receiptCount = Number(state.session.receiptCount) + 1;
+          state.session.recordedTotal = (Number(state.session.recordedTotal) + total).toFixed(2);
+        }
         const number = `${today.replaceAll("-", "")}-${String(state.receipts.length + 7).padStart(4, "0")}`;
         state.receipts.push({
           __typename: "ReceiptType",
@@ -375,5 +432,63 @@ test.describe("Recorder workspace", () => {
     await expect(voided.getByText("VOID", { exact: true })).toBeVisible();
     await expect(voided.getByRole("button", { name: /Resend SMS/ })).toHaveCount(0);
     await expect(voided.getByRole("button", { name: "Request void" })).toHaveCount(0);
+  });
+
+  test("signed-in recorder lands on /record, opens a session, records and closes & counts", async ({ page }) => {
+    test.setTimeout(180_000);
+    const state = await interceptGraphQL(page);
+    await injectSession(page, { userId: 5, memberId: 5, fullName: "Rita Recorder" });
+
+    // Already signed in: /login → /post-login → /record for a pure recorder
+    await page.goto("/login", { waitUntil: "networkidle" });
+    await expect(page).toHaveURL(/\/record$/, { timeout: 60_000 });
+    await expect(page.getByRole("heading", { name: "Record giving" })).toBeVisible({ timeout: 60_000 });
+
+    // Start a collection session (default name)
+    await expect(page.getByLabel("Session name")).toHaveValue("Divine Service");
+    await page.getByRole("button", { name: /Start collection session/ }).click();
+    await expect(page.getByTestId("session-totals")).toContainText("0 receipts");
+    expect(state.openSessionCalls).toEqual([{ name: "Divine Service" }]);
+
+    // Record a walk-in cash gift of 1,500
+    await page.getByLabel("Walk-in / no phone").click();
+    await page.getByLabel("Giver Name *").fill("Visitor - John");
+    await page.locator("#category-0").click();
+    await page.getByRole("option", { name: /Tithe/ }).click();
+    await page.locator("#amount-0").fill("1500");
+    await page.getByRole("button", { name: /Review & save/ }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Confirm & issue receipt" }).click();
+    await expect(page.getByTestId("issued-receipt-number")).toHaveText(/^\d{8}-\d{4}$/);
+    expect(state.createCalls[0].idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
+    await expect(page.getByTestId("session-totals")).toContainText("1 receipt · KES 1,500.00 recorded");
+
+    // Close & count: KES 1,300 counted, breakdown must match, reason required
+    await page.getByRole("button", { name: /Close & count/ }).click();
+    const sheet = page.getByRole("dialog");
+    await sheet.getByLabel("Counted cash (KES)").fill("1300");
+    await sheet.getByLabel("KES 1,000", { exact: true }).fill("1");
+    await sheet.getByLabel("KES 200", { exact: true }).fill("1");
+    await expect(sheet.getByTestId("breakdown-error")).toContainText("adds up to KES 1,200.00");
+    await sheet.getByLabel("KES 100", { exact: true }).fill("1");
+    await expect(sheet.getByTestId("breakdown-error")).toBeHidden();
+    await expect(sheet.getByTestId("close-variance")).toContainText("Variance −KES 200.00");
+    await sheet.getByRole("button", { name: "Close session" }).click();
+    await expect(sheet.getByText(/at least 10 characters/)).toBeVisible();
+    await sheet.getByLabel("Reason for the difference").fill("Gave KES 200 change to a visitor");
+    await sheet.getByRole("button", { name: "Close session" }).click();
+    await expect(sheet).toBeHidden();
+    await expect(page.getByLabel("Session name")).toBeVisible();
+    expect(state.closeSessionCalls).toEqual([
+      {
+        id: "31",
+        countedCash: "1300.00",
+        countedBreakdown: [
+          { denomination: "1000", count: 1 },
+          { denomination: "200", count: 1 },
+          { denomination: "100", count: 1 },
+        ],
+        varianceReason: "Gave KES 200 change to a visitor",
+      },
+    ]);
   });
 });
