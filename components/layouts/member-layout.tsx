@@ -20,6 +20,7 @@ import {
   Shield,
   Newspaper,
   Info,
+  NotebookPen,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,7 +47,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { canAccessAdmin, canAccessContent } = useUserRole();
+  const { canAccessAdmin, canAccessContent, isRecorder, isStaff } = useUserRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -62,6 +63,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
 
   const extraAdminLinks: NavItem[] = [
     ...(canAccessAdmin ? [{ name: "Admin Panel", href: "/admin", icon: Shield }] : []),
+    ...(isRecorder || isStaff ? [{ name: "Record giving", href: "/record", icon: NotebookPen }] : []),
     ...(canAccessContent ? [{ name: "Church Content", href: "/admin/content", icon: Newspaper }] : []),
   ];
 

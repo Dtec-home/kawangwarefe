@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X } from "lucide-react";
+import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen } from "lucide-react";
 import { useState } from "react";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 
@@ -18,7 +18,10 @@ const primaryAdminLinks: NavItem[] = [
   { href: "/admin/reports", label: "Reports", icon: FileText },
 ];
 
+const recordLink: NavItem = { href: "/record", label: "Record giving", icon: NotebookPen };
+
 const moreAdminLinks: NavItem[] = [
+  recordLink,
   { href: "/admin/categories", label: "Departments", icon: FolderOpen },
   { href: "/admin/groups", label: "Groups", icon: UserRound },
   { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
@@ -31,7 +34,7 @@ const moreAdminLinks: NavItem[] = [
 export function AdminBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { canAccessFeature } = useUserRole();
+  const { canAccessFeature, isPureRecorder } = useUserRole();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (href: string) => {
@@ -51,15 +54,17 @@ export function AdminBottomNav() {
     "/admin/content": "content",
     "/admin/messaging": "messaging",
     "/admin/prayers": "prayers",
+    "/record": "record",
   };
 
-  const visiblePrimary = primaryAdminLinks.filter(
-    (link) => canAccessFeature(featureMap[link.href] as never)
-  );
+  // A pure recorder has a single destination — show it in the bar itself
+  const visiblePrimary = isPureRecorder
+    ? [recordLink]
+    : primaryAdminLinks.filter((link) => canAccessFeature(featureMap[link.href] as never));
 
-  const visibleMore = moreAdminLinks.filter(
-    (link) => canAccessFeature(featureMap[link.href] as never)
-  );
+  const visibleMore = isPureRecorder
+    ? []
+    : moreAdminLinks.filter((link) => canAccessFeature(featureMap[link.href] as never));
 
   return (
     <>

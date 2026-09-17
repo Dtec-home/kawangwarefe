@@ -71,14 +71,20 @@ import {
 import Link from "next/link";
 
 const PAGE_SIZE = 100;
-const ALL_ROLES = ["admin", "treasurer", "pastor", "content_admin", "member"] as const;
+const ALL_ROLES = ["admin", "treasurer", "pastor", "content_admin", "recorder", "member"] as const;
 
 const ROLE_TONES: Record<string, RoleTone> = {
   admin: "warning",
   treasurer: "info",
   pastor: "primary",
   content_admin: "success",
+  recorder: "info",
   member: "neutral",
+};
+
+// Short help text shown next to a role in the role pickers
+const ROLE_DESCRIPTIONS: Partial<Record<string, string>> = {
+  recorder: "Can record cash/envelope giving only",
 };
 
 interface GroupItem {
@@ -413,6 +419,9 @@ function ManageRolesDialog({
                 <RoleBadge tone={ROLE_TONES[role] || "neutral"} className="capitalize">
                   {role.replace("_", " ")}
                 </RoleBadge>
+                {ROLE_DESCRIPTIONS[role] && (
+                  <span className="text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[role]}</span>
+                )}
               </label>
             );
           })}

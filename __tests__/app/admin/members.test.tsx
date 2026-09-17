@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock Apollo with data
 vi.mock('@apollo/client/react', () => ({
@@ -105,5 +105,12 @@ describe('MembersPage', () => {
   it('shows Import Members link', () => {
     render(<MembersPage />)
     expect(screen.getByText('Import')).toBeInTheDocument()
+  })
+
+  it('offers the recorder role with its description (T2.4)', async () => {
+    render(<MembersPage />)
+    fireEvent.click(screen.getAllByTitle('Manage Roles')[0])
+    expect(await screen.findByText('recorder')).toBeInTheDocument()
+    expect(screen.getByText('Can record cash/envelope giving only')).toBeInTheDocument()
   })
 })

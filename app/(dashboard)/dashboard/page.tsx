@@ -116,7 +116,7 @@ function DashboardContent() {
   const { roles: categoryAdminRoles, isAnyCategoryAdmin } = useMyCategoryAdminRoles();
 
   // Check if user has content admin role
-  const { isContentAdmin } = useUserRole();
+  const { isContentAdmin, isRecorder } = useUserRole();
 
   // Calculate contributions early for useEffect dependency
   const contributions = data?.myContributions || [];
@@ -236,6 +236,11 @@ function DashboardContent() {
                 <Button variant="outline" onClick={() => router.push("/contribute")}>
                   Give Now
                 </Button>
+                {isRecorder && (
+                  <Button variant="outline" onClick={() => router.push("/record")}>
+                    Record giving
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
