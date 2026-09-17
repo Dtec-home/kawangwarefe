@@ -34,6 +34,8 @@ import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
 import { ADMIN_REPORTS_TOUR_CONFIG } from "@/lib/tours/configs/admin-reports";
 import { toast } from "sonner";
+import { downloadBase64File as downloadFile } from "@/lib/download-base64-file";
+import { CashStatementExportCard } from "@/components/treasury/cash-statement-export-card";
 
 interface Category {
   id: string;
@@ -318,27 +320,6 @@ function ReportsPageContent() {
   });
 
   const [generateReport, { loading }] = useMutation<ReportResponse>(GENERATE_CONTRIBUTION_REPORT);
-
-  const downloadFile = (base64Data: string, filename: string, contentType: string) => {
-    // Convert base64 to blob
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.codePointAt(i) ?? 0;
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: contentType });
-
-    // Create download link
-    const url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    globalThis.URL.revokeObjectURL(url);
-  };
 
   const runExportForActivity = async (activityId: string, requestVariables: ExportRequestVariables) => {
     try {
@@ -659,6 +640,9 @@ function ReportsPageContent() {
             </Button>
           )}
         </div>
+
+        {/* Treasurer's Cash Statement (T3.4) */}
+        {isStaff && reportMode === "exports" && <CashStatementExportCard />}
 
         {/* Report Configuration */}
         {isStaff && reportMode === "exports" && (

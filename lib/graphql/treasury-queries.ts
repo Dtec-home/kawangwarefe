@@ -43,3 +43,25 @@ export interface EntryDateUnlock {
 export interface ActiveEntryDateUnlocksData {
   activeEntryDateUnlocks: EntryDateUnlock[];
 }
+
+/** Staff only: the Cash Statement's fund columns for a range, in print order (T3.1). */
+export const GET_STATEMENT_COLUMNS = gql`
+  query GetStatementColumns($dateFrom: Date!, $dateTo: Date!) {
+    statementColumns(dateFrom: $dateFrom, dateTo: $dateTo) {
+      key
+      label
+      isTrust
+    }
+  }
+`;
+
+export interface StatementColumn {
+  /** "category:<id>" or "purpose:<id>" */
+  key: string;
+  label: string;
+  isTrust: boolean;
+}
+
+export interface StatementColumnsData {
+  statementColumns: StatementColumn[];
+}

@@ -57,3 +57,29 @@ export interface CloseEntryDateUnlockData {
 export interface CloseEntryDateUnlockVars {
   id: string;
 }
+
+/**
+ * Staff only: the Treasurer's Cash Statement for [dateFrom, dateTo] (max 366
+ * days) as base64 — format "pdf" | "excel", paper "letter" | "a4" (T3.4).
+ */
+export const GENERATE_CASH_STATEMENT = gql`
+  mutation GenerateCashStatement($dateFrom: Date!, $dateTo: Date!, $format: String!, $paper: String) {
+    generateCashStatement(dateFrom: $dateFrom, dateTo: $dateTo, format: $format, paper: $paper) {
+      success
+      message
+      fileData
+      filename
+      contentType
+    }
+  }
+`;
+
+export interface GenerateCashStatementData {
+  generateCashStatement: {
+    success: boolean;
+    message: string;
+    fileData: string | null;
+    filename: string | null;
+    contentType: string | null;
+  };
+}
