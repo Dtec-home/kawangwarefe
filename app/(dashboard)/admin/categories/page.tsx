@@ -48,7 +48,9 @@ import {
   FolderOpen,
   ListChecks,
   Wallet,
+  Columns3,
 } from "lucide-react";
+import { StatementColumnsPreviewDialog } from "@/components/treasury/statement-columns-preview";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -300,6 +302,8 @@ function CategoryManagementPageContent() {
   const [editIsTrustFund, setEditIsTrustFund] = useState(false);
   const [editStatementOrder, setEditStatementOrder] = useState(DEFAULT_STATEMENT_ORDER);
 
+  const [showStatementPreview, setShowStatementPreview] = useState(false);
+
   const { data, loading, refetch } = useQuery<GetCategoriesData>(GET_ALL_CATEGORIES, {
     variables: { includeInactive: true },
   });
@@ -547,6 +551,10 @@ function CategoryManagementPageContent() {
             description="Manage contribution departments (e.g., Tithe, Offering, Building Fund)"
             actions={
               <>
+                <Button variant="outline" onClick={() => setShowStatementPreview(true)}>
+                  <Columns3 className="h-4 w-4 mr-2" />
+                  Statement preview
+                </Button>
                 <Button onClick={() => { setShowCreateForm(!showCreateForm); clearMessages(); }}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Department
@@ -1199,6 +1207,10 @@ function CategoryManagementPageContent() {
         open={fundSettingsTarget !== null}
         onOpenChange={(v) => { if (!v) setFundSettingsTarget(null); }}
         onSaved={() => void refetchFundSettings()}
+      />
+      <StatementColumnsPreviewDialog
+        open={showStatementPreview}
+        onOpenChange={setShowStatementPreview}
       />
       <ConfirmDialog />
     </AdminLayout>

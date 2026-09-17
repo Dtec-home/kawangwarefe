@@ -135,3 +135,11 @@ describe('Categories page — Cash Statement settings', () => {
     await waitFor(() => expect(toastMock.error).toHaveBeenCalledWith('Requires admin privileges'))
   })
 })
+
+describe('Categories page — statement preview', () => {
+  it('opens the Cash Statement columns preview from the header', () => {
+    render(<CategoryManagementPage />)
+    fireEvent.click(screen.getByRole('button', { name: /Statement preview/i }))
+    expect(screen.getByText('Cash Statement columns')).toBeInTheDocument()
+  })
+})
