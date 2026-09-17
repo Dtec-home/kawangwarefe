@@ -29,12 +29,19 @@ interface Contribution {
   status: string;
   transactionDate: string | null;
   purposeName: string | null;
+  // Redacted to "" for a viewer who is not the giver (nor staff / a scoped admin).
   departmentMemberIdentifier?: string | null;
   contributionGroupId: string | null;
+  /** System receipt number (YYYYMMDD-NNNN); never redacted, null until issued. */
+  receiptNumber?: string | null;
   member: {
     id: string;
+    /** First name only for a viewer who is not the giver. */
     fullName: string;
-    phoneNumber: string;
+    /** null for a viewer who is not the giver. */
+    phoneNumber?: string | null;
+    /** null for a viewer who is not the giver (not requested in every mode). */
+    memberNumber?: string | null;
   };
   category: {
     id: string;
@@ -42,8 +49,9 @@ interface Contribution {
   };
   mpesaTransaction: {
     id: string;
-    mpesaReceiptNumber: string | null;
-    resultDesc: string | null;
+    /** null for a viewer who is not the giver. */
+    mpesaReceiptNumber?: string | null;
+    resultDesc?: string | null;
   } | null;
 }
 
@@ -53,6 +61,18 @@ interface GetContributionData {
 
 interface GetContributionsByCheckoutData {
   contributionsByCheckoutId: Contribution[];
+}
+
+/**
+ * True when a redactable string actually carries a value.
+ *
+ * The backend blanks giver details for anyone who is not the giver (or staff /
+ * a scoped department admin): some fields come back as `null`, others as `""`.
+ * Every detail row that can be redacted is guarded with this so the page never
+ * renders an empty label/value pair.
+ */
+function hasText(value?: string | null): value is string {
+  return typeof value === "string" && value.trim() !== "";
 }
 
 function StatusIcon({ status }: { status: string }) {
@@ -124,6 +144,8 @@ function SingleContributionConfirmation({
 
   const statusConfig = getStatusConfig(contribution.status, contribution.mpesaTransaction?.resultDesc);
   const StatusIconEl = statusConfig.icon;
+  // Withheld (null) unless the viewer is the giver, staff or a scoped admin.
+  const mpesaReceiptNumber = contribution.mpesaTransaction?.mpesaReceiptNumber;
 
   return (
     <ConfirmationLayout>
@@ -132,9 +154,10 @@ function SingleContributionConfirmation({
       </StatusCard>
 
       <DetailsCard>
+        <ReceiptNumberPanel receiptNumbers={[contribution.receiptNumber]} />
         <DetailRow label="Amount" value={`KES ${Number.parseFloat(contribution.amount).toLocaleString()}`} />
         <DetailRow label="Department" value={contribution.category.name} />
-        {contribution.departmentMemberIdentifier && (
+        {hasText(contribution.departmentMemberIdentifier) && (
           <DetailRow
             label={`${contribution.category.name} member #`}
             value={<span className="font-mono">{contribution.departmentMemberIdentifier}</span>}
@@ -152,9 +175,9 @@ function SingleContributionConfirmation({
           label="Date"
           value={contribution.transactionDate ? new Date(contribution.transactionDate).toLocaleDateString() : "Pending"}
         />
-        <DetailRow label="Member" value={contribution.member.fullName} subValue={contribution.member.phoneNumber} wide />
-        {contribution.mpesaTransaction?.mpesaReceiptNumber && (
-          <DetailRow label="M-Pesa Receipt" value={<span className="font-mono">{contribution.mpesaTransaction.mpesaReceiptNumber}</span>} wide />
+        <GiverRow member={contribution.member} />
+        {hasText(mpesaReceiptNumber) && (
+          <DetailRow label="M-Pesa Receipt" value={<span className="font-mono">{mpesaReceiptNumber}</span>} wide />
         )}
         {checkoutRequestId && (
           <DetailRow label="Checkout Reference" value={<span className="font-mono text-xs">{checkoutRequestId}</span>} wide />
@@ -214,7 +237,7 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
   const StatusIconEl = statusConfig.icon;
 
   const totalAmount = contributions.reduce((sum, c) => sum + parseFloat(c.amount), 0);
-  const receiptNumber = firstContrib?.mpesaTransaction?.mpesaReceiptNumber;
+  const mpesaReceiptNumber = firstContrib?.mpesaTransaction?.mpesaReceiptNumber;
 
   return (
     <ConfirmationLayout>
@@ -223,6 +246,8 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
       </StatusCard>
 
       <DetailsCard>
+        {/* A split / multi-category payment may be receipted once or per line. */}
+        <ReceiptNumberPanel receiptNumbers={contributions.map((c) => c.receiptNumber)} />
         <DetailRow label="Total Amount" value={`KES ${totalAmount.toLocaleString()}`} />
         <DetailRow
           label="Status"
@@ -232,11 +257,9 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
             </StatusBadge>
           }
         />
-        {firstContrib && (
-          <DetailRow label="Member" value={firstContrib.member.fullName} subValue={firstContrib.member.phoneNumber} wide />
-        )}
-        {receiptNumber && (
-          <DetailRow label="M-Pesa Receipt" value={<span className="font-mono">{receiptNumber}</span>} wide />
+        {firstContrib && <GiverRow member={firstContrib.member} />}
+        {hasText(mpesaReceiptNumber) && (
+          <DetailRow label="M-Pesa Receipt" value={<span className="font-mono">{mpesaReceiptNumber}</span>} wide />
         )}
         <DetailRow label="Checkout Reference" value={<span className="font-mono text-xs">{checkoutRequestId}</span>} wide />
 
@@ -253,7 +276,7 @@ function MultiContributionConfirmation({ checkoutRequestId }: { checkoutRequestI
                   <div key={c.id} className="flex justify-between text-sm">
                     <span>
                       {isAutoSplit ? (c.purposeName || c.category.name) : c.category.name}
-                      {c.departmentMemberIdentifier && (
+                      {hasText(c.departmentMemberIdentifier) && (
                         <span className="ml-1 text-xs text-muted-foreground">
                           (#{c.departmentMemberIdentifier})
                         </span>
@@ -395,16 +418,57 @@ function DetailRow({
 }: {
   label: string;
   value: React.ReactNode;
-  subValue?: string;
+  subValue?: string | null;
   wide?: boolean;
 }) {
   return (
     <div className={wide ? "col-span-2" : ""}>
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="text-lg font-semibold">{value}</p>
-      {subValue && <p className="text-sm text-muted-foreground">{subValue}</p>}
+      {hasText(subValue) && <p className="text-sm text-muted-foreground">{subValue}</p>}
     </div>
   );
+}
+
+/**
+ * The system receipt number — the giver's proof of the gift.
+ *
+ * Unlike the M-Pesa code and the giver's phone, this is shown to every viewer,
+ * so it is the one identifier a shared confirmation link can be checked
+ * against. Renders nothing until a receipt has been issued.
+ */
+function ReceiptNumberPanel({ receiptNumbers }: { receiptNumbers: (string | null | undefined)[] }) {
+  const numbers = Array.from(new Set(receiptNumbers.filter(hasText)));
+  if (numbers.length === 0) return null;
+  return (
+    <div className="col-span-2 rounded-lg border border-primary/30 bg-primary/5 p-4">
+      <p className="text-sm text-muted-foreground">
+        {numbers.length > 1 ? "Receipt Nos." : "Receipt No."}
+      </p>
+      <p className="mt-0.5 font-mono text-2xl font-bold tracking-wide text-primary break-all">
+        {numbers.join(" · ")}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Keep this number — it is your proof of this gift.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * The giver, as much of them as this viewer may see.
+ *
+ * For the giver (or staff) that is the full name plus phone; for anyone else
+ * the backend sends the first name alone, so the row shows just that — no
+ * empty phone line implying details are missing.
+ */
+function GiverRow({
+  member,
+}: {
+  member: { fullName: string; phoneNumber?: string | null };
+}) {
+  if (!hasText(member.fullName)) return null;
+  return <DetailRow label="Giver" value={member.fullName} subValue={member.phoneNumber} wide />;
 }
 
 function PendingStepsCard() {
