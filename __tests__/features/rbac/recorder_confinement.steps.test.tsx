@@ -39,6 +39,8 @@ function role(overrides: Record<string, unknown>) {
     canSendBulkMessage: false,
     isRecorder: false,
     canVoidReceipts: false,
+    isAdmin: false,
+    isTreasurer: false,
     adminCategoryIds: [],
     adminGroupNames: [],
     adminCategories: [],

@@ -37,6 +37,8 @@ function role(canVoidReceipts: boolean) {
     canSendBulkMessage: true,
     isRecorder: false,
     canVoidReceipts,
+    isAdmin: false,
+    isTreasurer: canVoidReceipts,
     adminCategoryIds: [],
     adminGroupNames: [],
     adminCategories: [],

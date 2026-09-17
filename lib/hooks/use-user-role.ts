@@ -21,6 +21,8 @@ export const GET_CURRENT_USER_ROLE = gql`
       canSendBulkMessage
       isRecorder
       canVoidReceipts
+      isAdmin
+      isTreasurer
       adminCategoryIds
       adminGroupNames
       adminCategories {
@@ -51,6 +53,10 @@ interface UserRoleInfo {
   isRecorder: boolean;
   /** Admin or treasurer — may void receipts / approve void requests. */
   canVoidReceipts: boolean;
+  /** Holds the `admin` role. */
+  isAdmin: boolean;
+  /** Holds the `treasurer` role. */
+  isTreasurer: boolean;
   adminCategoryIds: string[];
   adminGroupNames: string[];
   adminCategories: Category[];
@@ -110,6 +116,12 @@ export function useUserRole() {
     canSendBulkMessage: roleInfo?.canSendBulkMessage ?? false,
     isRecorder: roleInfo?.isRecorder ?? false,
     canVoidReceipts: roleInfo?.canVoidReceipts ?? false,
+    isAdmin: roleInfo?.isAdmin ?? false,
+    isTreasurer: roleInfo?.isTreasurer ?? false,
+
+    // Treasurer or admin: may change the treasury books (opening balance,
+    // remittances). Pastors are staff but read-only here.
+    canManageBooks: !!(roleInfo?.isAdmin || roleInfo?.isTreasurer),
 
     // A recorder without staff rights: confined to the /record workspace
     // (plus their own member area). Server-side checks are authoritative.
