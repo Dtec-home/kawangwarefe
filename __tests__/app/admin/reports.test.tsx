@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+
+const { mockGenerateReport } = vi.hoisted(() => ({
+  mockGenerateReport: vi.fn(),
+}))
 
 // Mock Apollo
 vi.mock('@apollo/client/react', () => ({
@@ -36,7 +40,7 @@ vi.mock('@apollo/client/react', () => ({
     error: null,
     refetch: vi.fn(),
   })),
-  useMutation: () => [vi.fn(), { loading: false }],
+  useMutation: () => [mockGenerateReport, { loading: false }],
   useLazyQuery: () => [vi.fn(), { data: undefined, loading: false, error: null }],
 }))
 
@@ -143,5 +147,20 @@ describe('ReportsPage', () => {
 
     expect(screen.getByText('Detailed breakdown by purpose')).toBeInTheDocument()
     expect(screen.getByText('Top Purposes')).toBeInTheDocument()
+  })
+
+  it('Monthly PDF quick card exports monthly/pdf on the first click', async () => {
+    mockGenerateReport.mockReset()
+    mockGenerateReport.mockResolvedValue({
+      data: { generateContributionReport: { success: false, message: 'noop', fileData: null, filename: null, contentType: null } },
+    })
+    render(<ReportsPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Exports' }))
+    fireEvent.click(screen.getByText('Monthly Report'))
+
+    await waitFor(() => expect(mockGenerateReport).toHaveBeenCalledTimes(1))
+    const { variables } = mockGenerateReport.mock.calls[0][0]
+    expect(variables.reportType).toBe('monthly')
+    expect(variables.format).toBe('pdf')
   })
 })
