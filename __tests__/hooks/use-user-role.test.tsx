@@ -29,6 +29,8 @@ const GET_CURRENT_USER_ROLE = gql`
       canSendBulkMessage
       isRecorder
       canVoidReceipts
+      isAdmin
+      isTreasurer
       adminCategoryIds
       adminGroupNames
       adminCategories {
@@ -64,6 +66,8 @@ const staffRoleMock = {
         canSendBulkMessage: true,
         isRecorder: false,
         canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -85,6 +89,8 @@ const contentAdminMock = {
         canSendBulkMessage: false,
         isRecorder: false,
         canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -106,6 +112,8 @@ const categoryAdminMock = {
         canSendBulkMessage: false,
         isRecorder: false,
         canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: ['cat-1'],
         adminGroupNames: [],
         adminCategories: [{ id: 'cat-1', name: 'Tithe', code: 'TITHE', description: '' }],
@@ -127,6 +135,8 @@ const unauthMock = {
         canSendBulkMessage: false,
         isRecorder: false,
         canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -148,6 +158,8 @@ const groupAdminMock = {
         canSendBulkMessage: true,
         isRecorder: false,
         canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: ['Youth'],
         adminCategories: [],
@@ -170,6 +182,8 @@ function roleMock(overrides: Record<string, unknown>) {
           canSendBulkMessage: false,
           isRecorder: false,
           canVoidReceipts: false,
+          isAdmin: false,
+          isTreasurer: false,
           adminCategoryIds: [],
           adminGroupNames: [],
           adminCategories: [],

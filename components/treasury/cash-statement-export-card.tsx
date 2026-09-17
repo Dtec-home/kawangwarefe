@@ -4,16 +4,18 @@
  * Treasurer's Cash Statement export card (T3.4, spec 03 §6): a single
  * Sabbath (default: the most recent Saturday in Nairobi) or a date range,
  * PDF or Excel, US Letter or A4 → generateCashStatement → download.
+ * A collapsible period summary (T4.1, T4.2) follows the chosen range.
  */
 
 import { useState } from "react";
 import { useMutation } from "@apollo/client/react";
-import { AlertCircle, Columns3, Download, Landmark } from "lucide-react";
+import { AlertCircle, ChevronDown, Columns3, Download, Landmark } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PeriodSummary } from "@/components/treasury/period-summary";
 import { StatementColumnsPreviewDialog } from "@/components/treasury/statement-columns-preview";
 import {
   GENERATE_CASH_STATEMENT,
@@ -84,6 +86,8 @@ export function CashStatementExportCard() {
   const [format, setFormat] = useState<Format>("pdf");
   const [paper, setPaper] = useState<Paper>("letter");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryRefreshKey, setSummaryRefreshKey] = useState(0);
 
   const [generateCashStatement, { loading }] =
     useMutation<GenerateCashStatementData>(GENERATE_CASH_STATEMENT);
@@ -108,6 +112,7 @@ export function CashStatementExportCard() {
           result.contentType || "application/octet-stream",
         );
         toast.success(result.message || "Cash statement downloaded");
+        setSummaryRefreshKey((key) => key + 1);
       } else {
         toast.error(result?.message || "Could not generate the cash statement");
       }
@@ -191,6 +196,33 @@ export function CashStatementExportCard() {
             <Columns3 className="h-4 w-4 mr-1" />
             Preview columns
           </Button>
+        </div>
+
+        <div className="border-t pt-4">
+          <Button
+            type="button"
+            variant="ghost"
+            className="-ml-2 px-2"
+            aria-expanded={summaryOpen}
+            aria-controls="cash-statement-period-summary"
+            onClick={() => setSummaryOpen((open) => !open)}
+          >
+            <ChevronDown
+              className={`h-4 w-4 mr-1 transition-transform ${summaryOpen ? "rotate-0" : "-rotate-90"}`}
+            />
+            Period summary
+          </Button>
+          {summaryOpen && (
+            <div id="cash-statement-period-summary" className="pt-4">
+              {validationError ? (
+                <p className="text-sm text-muted-foreground">
+                  Choose a valid period to see its summary.
+                </p>
+              ) : (
+                <PeriodSummary dateFrom={dateFrom} dateTo={dateTo} refreshKey={summaryRefreshKey} />
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
       <StatementColumnsPreviewDialog

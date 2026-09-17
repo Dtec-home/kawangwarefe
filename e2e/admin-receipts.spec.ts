@@ -23,6 +23,8 @@ function roleResponse(persona: Persona) {
     canSendBulkMessage: true,
     isRecorder: false,
     canVoidReceipts: persona === "treasurer",
+    isAdmin: false,
+    isTreasurer: persona === "treasurer",
     adminCategoryIds: [],
     adminCategories: [],
     adminGroupNames: [],
