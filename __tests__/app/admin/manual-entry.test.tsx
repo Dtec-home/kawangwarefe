@@ -50,8 +50,14 @@ vi.mock('@/lib/hooks/use-active-entry-unlocks', () => ({
 }))
 
 // Native <select> so a choice can be made in jsdom; `name` becomes the label.
+interface SelectMockProps {
+  name?: string
+  value?: string
+  onValueChange?: (value: string) => void
+  children: React.ReactNode
+}
 vi.mock('@/components/ui/select', () => ({
-  Select: ({ name, value, onValueChange, children }: any) => (
+  Select: ({ name, value, onValueChange, children }: SelectMockProps) => (
     <select aria-label={name} value={value} onChange={(e) => onValueChange?.(e.target.value)}>
       <option value="" />
       {children}
@@ -59,8 +65,10 @@ vi.mock('@/components/ui/select', () => ({
   ),
   SelectTrigger: () => null,
   SelectValue: () => null,
-  SelectContent: ({ children }: any) => <>{children}</>,
-  SelectItem: ({ value, children }: any) => <option value={value}>{children}</option>,
+  SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => (
+    <option value={value}>{children}</option>
+  ),
 }))
 
 // Mock auth

@@ -51,6 +51,7 @@ describe('AdminLayout', () => {
     expect(screen.getByText('Overview')).toBeInTheDocument()
     expect(screen.getByText('Contributions')).toBeInTheDocument()
     expect(screen.getByText('Members')).toBeInTheDocument()
+    expect(screen.getByText('Receipts')).toBeInTheDocument()
   })
 
   it('shows user info', () => {

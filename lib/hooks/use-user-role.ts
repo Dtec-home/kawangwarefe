@@ -72,7 +72,8 @@ export type AdminFeature =
   | "expenses"
   | "leaders"
   | "record"
-  | "catch-up-windows";
+  | "catch-up-windows"
+  | "receipts";
 
 interface UserRoleData {
   currentUserRole: UserRoleInfo;
