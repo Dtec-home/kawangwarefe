@@ -33,6 +33,9 @@ vi.mock('@apollo/client/react', () => ({
     if (body.includes('myRecordedReceipts')) {
       return { data: state.recorded ?? undefined, loading: false, error: undefined, refetch: refetchMock }
     }
+    if (body.includes('myOpenCollectionSession')) {
+      return { data: { myOpenCollectionSession: null }, loading: false, error: undefined, refetch: refetchMock }
+    }
     if (body.includes('contributionCategories')) {
       return { data: { contributionCategories: CATEGORIES }, loading: false, refetch: vi.fn() }
     }
@@ -211,6 +214,7 @@ describe('Recorder workspace /record', () => {
       phoneNumber: '0712345678',
       giverName: null,
       entryType: 'cash',
+      idempotencyKey: expect.any(String),
     })
     expect(variables).not.toHaveProperty('transactionDate')
 
