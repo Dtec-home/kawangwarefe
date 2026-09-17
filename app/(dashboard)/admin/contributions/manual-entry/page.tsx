@@ -13,35 +13,43 @@
 
 import { useState } from "react";
 import { useMutation } from "@apollo/client/react";
-import {
-  CREATE_MANUAL_MULTI_CONTRIBUTION,
-  LOOKUP_MEMBER_BY_PHONE,
-} from "@/lib/graphql/manual-contribution-mutations";
+import { CREATE_MANUAL_MULTI_CONTRIBUTION } from "@/lib/graphql/manual-contribution-mutations";
 import { useActiveEntryUnlocks } from "@/lib/hooks/use-active-entry-unlocks";
-import { formatEntryDate } from "@/lib/treasury/entry-dates";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import {
-  MultiCategorySelector,
-  CategoryAmount,
-} from "@/components/forms/multi-category-selector";
+  ContributionLinesForm,
+  emptyContributionLine,
+  toManualCategoryInputs,
+  validateContributionLines,
+  type CategoryAmount,
+} from "@/components/contributions/contribution-lines-form";
+import {
+  GiverIdentityFields,
+  useGiverLookup,
+  type LookedUpMember,
+} from "@/components/contributions/giver-lookup";
+import {
+  RECORD_FOR_TODAY as TODAY,
+  RecordingForField,
+  effectiveRecordFor as resolveRecordFor,
+  transactionDateVariables,
+} from "@/components/contributions/recording-for-field";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
 import { ADMIN_MANUAL_ENTRY_TOUR_CONFIG } from "@/lib/tours/configs/admin-manual-entry";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Save,
-  Search,
   CheckCircle,
   AlertCircle,
   ArrowLeft,
@@ -49,24 +57,10 @@ import {
   UserX,
   Plus,
   Info,
-  CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
 
-interface Member {
-  id: string;
-  fullName: string;
-  phoneNumber: string;
-  memberNumber: string | null;
-  isGuest: boolean;
-}
-
-interface LookupMemberResult {
-  lookupMemberByPhone: {
-    found: boolean;
-    member?: Member;
-  };
-}
+type Member = LookedUpMember;
 
 interface CreateMultiContributionResult {
   createManualMultiContribution: {
@@ -77,18 +71,13 @@ interface CreateMultiContributionResult {
   };
 }
 
-/** Select value meaning "record for today" (no date is sent). */
-const TODAY = "today";
-
-const emptyLine = (): CategoryAmount => ({ categoryId: "", amount: "", purposeId: "" });
-
 function ManualContributionPageContent() {
   const [walkIn, setWalkIn] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [giverName, setGiverName] = useState("");
   const [member, setMember] = useState<Member | null>(null);
   const [isGuest, setIsGuest] = useState(false);
-  const [contributions, setContributions] = useState<CategoryAmount[]>([emptyLine()]);
+  const [contributions, setContributions] = useState<CategoryAmount[]>([emptyContributionLine()]);
   const [entryType, setEntryType] = useState("envelope");
   const [oldBookNumber, setOldBookNumber] = useState("");
   const [notes, setNotes] = useState("");
@@ -107,10 +96,9 @@ function ManualContributionPageContent() {
   // No backdating: a past date is only offered while a catch-up window is open.
   const { unlockDates, hasActiveUnlocks } = useActiveEntryUnlocks({ pollInterval: 60_000 });
   // Fall back to today if the chosen window has since closed.
-  const effectiveRecordFor =
-    recordFor !== TODAY && hasActiveUnlocks && unlockDates.includes(recordFor) ? recordFor : TODAY;
+  const effectiveRecordFor = hasActiveUnlocks ? resolveRecordFor(recordFor, unlockDates) : TODAY;
 
-  const [lookupMember] = useMutation<LookupMemberResult>(LOOKUP_MEMBER_BY_PHONE);
+  const { lookup: lookupGiver } = useGiverLookup();
   const [createContribution] = useMutation<CreateMultiContributionResult>(
     CREATE_MANUAL_MULTI_CONTRIBUTION
   );
@@ -119,12 +107,8 @@ function ManualContributionPageContent() {
     if (!phoneNumber.trim()) return;
 
     try {
-      const { data } = await lookupMember({
-        variables: { phoneNumber: phoneNumber.trim() },
-      });
-
-      if (data?.lookupMemberByPhone) {
-        const result = data.lookupMemberByPhone;
+      const result = await lookupGiver(phoneNumber);
+      if (result) {
         if (result.found && result.member) {
           setMember(result.member);
           setIsGuest(result.member.isGuest);
@@ -157,7 +141,7 @@ function ManualContributionPageContent() {
     setGiverName("");
     setMember(null);
     setIsGuest(false);
-    setContributions([emptyLine()]);
+    setContributions([emptyContributionLine()]);
     setOldBookNumber("");
     setNotes("");
     setRecordFor(TODAY);
@@ -181,21 +165,12 @@ function ManualContributionPageContent() {
     }
 
     // Line-item validation
-    const cleaned = contributions.filter((c) => c.categoryId || c.amount);
-    if (cleaned.length === 0) {
-      setError("Add at least one department and amount");
+    const validation = validateContributionLines(contributions);
+    if (!validation.ok) {
+      setError(validation.error);
       return;
     }
-    for (const line of cleaned) {
-      if (!line.categoryId) {
-        setError("Please select a department for every line");
-        return;
-      }
-      if (!line.amount || parseFloat(line.amount) < 1) {
-        setError("Each amount must be at least KES 1.00");
-        return;
-      }
-    }
+    const cleaned = validation.lines;
 
     setSubmitting(true);
 
@@ -204,16 +179,11 @@ function ManualContributionPageContent() {
         variables: {
           phoneNumber: walkIn ? null : phoneNumber.trim(),
           giverName: walkIn ? giverName.trim() : null,
-          contributions: cleaned.map((c) => ({
-            categoryId: c.categoryId,
-            amount: c.amount,
-            purposeId: c.purposeId || null,
-            memberIdentifier: c.memberIdentifier || null,
-          })),
+          contributions: toManualCategoryInputs(cleaned),
           entryType,
           receiptNumber: oldBookNumber.trim() || null,
           // Omitted for today; the backend refuses other dates without a window.
-          ...(effectiveRecordFor !== TODAY ? { transactionDate: effectiveRecordFor } : {}),
+          ...transactionDateVariables(effectiveRecordFor),
           notes: notes.trim() || null,
         },
       });
@@ -307,101 +277,56 @@ function ManualContributionPageContent() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Walk-in toggle */}
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <div className="space-y-0.5">
-                  <Label htmlFor="walk-in">Walk-in / no phone</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Record a giver who has no phone number on file. No SMS
-                    receipt is sent.
-                  </p>
-                </div>
-                <Switch
-                  id="walk-in"
-                  checked={walkIn}
-                  onCheckedChange={toggleWalkIn}
-                />
-              </div>
-
-              {walkIn ? (
-                <div className="space-y-2">
-                  <Label htmlFor="giver-name">Giver Name *</Label>
-                  <Input
-                    id="giver-name"
-                    type="text"
-                    placeholder="e.g. Visitor - John"
-                    value={giverName}
-                    onChange={(e) => setGiverName(e.target.value)}
-                  />
-                </div>
-              ) : (
-                <>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="0712345678 or 254712345678"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        onBlur={handlePhoneNumberLookup}
-                      />
-                    </div>
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handlePhoneNumberLookup}
-                      >
-                        <Search className="h-4 w-4 mr-2" />
-                        Search
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Member Display */}
-                  {member && (
-                    <Alert>
-                      {isGuest ? (
-                        <UserX className="h-4 w-4" />
-                      ) : (
-                        <UserCheck className="h-4 w-4" />
-                      )}
-                      <AlertTitle>
-                        {/* Ticket 11: show the actual name when we have one */}
-                        {member.fullName || (isGuest ? "Guest" : "Member Found")}
-                      </AlertTitle>
-                      <AlertDescription>
-                        <div className="space-y-1">
-                          <p className="font-medium">{member.fullName}</p>
-                          <p className="text-sm">{member.phoneNumber}</p>
-                          {member.memberNumber && (
-                            <p className="text-sm">Member #: {member.memberNumber}</p>
-                          )}
-                          {isGuest && (
-                            <p className="text-sm text-warning">
-                              This contributor is not yet a full member. You can
-                              update their details later.
-                            </p>
-                          )}
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  {phoneNumber && !member && isGuest && (
-                    <Alert>
+              <GiverIdentityFields
+                walkIn={walkIn}
+                onWalkInChange={toggleWalkIn}
+                phoneNumber={phoneNumber}
+                onPhoneNumberChange={setPhoneNumber}
+                giverName={giverName}
+                onGiverNameChange={setGiverName}
+                onLookup={handlePhoneNumberLookup}
+              >
+                {/* Member Display */}
+                {member && (
+                  <Alert>
+                    {isGuest ? (
                       <UserX className="h-4 w-4" />
-                      <AlertTitle>New contributor</AlertTitle>
-                      <AlertDescription>
-                        This phone number is not registered. A new contributor
-                        record will be created.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </>
-              )}
+                    ) : (
+                      <UserCheck className="h-4 w-4" />
+                    )}
+                    <AlertTitle>
+                      {/* Ticket 11: show the actual name when we have one */}
+                      {member.fullName || (isGuest ? "Guest" : "Member Found")}
+                    </AlertTitle>
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <p className="font-medium">{member.fullName}</p>
+                        <p className="text-sm">{member.phoneNumber}</p>
+                        {member.memberNumber && (
+                          <p className="text-sm">Member #: {member.memberNumber}</p>
+                        )}
+                        {isGuest && (
+                          <p className="text-sm text-warning">
+                            This contributor is not yet a full member. You can
+                            update their details later.
+                          </p>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {phoneNumber && !member && isGuest && (
+                  <Alert>
+                    <UserX className="h-4 w-4" />
+                    <AlertTitle>New contributor</AlertTitle>
+                    <AlertDescription>
+                      This phone number is not registered. A new contributor
+                      record will be created.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </GiverIdentityFields>
             </CardContent>
           </Card>
 
@@ -415,35 +340,12 @@ function ManualContributionPageContent() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Recording date: today, or an open catch-up window (T2.8) */}
-              <div className="space-y-2" data-testid="recording-for">
-                {hasActiveUnlocks ? (
-                  <>
-                    <Label htmlFor="recordFor">Recording for</Label>
-                    <Select name="recordFor" value={effectiveRecordFor} onValueChange={setRecordFor}>
-                      <SelectTrigger id="recordFor">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={TODAY}>Today</SelectItem>
-                        {unlockDates.map((date) => (
-                          <SelectItem key={date} value={date}>
-                            {formatEntryDate(date)} (catch-up)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      A catch-up window is open, so you may record for that past date.
-                    </p>
-                  </>
-                ) : (
-                  <p className="flex items-center gap-2 text-sm">
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Recording for:</span>
-                    <span className="font-medium">Today</span>
-                  </p>
-                )}
-              </div>
+              <RecordingForField
+                value={effectiveRecordFor}
+                onChange={setRecordFor}
+                unlockDates={unlockDates}
+                hasActiveUnlocks={hasActiveUnlocks}
+              />
 
               {/* Entry Type */}
               <div className="space-y-2">
@@ -482,14 +384,11 @@ function ManualContributionPageContent() {
               </div>
 
               {/* Line items (department / purpose / amount) */}
-              <div className="space-y-2">
-                <Label>Departments *</Label>
-                <MultiCategorySelector
-                  contributions={contributions}
-                  onChange={setContributions}
-                  phoneNumber={walkIn ? undefined : phoneNumber}
-                />
-              </div>
+              <ContributionLinesForm
+                lines={contributions}
+                onChange={setContributions}
+                phoneNumber={walkIn ? undefined : phoneNumber}
+              />
 
               {/* Old paper-book number — the system issues the real receipt */}
               <div className="space-y-2" data-tour="manual-entry-receipt">

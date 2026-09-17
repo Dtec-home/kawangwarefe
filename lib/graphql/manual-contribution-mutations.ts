@@ -117,6 +117,10 @@ export const LOOKUP_MEMBER_BY_PHONE = gql`
         isGuest
         isActive
       }
+      giver {
+        id
+        displayName
+      }
     }
   }
 `;
