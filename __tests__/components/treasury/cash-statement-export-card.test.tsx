@@ -4,7 +4,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 
-const { mockGenerate, mockDownload, toastMock, useQueryMock } = vi.hoisted(() => ({
+const { mockGenerate, mockDownload, toastMock, useQueryMock, summaryProps } = vi.hoisted(() => ({
+  summaryProps: [] as Array<{ dateFrom: string; dateTo: string; refreshKey?: number }>,
   mockGenerate: vi.fn(),
   mockDownload: vi.fn(),
   toastMock: { success: vi.fn(), error: vi.fn() },
@@ -17,6 +18,12 @@ vi.mock('@apollo/client/react', () => ({
 }))
 vi.mock('sonner', () => ({ toast: toastMock }))
 vi.mock('@/lib/download-base64-file', () => ({ downloadBase64File: mockDownload }))
+vi.mock('@/components/treasury/period-summary', () => ({
+  PeriodSummary: (props: { dateFrom: string; dateTo: string; refreshKey?: number }) => {
+    summaryProps.push(props)
+    return <div data-testid="period-summary-stub">{`${props.dateFrom}..${props.dateTo}#${props.refreshKey}`}</div>
+  },
+}))
 
 import { CashStatementExportCard } from '@/components/treasury/cash-statement-export-card'
 
@@ -39,6 +46,7 @@ describe('CashStatementExportCard', () => {
     toastMock.success.mockReset()
     toastMock.error.mockReset()
     useQueryMock.mockClear()
+    summaryProps.length = 0
   })
   afterEach(() => {
     vi.useRealTimers()
@@ -159,5 +167,46 @@ describe('CashStatementExportCard', () => {
     expect(screen.getByText('Cash Statement columns')).toBeInTheDocument()
     const options = (useQueryMock.mock.calls.at(-1) as unknown[])[1] as { variables: unknown }
     expect(options.variables).toEqual({ dateFrom: '2026-09-12', dateTo: '2026-09-12' })
+  })
+
+  describe('period summary', () => {
+    const toggle = () => screen.getByRole('button', { name: /Period summary/ })
+
+    it('is collapsed by default and follows the chosen range when expanded', () => {
+      useClock(WEDNESDAY)
+      render(<CashStatementExportCard />)
+      expect(toggle()).toHaveAttribute('aria-expanded', 'false')
+      expect(screen.queryByTestId('period-summary-stub')).not.toBeInTheDocument()
+
+      fireEvent.click(toggle())
+      expect(toggle()).toHaveAttribute('aria-expanded', 'true')
+      expect(screen.getByTestId('period-summary-stub')).toHaveTextContent('2026-09-12..2026-09-12#0')
+
+      pick('Period', 'Date range')
+      fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-08-01' } })
+      fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-08-31' } })
+      expect(screen.getByTestId('period-summary-stub')).toHaveTextContent('2026-08-01..2026-08-31#0')
+    })
+
+    it('asks for a valid period instead of loading a summary for a bad range', () => {
+      useClock(WEDNESDAY)
+      render(<CashStatementExportCard />)
+      fireEvent.click(toggle())
+      pick('Period', 'Date range')
+      fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-01-01' } })
+      expect(screen.queryByTestId('period-summary-stub')).not.toBeInTheDocument()
+      expect(screen.getByText('Choose a valid period to see its summary.')).toBeInTheDocument()
+    })
+
+    it('asks the summary to refresh after a statement is generated', async () => {
+      useClock(WEDNESDAY)
+      mockGenerate.mockResolvedValue({
+        data: { generateCashStatement: { success: true, message: 'ok', fileData: 'AAAA', filename: 'a.pdf', contentType: 'application/pdf' } },
+      })
+      render(<CashStatementExportCard />)
+      fireEvent.click(toggle())
+      fireEvent.click(generateButton())
+      await waitFor(() => expect(screen.getByTestId('period-summary-stub')).toHaveTextContent('#1'))
+    })
   })
 })
