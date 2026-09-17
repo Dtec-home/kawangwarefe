@@ -149,6 +149,7 @@ export const GET_CONTRIBUTION = gql`
       notes
       isCompleted
       departmentMemberIdentifier
+      receiptNumber
       member {
         id
         fullName
