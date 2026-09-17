@@ -19,7 +19,9 @@ Everything from Overview, plus a "Detailed Breakdowns" section with sortable, se
 Look up one member's contribution history. Choose a Department (required), optionally break the results down by Purpose or Group, filter by date range, and choose whether to see individual transactions or Monthly totals. Click Load Report to run it. Once loaded, you can toggle between a table and chart view, and export the result to Excel.
 
 **Exports** (staff only)
-Configure and download a report:
+At the top is the Treasurer's Cash Statement card, which exports the conference sheet as PDF or Excel — see "Exporting the Treasurer's Cash Statement".
+
+Below it, configure and download a contribution report:
 - Report Type — Daily, Weekly, Monthly, or a Custom date range.
 - Export Format — Excel (.xlsx) or PDF.
 - Filter by Departments (optional) — leave nothing checked to include all departments.

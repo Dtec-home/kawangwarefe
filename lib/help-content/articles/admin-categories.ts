@@ -27,6 +27,9 @@ Switch on "Track a per-member number for this department" (e.g. a Welfare number
 **Fund Settings (expense tracking)**
 "Fund Settings" on each department lets you switch on expense tracking and record an opening balance and date. Once enabled, a live Current Balance badge shows on the department; historical contributions aren't retroactively deducted.
 
+**Cash Statement settings**
+"Trust fund (remitted to conference)" and "Statement order" decide whether the department is a trust or local column on the Treasurer's Cash Statement, and where the column appears. Use "Statement preview" to check the columns — see "Setting up departments for the Cash Statement".
+
 **Managing existing departments**
 Edit, Deactivate/Activate, or Delete a department from the list; each action is available from the row's buttons.`,
 };

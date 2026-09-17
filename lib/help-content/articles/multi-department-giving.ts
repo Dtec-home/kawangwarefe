@@ -24,5 +24,5 @@ Some departments route giving to a specific member group (e.g. a youth group or 
 If a department you've selected tracks a per-member identifier (see the "Department member identifiers" article), a field for it appears on that row — this is entered per department, since the same person can have a different number in different departments.
 
 **Receipt**
-After the combined payment completes, you receive one SMS receipt. If all the amounts went to the same department (just different purposes), the receipt shows the purpose breakdown under that department; if you gave to genuinely different departments, the receipt lists each department and its amount along with the total. See the "Receipts and SMS notifications" article for details.`,
+After the combined payment completes, you get one receipt with one receipt number (e.g. 20260829-0017) and one SMS. The SMS lists each department (and purpose, if any) with its amount, followed by the total. See the "Receipts and SMS notifications" article for details.`,
 };

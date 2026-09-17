@@ -12,6 +12,9 @@ export const ADMIN_CATEGORY_PURPOSES_ARTICLE: HelpArticle = {
 **Adding a purpose**
 Give it a Name; a Code is auto-generated from the name (uppercase, non-alphanumeric characters collapsed to dashes) unless you type your own. Description is optional.
 
+**Cash Statement column**
+By default a purpose's money is added to its department's column on the Treasurer's Cash Statement ("Inherit from department"). Choose "Own column – Trust" or "Own column – Local" to give the purpose its own DEPARTMENT – PURPOSE column (e.g. COMBINED – CKC as trust and COMBINED – LCB as local).
+
 **Managing purposes**
 Each purpose can be edited, deactivated/activated, or deleted from the list. Deactivated purposes stay visible here but are excluded from the auto-split allocation dropdown and from being offered to members.
 
