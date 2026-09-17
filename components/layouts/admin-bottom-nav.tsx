@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen } from "lucide-react";
+import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen, CalendarClock } from "lucide-react";
 import { useState } from "react";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 
@@ -26,6 +26,7 @@ const moreAdminLinks: NavItem[] = [
   { href: "/admin/groups", label: "Groups", icon: UserRound },
   { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
   { href: "/admin/c2b-transactions", label: "C2B / Pay Bill", icon: Smartphone },
+  { href: "/admin/catch-up-windows", label: "Catch-up windows", icon: CalendarClock },
   { href: "/admin/content", label: "Content", icon: Newspaper },
   { href: "/admin/messaging", label: "Messaging", icon: MessageSquare },
   { href: "/admin/prayers", label: "Prayers", icon: Heart },
@@ -55,6 +56,7 @@ export function AdminBottomNav() {
     "/admin/messaging": "messaging",
     "/admin/prayers": "prayers",
     "/record": "record",
+    "/admin/catch-up-windows": "catch-up-windows",
   };
 
   // A pure recorder has a single destination — show it in the bar itself
