@@ -20,7 +20,6 @@ import { ADMIN_MEMBERS_ARTICLE } from "./articles/admin-members";
 import { ADMIN_MESSAGING_CAMPAIGN_DETAIL_ARTICLE } from "./articles/admin-messaging-campaign-detail";
 import { ADMIN_MESSAGING_ARTICLE } from "./articles/admin-messaging";
 import { ADMIN_PRAYERS_ARTICLE } from "./articles/admin-prayers";
-import { ADMIN_RECEIPT_SETTINGS_ARTICLE } from "./articles/admin-receipt-settings";
 import { ADMIN_REPORTS_ARTICLE } from "./articles/admin-reports";
 import { ADMIN_YOUTUBE_ARTICLE } from "./articles/admin-youtube";
 import { ANNOUNCEMENTS_PAGE_ARTICLE } from "./articles/announcements-page";
@@ -62,7 +61,6 @@ export const HELP_ARTICLES: HelpArticle[] = [
   ADMIN_MESSAGING_CAMPAIGN_DETAIL_ARTICLE,
   ADMIN_MESSAGING_ARTICLE,
   ADMIN_PRAYERS_ARTICLE,
-  ADMIN_RECEIPT_SETTINGS_ARTICLE,
   ADMIN_REPORTS_ARTICLE,
   ADMIN_YOUTUBE_ARTICLE,
   ANNOUNCEMENTS_PAGE_ARTICLE,

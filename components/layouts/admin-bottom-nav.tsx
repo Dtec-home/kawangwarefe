@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen, CalendarClock } from "lucide-react";
+import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen, CalendarClock, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { useUserRole } from "@/lib/hooks/use-user-role";
+import { usePendingVoidRequestCount } from "@/lib/hooks/use-pending-void-request-count";
 
 interface NavItem {
   href: string;
@@ -22,6 +23,7 @@ const recordLink: NavItem = { href: "/record", label: "Record giving", icon: Not
 
 const moreAdminLinks: NavItem[] = [
   recordLink,
+  { href: "/admin/receipts", label: "Receipts", icon: ReceiptText },
   { href: "/admin/categories", label: "Departments", icon: FolderOpen },
   { href: "/admin/groups", label: "Groups", icon: UserRound },
   { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
@@ -35,7 +37,9 @@ const moreAdminLinks: NavItem[] = [
 export function AdminBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { canAccessFeature, isPureRecorder } = useUserRole();
+  const { canAccessFeature, isPureRecorder, canVoidReceipts } = useUserRole();
+  // T2.6 — pending receipt void requests (treasurer/admin only)
+  const pendingVoidRequests = usePendingVoidRequestCount({ enabled: !!canVoidReceipts && !isPureRecorder });
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (href: string) => {
@@ -57,6 +61,7 @@ export function AdminBottomNav() {
     "/admin/prayers": "prayers",
     "/record": "record",
     "/admin/catch-up-windows": "catch-up-windows",
+    "/admin/receipts": "receipts",
   };
 
   // A pure recorder has a single destination — show it in the bar itself
@@ -104,6 +109,14 @@ export function AdminBottomNav() {
                 >
                   <Icon className="h-5 w-5" />
                   {link.label}
+                  {link.href === "/admin/receipts" && pendingVoidRequests > 0 && (
+                    <span
+                      className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-xs font-semibold leading-none text-white"
+                      aria-label={`${pendingVoidRequests} pending void requests`}
+                    >
+                      {pendingVoidRequests}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -141,10 +154,13 @@ export function AdminBottomNav() {
                 moreOpen ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <span className={`flex items-center justify-center w-10 h-6 rounded-full transition-all duration-200 ${
+              <span className={`relative flex items-center justify-center w-10 h-6 rounded-full transition-all duration-200 ${
                 moreOpen ? "bg-primary/15" : ""
               }`}>
                 <MoreHorizontal className="h-5 w-5" />
+                {pendingVoidRequests > 0 && (
+                  <span aria-hidden className="absolute right-1 top-0 size-2 rounded-full bg-destructive" />
+                )}
               </span>
               <span className="text-xs font-medium leading-none">More</span>
             </button>

@@ -16,7 +16,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Routes that require authentication
-const PROTECTED_PATHS = ["/dashboard", "/admin", "/record"];
+const PROTECTED_PATHS = ["/dashboard", "/admin", "/record", "/receipts"];
 
 // Routes that authenticated users shouldn't see (redirect to dashboard)
 const AUTH_PATHS = ["/login", "/verify-otp"];
@@ -45,5 +45,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/record/:path*", "/login", "/verify-otp"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/record/:path*", "/receipts/:path*", "/login", "/verify-otp"],
 };
