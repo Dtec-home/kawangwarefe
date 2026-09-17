@@ -79,6 +79,7 @@ export type AdminFeature =
   | "leaders"
   | "record"
   | "catch-up-windows"
+  | "collection-sessions"
   | "receipts";
 
 interface UserRoleData {

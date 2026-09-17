@@ -39,6 +39,7 @@ import {
   NotebookPen,
   CalendarClock,
   ReceiptText,
+  Coins,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminBottomNav } from "@/components/layouts/admin-bottom-nav";
@@ -108,6 +109,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: "Expenses",     href: "/admin/expenses",         icon: Receipt,   feature: "expenses" },
         { name: "C2B / M-Pesa", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
         { name: "Catch-up windows", href: "/admin/catch-up-windows", icon: CalendarClock, feature: "catch-up-windows" },
+        { name: "Collection sessions", href: "/admin/collection-sessions", icon: Coins, feature: "collection-sessions" },
       ],
     },
     {
