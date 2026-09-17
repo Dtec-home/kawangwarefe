@@ -4,18 +4,22 @@
  *
  * Allows admins to manually enter contributions for envelope/cash donations.
  * Supports multiple line items (Ticket 6), walk-in givers with no phone
- * (Ticket 7) and auto-incrementing book receipt numbers (Ticket 9).
+ * (Ticket 7). Every saved entry gets a system receipt number (YYYYMMDD-NNNN,
+ * T1.8); the typed field only records an old paper-book number. Entries are
+ * always for today unless an admin has opened a catch-up window (T2.8).
  */
 
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
 import {
   CREATE_MANUAL_MULTI_CONTRIBUTION,
   LOOKUP_MEMBER_BY_PHONE,
-  GET_NEXT_RECEIPT_NUMBER,
 } from "@/lib/graphql/manual-contribution-mutations";
+import { useActiveEntryUnlocks } from "@/lib/hooks/use-active-entry-unlocks";
+import { formatEntryDate } from "@/lib/treasury/entry-dates";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,8 +48,8 @@ import {
   UserCheck,
   UserX,
   Plus,
-  Settings,
   Info,
+  CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -64,21 +68,17 @@ interface LookupMemberResult {
   };
 }
 
-interface NextReceiptNumberResult {
-  nextReceiptNumber: {
-    prefix: string;
-    nextNumber: number;
-    padding: number;
-    nextReceiptNumber: string;
-  } | null;
-}
-
 interface CreateMultiContributionResult {
   createManualMultiContribution: {
     success: boolean;
     message: string;
+    /** System receipt number (YYYYMMDD-NNNN) */
+    receiptNumber?: string | null;
   };
 }
+
+/** Select value meaning "record for today" (no date is sent). */
+const TODAY = "today";
 
 const emptyLine = (): CategoryAmount => ({ categoryId: "", amount: "", purposeId: "" });
 
@@ -90,10 +90,12 @@ function ManualContributionPageContent() {
   const [isGuest, setIsGuest] = useState(false);
   const [contributions, setContributions] = useState<CategoryAmount[]>([emptyLine()]);
   const [entryType, setEntryType] = useState("envelope");
-  const [receiptNumber, setReceiptNumber] = useState("");
+  const [oldBookNumber, setOldBookNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [recordFor, setRecordFor] = useState<string>(TODAY);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [issuedReceipt, setIssuedReceipt] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const { start: startTour, isReady: isTourReady } = useTour({
@@ -102,12 +104,11 @@ function ManualContributionPageContent() {
     autoStart: false,
   });
 
-  // Next auto-assigned book receipt number (read-only hint, still overridable).
-  const { data: nextReceiptData } = useQuery<NextReceiptNumberResult>(
-    GET_NEXT_RECEIPT_NUMBER,
-    { fetchPolicy: "cache-and-network" }
-  );
-  const nextReceiptHint = nextReceiptData?.nextReceiptNumber?.nextReceiptNumber || "";
+  // No backdating: a past date is only offered while a catch-up window is open.
+  const { unlockDates, hasActiveUnlocks } = useActiveEntryUnlocks({ pollInterval: 60_000 });
+  // Fall back to today if the chosen window has since closed.
+  const effectiveRecordFor =
+    recordFor !== TODAY && hasActiveUnlocks && unlockDates.includes(recordFor) ? recordFor : TODAY;
 
   const [lookupMember] = useMutation<LookupMemberResult>(LOOKUP_MEMBER_BY_PHONE);
   const [createContribution] = useMutation<CreateMultiContributionResult>(
@@ -132,8 +133,8 @@ function ManualContributionPageContent() {
           setIsGuest(true);
         }
       }
-    } catch (err: any) {
-      setError(err.message || "Error looking up member");
+    } catch (err) {
+      setError((err instanceof Error && err.message) || "Error looking up member");
     }
   };
 
@@ -157,14 +158,16 @@ function ManualContributionPageContent() {
     setMember(null);
     setIsGuest(false);
     setContributions([emptyLine()]);
-    setReceiptNumber("");
+    setOldBookNumber("");
     setNotes("");
+    setRecordFor(TODAY);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess(false);
+    setIssuedReceipt(null);
 
     // Identity validation
     if (walkIn) {
@@ -208,13 +211,18 @@ function ManualContributionPageContent() {
             memberIdentifier: c.memberIdentifier || null,
           })),
           entryType,
-          receiptNumber: receiptNumber.trim() || null,
+          receiptNumber: oldBookNumber.trim() || null,
+          // Omitted for today; the backend refuses other dates without a window.
+          ...(effectiveRecordFor !== TODAY ? { transactionDate: effectiveRecordFor } : {}),
           notes: notes.trim() || null,
         },
       });
 
       if (data?.createManualMultiContribution?.success) {
+        const number = data.createManualMultiContribution.receiptNumber ?? null;
         setSuccess(true);
+        setIssuedReceipt(number);
+        toast.success(number ? `Receipt ${number} issued` : "Contribution recorded");
         resetForm();
       } else {
         setError(
@@ -222,8 +230,8 @@ function ManualContributionPageContent() {
             "Failed to create contribution"
         );
       }
-    } catch (err: any) {
-      setError(err.message || "Error creating contribution");
+    } catch (err) {
+      setError((err instanceof Error && err.message) || "Error creating contribution");
     } finally {
       setSubmitting(false);
     }
@@ -231,6 +239,7 @@ function ManualContributionPageContent() {
 
   const handleAddAnother = () => {
     setSuccess(false);
+    setIssuedReceipt(null);
     setError("");
   };
 
@@ -258,7 +267,20 @@ function ManualContributionPageContent() {
             <CheckCircle className="h-4 w-4" />
             <AlertTitle>Contribution Recorded</AlertTitle>
             <AlertDescription>
-              The contribution has been successfully recorded.
+              {issuedReceipt ? (
+                <span>
+                  Receipt number{" "}
+                  <Link
+                    href={`/receipts/${encodeURIComponent(issuedReceipt)}`}
+                    className="font-mono text-base font-semibold text-primary underline-offset-4 hover:underline"
+                  >
+                    {issuedReceipt}
+                  </Link>
+                  . Write this on the envelope or give it to the giver.
+                </span>
+              ) : (
+                "The contribution has been successfully recorded."
+              )}
             </AlertDescription>
           </Alert>
         )}
@@ -392,6 +414,37 @@ function ManualContributionPageContent() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Recording date: today, or an open catch-up window (T2.8) */}
+              <div className="space-y-2" data-testid="recording-for">
+                {hasActiveUnlocks ? (
+                  <>
+                    <Label htmlFor="recordFor">Recording for</Label>
+                    <Select name="recordFor" value={effectiveRecordFor} onValueChange={setRecordFor}>
+                      <SelectTrigger id="recordFor">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={TODAY}>Today</SelectItem>
+                        {unlockDates.map((date) => (
+                          <SelectItem key={date} value={date}>
+                            {formatEntryDate(date)} (catch-up)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      A catch-up window is open, so you may record for that past date.
+                    </p>
+                  </>
+                ) : (
+                  <p className="flex items-center gap-2 text-sm">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Recording for:</span>
+                    <span className="font-medium">Today</span>
+                  </p>
+                )}
+              </div>
+
               {/* Entry Type */}
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
@@ -438,23 +491,20 @@ function ManualContributionPageContent() {
                 />
               </div>
 
-              {/* Receipt Number */}
+              {/* Old paper-book number — the system issues the real receipt */}
               <div className="space-y-2" data-tour="manual-entry-receipt">
-                <Label htmlFor="receipt">Receipt Number (Optional)</Label>
+                <Label htmlFor="receipt">Old book receipt no. (optional)</Label>
                 <Input
                   id="receipt"
                   type="text"
-                  placeholder={nextReceiptHint || "ENV001"}
-                  value={receiptNumber}
-                  onChange={(e) => setReceiptNumber(e.target.value)}
+                  placeholder="e.g. 1043"
+                  value={oldBookNumber}
+                  onChange={(e) => setOldBookNumber(e.target.value)}
                 />
-                {nextReceiptHint && (
-                  <p className="text-xs text-muted-foreground">
-                    Next auto-assigned number:{" "}
-                    <span className="font-medium">{nextReceiptHint}</span>. Leave
-                    blank to use it, or type your own to override.
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  A receipt number is issued automatically when you save. Only fill
+                  this in if a paper receipt book was also used.
+                </p>
               </div>
 
               {/* Notes */}
@@ -500,12 +550,6 @@ function ManualContributionPageContent() {
               </Button>
             </Link>
 
-            <Link href="/admin/receipt-settings">
-              <Button type="button" variant="ghost" className="w-full sm:w-auto">
-                <Settings className="h-4 w-4 mr-2" />
-                Receipt Book Settings
-              </Button>
-            </Link>
           </div>
         </form>
       </div>
