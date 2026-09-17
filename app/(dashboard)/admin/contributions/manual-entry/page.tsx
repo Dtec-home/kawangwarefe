@@ -7,11 +7,13 @@
  * (Ticket 7). Every saved entry gets a system receipt number (YYYYMMDD-NNNN,
  * T1.8); the typed field only records an old paper-book number. Entries are
  * always for today unless an admin has opened a catch-up window (T2.8).
+ * Submissions carry an idempotency key (T5.3): retrying after a network error
+ * reuses it, so an entry is never recorded twice.
  */
 
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation } from "@apollo/client/react";
 import { CREATE_MANUAL_MULTI_CONTRIBUTION } from "@/lib/graphql/manual-contribution-mutations";
 import { useActiveEntryUnlocks } from "@/lib/hooks/use-active-entry-unlocks";
@@ -44,6 +46,7 @@ import {
   effectiveRecordFor as resolveRecordFor,
   transactionDateVariables,
 } from "@/components/contributions/recording-for-field";
+import { useIdempotencyKey } from "@/components/contributions/idempotency";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
 import { ADMIN_MANUAL_ENTRY_TOUR_CONFIG } from "@/lib/tours/configs/admin-manual-entry";
@@ -57,6 +60,7 @@ import {
   UserX,
   Plus,
   Info,
+  RotateCw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -68,6 +72,8 @@ interface CreateMultiContributionResult {
     message: string;
     /** System receipt number (YYYYMMDD-NNNN) */
     receiptNumber?: string | null;
+    /** The idempotency key was seen before: this is the original receipt */
+    idempotentReplay?: boolean;
   };
 }
 
@@ -86,6 +92,11 @@ function ManualContributionPageContent() {
   const [success, setSuccess] = useState(false);
   const [issuedReceipt, setIssuedReceipt] = useState<string | null>(null);
   const [error, setError] = useState("");
+  /** The last save got no answer from the server: offer a safe retry */
+  const [retryable, setRetryable] = useState(false);
+  const [alreadyRecorded, setAlreadyRecorded] = useState(false);
+  const idempotency = useIdempotencyKey();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const { start: startTour, isReady: isTourReady } = useTour({
     tourKey: "admin_manual_entry_v1",
@@ -150,8 +161,10 @@ function ManualContributionPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setRetryable(false);
     setSuccess(false);
     setIssuedReceipt(null);
+    setAlreadyRecorded(false);
 
     // Identity validation
     if (walkIn) {
@@ -174,25 +187,37 @@ function ManualContributionPageContent() {
 
     setSubmitting(true);
 
+    const submission = {
+      phoneNumber: walkIn ? null : phoneNumber.trim(),
+      giverName: walkIn ? giverName.trim() : null,
+      contributions: toManualCategoryInputs(cleaned),
+      entryType,
+      receiptNumber: oldBookNumber.trim() || null,
+      // Omitted for today; the backend refuses other dates without a window.
+      ...transactionDateVariables(effectiveRecordFor),
+      notes: notes.trim() || null,
+    };
+
     try {
       const { data } = await createContribution({
-        variables: {
-          phoneNumber: walkIn ? null : phoneNumber.trim(),
-          giverName: walkIn ? giverName.trim() : null,
-          contributions: toManualCategoryInputs(cleaned),
-          entryType,
-          receiptNumber: oldBookNumber.trim() || null,
-          // Omitted for today; the backend refuses other dates without a window.
-          ...transactionDateVariables(effectiveRecordFor),
-          notes: notes.trim() || null,
-        },
+        variables: { ...submission, idempotencyKey: idempotency.keyFor(submission) },
       });
+      // The server answered: the key is spent either way.
+      idempotency.settle();
 
       if (data?.createManualMultiContribution?.success) {
         const number = data.createManualMultiContribution.receiptNumber ?? null;
+        const replay = !!data.createManualMultiContribution.idempotentReplay;
         setSuccess(true);
         setIssuedReceipt(number);
-        toast.success(number ? `Receipt ${number} issued` : "Contribution recorded");
+        setAlreadyRecorded(replay);
+        if (replay) {
+          toast.info("Already recorded", {
+            description: number ? `Showing the original receipt ${number}.` : "Showing the original entry.",
+          });
+        } else {
+          toast.success(number ? `Receipt ${number} issued` : "Contribution recorded");
+        }
         resetForm();
       } else {
         setError(
@@ -201,6 +226,8 @@ function ManualContributionPageContent() {
         );
       }
     } catch (err) {
+      // No answer: the entry may already be saved. Keep the key for the retry.
+      setRetryable(true);
       setError((err instanceof Error && err.message) || "Error creating contribution");
     } finally {
       setSubmitting(false);
@@ -210,6 +237,7 @@ function ManualContributionPageContent() {
   const handleAddAnother = () => {
     setSuccess(false);
     setIssuedReceipt(null);
+    setAlreadyRecorded(false);
     setError("");
   };
 
@@ -235,7 +263,7 @@ function ManualContributionPageContent() {
         {success && (
           <Alert>
             <CheckCircle className="h-4 w-4" />
-            <AlertTitle>Contribution Recorded</AlertTitle>
+            <AlertTitle>{alreadyRecorded ? "Already recorded" : "Contribution Recorded"}</AlertTitle>
             <AlertDescription>
               {issuedReceipt ? (
                 <span>
@@ -260,12 +288,29 @@ function ManualContributionPageContent() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>
+              <p>{error}</p>
+              {retryable && (
+                <div className="mt-2 space-y-2">
+                  <p>The entry may not be saved yet. Retrying will not record it twice.</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={submitting}
+                    onClick={() => formRef.current?.requestSubmit()}
+                  >
+                    <RotateCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              )}
+            </AlertDescription>
           </Alert>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           {/* Member Lookup */}
           <Card data-tour="manual-entry-identity">
             <CardHeader>

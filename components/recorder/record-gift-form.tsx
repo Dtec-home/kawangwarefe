@@ -5,14 +5,15 @@
  * The entry type is owned by the workspace so it survives "Next giver".
  * Dates: no date field; a "Recording for" selector appears only while an
  * admin catch-up window is open (T2.8, D13). Submission is guarded against
- * double taps (button disabled + in-flight ref).
+ * double taps (button disabled + in-flight ref) and carries an idempotency key
+ * (T5.3): a retry after a network error reuses it, so the gift is recorded once.
  */
 
 "use client";
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { CheckCircle2, Loader2, MessageSquare, Printer, UserCheck, UserPlus, UserRoundPlus } from "lucide-react";
+import { CheckCircle2, Loader2, MessageSquare, Printer, RotateCw, UserCheck, UserPlus, UserRoundPlus, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +45,7 @@ import {
   recordForLabel,
   transactionDateVariables,
 } from "@/components/contributions/recording-for-field";
+import { useIdempotencyKey } from "@/components/contributions/idempotency";
 import { CREATE_MANUAL_MULTI_CONTRIBUTION } from "@/lib/graphql/manual-contribution-mutations";
 import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
 import { formatKes, receiptHref } from "@/lib/receipts/format";
@@ -63,6 +65,7 @@ interface CreateMultiContributionResult {
     receiptNumber?: string | null;
     totalAmount?: string | null;
     smsSent?: boolean;
+    idempotentReplay?: boolean;
   };
 }
 
@@ -117,7 +120,10 @@ export function RecordGiftForm({
   const [confirmedLines, setConfirmedLines] = useState<CategoryAmount[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [issued, setIssued] = useState<IssuedReceipt | null>(null);
+  /** The last attempt failed without an answer from the server: offer a retry */
+  const [retryable, setRetryable] = useState(false);
   const inFlight = useRef(false);
+  const idempotency = useIdempotencyKey();
 
   const { lookup, loading: lookupLoading } = useGiverLookup();
   const [createContribution] = useMutation<CreateMultiContributionResult>(CREATE_MANUAL_MULTI_CONTRIBUTION);
@@ -181,6 +187,7 @@ export function RecordGiftForm({
       return;
     }
     setConfirmedLines(validation.lines);
+    setRetryable(false);
     setConfirmOpen(true);
   };
 
@@ -189,33 +196,48 @@ export function RecordGiftForm({
     if (inFlight.current) return;
     inFlight.current = true;
     setSubmitting(true);
+    const submission = {
+      contributions: toManualCategoryInputs(confirmedLines),
+      phoneNumber: walkIn ? null : phoneNumber.trim(),
+      giverName: walkIn ? giverName.trim() : null,
+      entryType,
+      ...transactionDateVariables(recordingFor),
+    };
     try {
       const { data } = await createContribution({
-        variables: {
-          contributions: toManualCategoryInputs(confirmedLines),
-          phoneNumber: walkIn ? null : phoneNumber.trim(),
-          giverName: walkIn ? giverName.trim() : null,
-          entryType,
-          ...transactionDateVariables(recordingFor),
-        },
+        variables: { ...submission, idempotencyKey: idempotency.keyFor(submission) },
       });
       const result = data?.createManualMultiContribution;
+      // The server answered: this submission is settled either way.
+      idempotency.settle();
+      setRetryable(false);
       if (result?.success) {
         const number = result.receiptNumber ?? null;
+        const replay = !!result.idempotentReplay;
+        const replayTotal = Number.parseFloat(result.totalAmount ?? "");
         setIssued({
           receiptNumber: number,
-          total: contributionLinesTotal(confirmedLines),
+          total: replay && Number.isFinite(replayTotal) ? replayTotal : contributionLinesTotal(confirmedLines),
           giver: giverLabel,
           walkIn,
           smsSent: !!result.smsSent,
         });
         setConfirmOpen(false);
-        toast.success(number ? `Receipt ${number} issued` : "Gift recorded");
+        if (replay) {
+          toast.info("Already recorded", {
+            description: number ? `Showing the original receipt ${number}.` : "Showing the original entry.",
+          });
+        } else {
+          toast.success(number ? `Receipt ${number} issued` : "Gift recorded");
+        }
         onRecorded?.();
       } else {
         toast.error(result?.message || "Could not record the gift");
       }
     } catch (err) {
+      // No answer (e.g. network error): the gift may or may not be saved. Keep
+      // the key so a retry cannot record it twice.
+      setRetryable(true);
       toast.error((err instanceof Error && err.message) || "Could not record the gift");
     } finally {
       inFlight.current = false;
@@ -443,13 +465,29 @@ export function RecordGiftForm({
               </dd>
             </div>
           </dl>
+          {retryable && (
+            <div
+              role="alert"
+              className="flex gap-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
+              data-testid="record-retry-notice"
+            >
+              <WifiOff className="h-4 w-4 shrink-0 text-warning mt-0.5" />
+              <p>
+                The connection failed, so this gift may not be saved yet. Retry: it will not be recorded twice.
+              </p>
+            </div>
+          )}
           <DialogFooter className="gap-2">
             <Button variant="outline" size="mobile" onClick={() => setConfirmOpen(false)} disabled={submitting}>
               Back
             </Button>
             <Button size="mobile" onClick={handleConfirm} disabled={submitting} aria-busy={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {submitting ? "Saving…" : "Confirm & issue receipt"}
+              {submitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : retryable ? (
+                <RotateCw className="h-4 w-4 mr-2" />
+              ) : null}
+              {submitting ? "Saving…" : retryable ? "Retry" : "Confirm & issue receipt"}
             </Button>
           </DialogFooter>
         </DialogContent>
