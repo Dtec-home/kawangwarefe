@@ -159,9 +159,9 @@ function LinkPhoneContent() {
             <a href="/" className="flex items-center gap-3 font-bold text-lg hover:opacity-80 transition-opacity">
               <div className="relative w-10 h-10">
                 <img
-                  src="/logo.png"
+                  src="/logo-mark.png"
                   alt="SDA Church"
-                  className="object-contain w-full h-full"
+                  className="object-contain w-full h-full dark:invert"
                 />
               </div>
               <span className="hidden sm:inline">SDA Kawangware</span>

@@ -49,10 +49,11 @@ export function Navigation() {
           <Link href="/" className="flex items-center gap-3 font-bold text-lg">
             <div className="relative w-10 h-10">
               <Image
-                src="/logo.png"
+                src="/logo-mark.png"
                 alt="SDA Church"
                 fill
-                className="object-contain"
+                sizes="40px"
+                className="object-contain dark:invert"
               />
             </div>
             <span className="hidden sm:inline">SDA Kawangware</span>

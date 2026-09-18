@@ -177,9 +177,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex items-center gap-3">
                 <div className="relative w-8 h-8">
                   <img
-                    src="/logo.png"
+                    src="/logo-mark.png"
                     alt="SDA Church"
-                    className="object-contain w-full h-full"
+                    className="object-contain w-full h-full dark:invert"
                   />
                 </div>
                 <h1 className="text-xl font-bold text-sidebar-foreground">Church Admin</h1>
@@ -346,7 +346,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
               {/* Centre: logo + title on mobile only */}
               <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden pointer-events-none">
-                <img src="/logo.png" className="h-6 w-6 object-contain" alt="" />
+                <img src="/logo-mark.png" className="h-6 w-6 object-contain dark:invert" alt="" />
                 <span className="font-semibold text-sm">Church Admin</span>
               </div>
 
