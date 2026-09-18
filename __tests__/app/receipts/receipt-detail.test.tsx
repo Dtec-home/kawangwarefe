@@ -76,6 +76,8 @@ const receipt = {
   ],
 }
 
+const printCss = () => screen.getByTestId('receipt-print-styles').textContent || ''
+
 describe('ReceiptPage', () => {
   beforeEach(() => {
     state.receipt = { ...receipt }
@@ -85,6 +87,7 @@ describe('ReceiptPage', () => {
     mockVoid.mockReset()
     mockRefetch.mockReset()
     toastMock.success.mockReset()
+    localStorage.clear()
   })
 
   it('queries the receipt by the number in the URL', () => {
@@ -119,16 +122,75 @@ describe('ReceiptPage', () => {
     expect(screen.getByTestId('admin-layout')).toBeInTheDocument()
   })
 
-  it('prints with window.print and ships print CSS that hides app chrome', () => {
+  it('prints with window.print and hides app chrome at both print sizes (RC-8)', () => {
     const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {})
     render(<ReceiptPage />)
-    fireEvent.click(screen.getByRole('button', { name: /Print/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Print$/ }))
     expect(printSpy).toHaveBeenCalled()
-    const css = screen.getByTestId('receipt-print-styles').textContent || ''
-    expect(css).toContain('@media print')
-    expect(css).toContain('.receipt-print-area')
-    expect(css).toContain('72mm')
+
+    // Default is the 80 mm thermal roll the church uses day to day
+    expect(printCss()).toContain('@media print')
+    expect(printCss()).toContain('.receipt-print-area')
+    expect(printCss()).toContain('size: 80mm auto')
+    expect(printCss()).toContain('width: 72mm')
+    expect(printCss()).not.toContain('105mm 148mm')
+    expect(printCss()).toContain('.receipt-no-print, .receipt-no-print * { display: none !important;')
+
+    // A6 swaps in a 105 x 148 mm page box and a wider receipt
+    fireEvent.click(screen.getByRole('button', { name: 'A6 paper' }))
+    expect(printCss()).toContain('size: 105mm 148mm')
+    expect(printCss()).toContain('width: 91mm')
+    expect(printCss()).not.toContain('72mm')
+    expect(printCss()).toContain('.receipt-no-print, .receipt-no-print * { display: none !important;')
     printSpy.mockRestore()
+  })
+
+  it('marks the chosen print size as pressed and remembers it per device', () => {
+    const { unmount } = render(<ReceiptPage />)
+    expect(screen.getByRole('button', { name: 'Thermal 80mm' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'A6 paper' })).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.click(screen.getByRole('button', { name: 'A6 paper' }))
+    expect(screen.getByRole('button', { name: 'A6 paper' })).toHaveAttribute('aria-pressed', 'true')
+    expect(localStorage.getItem('receipt-print-size')).toBe('a6')
+
+    unmount()
+    render(<ReceiptPage />)
+    expect(screen.getByRole('button', { name: 'A6 paper' })).toHaveAttribute('aria-pressed', 'true')
+    expect(printCss()).toContain('size: 105mm 148mm')
+  })
+
+  it('falls back to the thermal default when localStorage throws', () => {
+    const getItem = vi.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
+      throw new Error('blocked in private mode')
+    })
+    const setItem = vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('blocked in private mode')
+    })
+    render(<ReceiptPage />)
+    expect(screen.getByRole('button', { name: 'Thermal 80mm' })).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'A6 paper' }))
+    expect(printCss()).toContain('size: 105mm 148mm')
+    getItem.mockRestore()
+    setItem.mockRestore()
+  })
+
+  it('keeps the print size control off the printed page', () => {
+    render(<ReceiptPage />)
+    expect(screen.getByRole('group', { name: 'Print size' }).closest('.receipt-no-print')).not.toBeNull()
+  })
+
+  it('prints VOID unmistakably at both sizes', () => {
+    state.receipt = { ...receipt, status: 'void', voidReason: 'Duplicate of 20260829-0016' }
+    render(<ReceiptPage />)
+    expect(screen.getByRole('note')).toHaveClass('receipt-void-note')
+
+    for (const size of ['Thermal 80mm', 'A6 paper']) {
+      fireEvent.click(screen.getByRole('button', { name: size }))
+      expect(printCss()).toContain('.receipt-print-area .receipt-void-note { border: 2pt solid #000 !important;')
+      expect(printCss()).toContain('color: rgba(0, 0, 0, 0.32) !important')
+      expect(printCss()).toMatch(/\.receipt-void-mark span \{ font-size: \d+pt !important; \}/)
+    }
   })
 
   it('shows the VOID state with its reason', () => {

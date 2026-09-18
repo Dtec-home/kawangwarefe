@@ -144,12 +144,24 @@ export interface Receipt {
   lines: ReceiptLine[];
 }
 
+/**
+ * The subset of the backend's `ReceiptFilterInput` the register can actually
+ * fill in.
+ *
+ * `issuedById` is deliberately left out. The backend accepts it
+ * (`receipt_queries._apply_filter`), but it is an `auth.User` primary key and
+ * nothing in the schema hands one to the client: `ReceiptType` exposes only
+ * `issuedByName`, and `membersList` / `memberSearch` / `leaders` return
+ * *Member* ids, which are a different key. `_apply_search` does not match
+ * issuer names either, so there is no honest way to drive the filter from the
+ * UI today. Add it back together with an `issuedById` field (or an issuer
+ * list) on the backend.
+ */
 export interface ReceiptFilterInput {
   dateFrom?: string | null;
   dateTo?: string | null;
   channel?: string | null;
   status?: string | null;
-  issuedById?: string | null;
   search?: string | null;
 }
 

@@ -9,7 +9,7 @@ export const RECORDER_REPRINT_RESEND_VOID_ARTICLE: HelpArticle = {
   body: `The "Today's entries" tab on Record giving lists the receipts you issued today: receipt number, giver, time, entry type and total, plus the count and total recorded (voided receipts are left out of the total). A recorder only sees their own entries, and only for today.
 
 **Print**
-Tap Print on any entry to open the printable receipt (it fits a small or thermal-style page). Use it for walk-in givers or anyone who wants a paper copy.
+Tap Print on any entry to open the printable receipt. Pick the Print size that matches your printer — "Thermal 80mm" for a receipt roll (the default) or "A6 paper" for a small sheet — and the choice is remembered on that device. Use it for walk-in givers or anyone who wants a paper copy.
 
 **Resend SMS**
 If a giver says the SMS didn't arrive, tap Resend SMS. Each receipt can be resent up to 3 times; the button shows how many resends are left. Walk-in receipts and void receipts can't be resent.
