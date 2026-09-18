@@ -14,6 +14,9 @@ Numbers look like 20260829-0017: the gift's date (Nairobi time), then a counter 
 **Register**
 Filter by date (From / To, today by default), Channel (Manual, Local Evangelism/Loose Money, Envelope, M-Pesa STK, M-Pesa Pay Bill) and Status (Issued / Void), or search by receipt number, giver name or M-Pesa code. Each row shows number, date, giver, channel, total, status and who issued it ("System" for M-Pesa and older receipts). Open a receipt to view or print it; the M-Pesa code appears on the receipt, but never on the Cash Statement.
 
+**Print size**
+The receipt page has a Print size choice: "Thermal 80mm" for the receipt-roll printer (the default) or "A6 paper" for a 105 x 148 mm sheet on the office printer. Your choice is remembered on that device, so set it once per computer or phone. Either way the printout carries only the receipt — none of the surrounding menus — and a void receipt prints a VOID watermark and a boxed VOID note.
+
 **Voiding a receipt (treasurer and admin only)**
 Receipts can't be edited or deleted. To correct a mistake, void the wrong receipt and have the gift recorded again:
 1. Click the void action on the row.
