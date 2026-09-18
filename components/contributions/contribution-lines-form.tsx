@@ -78,6 +78,8 @@ interface ContributionLinesFormProps {
   /** Giver's phone, used to prefill a tracked member identifier */
   phoneNumber?: string;
   label?: string;
+  /** Whose money this is: "other" when a recorder enters someone else's gift */
+  giver?: "self" | "other";
   /** Show a running total under the lines */
   showTotal?: boolean;
 }
@@ -88,12 +90,13 @@ export function ContributionLinesForm({
   phoneNumber,
   label = "Departments *",
   showTotal = false,
+  giver = "self",
 }: ContributionLinesFormProps) {
   const total = contributionLinesTotal(lines);
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <MultiCategorySelector contributions={lines} onChange={onChange} phoneNumber={phoneNumber} />
+      <MultiCategorySelector contributions={lines} onChange={onChange} phoneNumber={phoneNumber} giver={giver} />
       {showTotal && (
         <div
           className="flex items-center justify-between rounded-lg bg-muted px-4 py-3"

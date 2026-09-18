@@ -433,6 +433,7 @@ function ManualContributionPageContent() {
                 lines={contributions}
                 onChange={setContributions}
                 phoneNumber={walkIn ? undefined : phoneNumber}
+                giver="other"
               />
 
               {/* Old paper-book number — the system issues the real receipt */}

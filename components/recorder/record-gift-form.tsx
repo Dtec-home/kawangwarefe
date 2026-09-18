@@ -358,6 +358,7 @@ export function RecordGiftForm({
               lines={lines}
               onChange={setLines}
               phoneNumber={walkIn || nameOnly ? undefined : phoneNumber}
+              giver="other"
               label="Departments & amounts"
               showTotal
             />
