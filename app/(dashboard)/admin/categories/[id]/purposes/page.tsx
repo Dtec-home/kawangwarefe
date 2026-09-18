@@ -21,8 +21,15 @@ import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
 import { ADMIN_CATEGORY_PURPOSES_TOUR_CONFIG } from "@/lib/tours/configs/admin-category-purposes";
 import { CheckCircle, AlertCircle, Plus, Trash2, ArrowLeft, Pencil, ListChecks } from "lucide-react";
-import { GET_DEPARTMENT_PURPOSES, GET_CATEGORY_ALLOCATIONS } from "@/lib/graphql/queries";
+import { toast } from "sonner";
 import {
+  overrideToStatementColumnChoice,
+  statementColumnChoiceToOverride,
+  type StatementColumnChoice,
+} from "@/lib/treasury/statement-columns";
+import { GET_CATEGORY_ALLOCATIONS } from "@/lib/graphql/queries";
+import {
+  GET_ADMIN_DEPARTMENT_PURPOSES,
   CREATE_DEPARTMENT_PURPOSE,
   DELETE_DEPARTMENT_PURPOSE,
   UPDATE_DEPARTMENT_PURPOSE,
@@ -39,6 +46,39 @@ interface Purpose {
   code: string;
   description: string;
   isActive: boolean;
+  /** null = inherit the department's trust/local flag */
+  trustFundOverride?: boolean | null;
+}
+
+const STATEMENT_COLUMN_HELP =
+  "Choosing an own column gives this purpose a separate column on the Cash Statement, " +
+  "labelled DEPARTMENT – PURPOSE, instead of adding its money to the department's column.";
+
+function StatementColumnSelect({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: StatementColumnChoice;
+  onChange: (value: StatementColumnChoice) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={id}>Cash Statement column</Label>
+      <Select value={value} onValueChange={(v) => onChange(v as StatementColumnChoice)}>
+        <SelectTrigger id={id} aria-label="Cash Statement column">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="inherit">Inherit from department</SelectItem>
+          <SelectItem value="trust">Own column – Trust</SelectItem>
+          <SelectItem value="local">Own column – Local</SelectItem>
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">{STATEMENT_COLUMN_HELP}</p>
+    </div>
+  );
 }
 
 interface Allocation {
@@ -100,11 +140,13 @@ export default function DepartmentPurposesPage() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
+  const [statementColumn, setStatementColumn] = useState<StatementColumnChoice>("inherit");
   const [editingPurposeId, setEditingPurposeId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editCode, setEditCode] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [autoGenerateEditCode, setAutoGenerateEditCode] = useState(true);
+  const [editStatementColumn, setEditStatementColumn] = useState<StatementColumnChoice>("inherit");
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
@@ -116,7 +158,7 @@ export default function DepartmentPurposesPage() {
   const [allocSuccess, setAllocSuccess] = useState("");
   const [allocError, setAllocError] = useState("");
 
-  const { data, loading, refetch } = useQuery<PurposesData>(GET_DEPARTMENT_PURPOSES, {
+  const { data, loading, refetch } = useQuery<PurposesData>(GET_ADMIN_DEPARTMENT_PURPOSES, {
     skip: !categoryId,
     variables: { categoryId, isActive: null },
     fetchPolicy: "network-only",
@@ -286,6 +328,11 @@ export default function DepartmentPurposesPage() {
           name: name.trim(),
           code: code.trim() ? code.trim().toUpperCase() : undefined,
           description: description.trim(),
+          // Omitted (not null) when inheriting, so staff who can't set the
+          // override can still create purposes.
+          trustFundOverride: statementColumn === "inherit"
+            ? undefined
+            : statementColumnChoiceToOverride(statementColumn),
         },
       });
 
@@ -295,12 +342,17 @@ export default function DepartmentPurposesPage() {
         setName("");
         setCode("");
         setDescription("");
+        setStatementColumn("inherit");
         await refetch();
       } else {
-        setError(result?.message || "Failed to create purpose");
+        const message = result?.message || "Failed to create purpose";
+        setError(message);
+        toast.error(message);
       }
     } catch (err: unknown) {
-      setError(toErrorMessage(err, "Failed to create purpose"));
+      const message = toErrorMessage(err, "Failed to create purpose");
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -349,6 +401,7 @@ export default function DepartmentPurposesPage() {
     setEditCode(purpose.code);
     setEditDescription(purpose.description || "");
     setAutoGenerateEditCode(true);
+    setEditStatementColumn(overrideToStatementColumnChoice(purpose.trustFundOverride));
   };
 
   const handleCancelEdit = () => {
@@ -357,6 +410,7 @@ export default function DepartmentPurposesPage() {
     setEditCode("");
     setEditDescription("");
     setAutoGenerateEditCode(true);
+    setEditStatementColumn("inherit");
   };
 
   const handleSaveEdit = async (purposeId: string) => {
@@ -373,6 +427,7 @@ export default function DepartmentPurposesPage() {
         name: string;
         description: string;
         code?: string;
+        trustFundOverride?: boolean | null;
       } = {
         purposeId,
         name: editName.trim(),
@@ -387,6 +442,14 @@ export default function DepartmentPurposesPage() {
         variables.code = editCode.trim().toUpperCase();
       }
 
+      // Only send the override when it changed: omitted keeps the stored
+      // value, while an explicit null clears it back to "inherit".
+      const original = purposes.find((p) => p.id === purposeId);
+      const nextOverride = statementColumnChoiceToOverride(editStatementColumn);
+      if ((original?.trustFundOverride ?? null) !== nextOverride) {
+        variables.trustFundOverride = nextOverride;
+      }
+
       const { data: response } = await updatePurpose({ variables });
       const result = response?.updateDepartmentPurpose;
 
@@ -395,10 +458,14 @@ export default function DepartmentPurposesPage() {
         handleCancelEdit();
         await refetch();
       } else {
-        setError(result?.message || "Failed to update purpose");
+        const message = result?.message || "Failed to update purpose";
+        setError(message);
+        toast.error(message);
       }
     } catch (err: unknown) {
-      setError(toErrorMessage(err, "Failed to update purpose"));
+      const message = toErrorMessage(err, "Failed to update purpose");
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -488,6 +555,14 @@ export default function DepartmentPurposesPage() {
                   />
                 </div>
 
+                <div className="md:w-1/2">
+                  <StatementColumnSelect
+                    id="purpose-statement-column"
+                    value={statementColumn}
+                    onChange={setStatementColumn}
+                  />
+                </div>
+
                 <Button type="submit" disabled={creating}>
                   {creating ? "Saving..." : "Save Purpose"}
                 </Button>
@@ -570,14 +645,28 @@ export default function DepartmentPurposesPage() {
                               rows={2}
                             />
                           </div>
+
+                          <StatementColumnSelect
+                            id={`edit-statement-column-${purpose.id}`}
+                            value={editStatementColumn}
+                            onChange={setEditStatementColumn}
+                          />
                         </div>
                       ) : (
                         <div>
                           <div className="font-medium">{purpose.name}</div>
                           <div className="text-sm text-muted-foreground">{purpose.code}</div>
-                          {!purpose.isActive && (
-                            <div className="mt-1">
-                              <StatusBadge variant="neutral">Inactive</StatusBadge>
+                          {(!purpose.isActive || purpose.trustFundOverride != null) && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {!purpose.isActive && (
+                                <StatusBadge variant="neutral">Inactive</StatusBadge>
+                              )}
+                              {purpose.trustFundOverride === true && (
+                                <StatusBadge variant="info">Own column – Trust</StatusBadge>
+                              )}
+                              {purpose.trustFundOverride === false && (
+                                <StatusBadge variant="neutral">Own column – Local</StatusBadge>
+                              )}
                             </div>
                           )}
                           {purpose.description && (

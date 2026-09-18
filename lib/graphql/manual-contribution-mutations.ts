@@ -51,8 +51,11 @@ export const CREATE_MANUAL_CONTRIBUTION = gql`
 
 /**
  * Multi-category manual entry (Ticket 6): one Contribution per line item,
- * sharing one receipt number / contribution group. Supports walk-in givers
- * (Ticket 7) via optional phoneNumber + giverName.
+ * sharing one contribution group and one system receipt (`receiptNumber`,
+ * YYYYMMDD-NNNN). The `receiptNumber` argument is only a typed old book
+ * number. Supports walk-in givers (Ticket 7) via optional phoneNumber + giverName.
+ * `idempotencyKey` (T5.3): repeating a key returns the first result with
+ * `idempotentReplay: true` instead of recording the gift twice.
  */
 export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
   mutation CreateManualMultiContribution(
@@ -63,6 +66,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
     $transactionDate: String
     $notes: String
     $giverName: String
+    $idempotencyKey: String
   ) {
     createManualMultiContribution(
       contributions: $contributions
@@ -72,6 +76,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
       transactionDate: $transactionDate
       notes: $notes
       giverName: $giverName
+      idempotencyKey: $idempotencyKey
     ) {
       success
       message
@@ -80,40 +85,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
       receiptNumber
       isGuest
       smsSent
-    }
-  }
-`;
-
-/**
- * Preview the next auto-assigned manual book-receipt number (Ticket 9)
- * without consuming it. Shown as a read-only hint on the manual entry form.
- */
-export const GET_NEXT_RECEIPT_NUMBER = gql`
-  query GetNextReceiptNumber {
-    nextReceiptNumber {
-      prefix
-      nextNumber
-      padding
-      nextReceiptNumber
-    }
-  }
-`;
-
-/**
- * Admin-only: set/reset the starting number, prefix and padding of the
- * global auto-incrementing manual receipt sequence (Ticket 9).
- */
-export const SET_RECEIPT_SEQUENCE = gql`
-  mutation SetReceiptSequence($nextNumber: Int, $prefix: String, $padding: Int) {
-    setReceiptSequence(nextNumber: $nextNumber, prefix: $prefix, padding: $padding) {
-      success
-      message
-      sequence {
-        prefix
-        nextNumber
-        padding
-        nextReceiptNumber
-      }
+      idempotentReplay
     }
   }
 `;
@@ -149,6 +121,10 @@ export const LOOKUP_MEMBER_BY_PHONE = gql`
         email
         isGuest
         isActive
+      }
+      giver {
+        id
+        displayName
       }
     }
   }

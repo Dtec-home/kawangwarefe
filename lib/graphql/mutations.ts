@@ -67,6 +67,7 @@ export const GENERATE_CONTRIBUTION_REPORT = gql`
     $groupId: Int
     $routingType: String
     $memberId: Int
+    $timeBucket: String
   ) {
     generateContributionReport(
       format: $format
@@ -79,6 +80,7 @@ export const GENERATE_CONTRIBUTION_REPORT = gql`
       groupId: $groupId
       routingType: $routingType
       memberId: $memberId
+      timeBucket: $timeBucket
     ) {
       success
       message

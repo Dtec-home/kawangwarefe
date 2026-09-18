@@ -20,6 +20,7 @@ import {
   Shield,
   Newspaper,
   Info,
+  NotebookPen,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,7 +47,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { canAccessAdmin, canAccessContent } = useUserRole();
+  const { canAccessAdmin, canAccessContent, isRecorder, isStaff } = useUserRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -62,6 +63,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
 
   const extraAdminLinks: NavItem[] = [
     ...(canAccessAdmin ? [{ name: "Admin Panel", href: "/admin", icon: Shield }] : []),
+    ...(isRecorder || isStaff ? [{ name: "Record giving", href: "/record", icon: NotebookPen }] : []),
     ...(canAccessContent ? [{ name: "Church Content", href: "/admin/content", icon: Newspaper }] : []),
   ];
 
@@ -84,7 +86,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative w-8 h-8">
-                  <Image src="/logo.png" alt="SDA Church" fill className="object-contain" />
+                  <Image src="/logo-mark.png" alt="SDA Church" fill sizes="32px" className="object-contain dark:invert" />
                 </div>
                 <h1 className="text-xl font-bold text-sidebar-foreground">Church Member</h1>
               </div>
@@ -192,7 +194,7 @@ export function MemberLayout({ children }: MemberLayoutProps) {
               </Button>
               {/* Centred logo + name on mobile — sidebar already shows this on desktop */}
               <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden pointer-events-none">
-                <Image src="/logo.png" width={22} height={22} alt="" className="object-contain" />
+                <Image src="/logo-mark.png" width={22} height={22} alt="" className="object-contain dark:invert" />
                 <span className="font-semibold text-sm">SDA Kawangware</span>
               </div>
               {/* Desktop: ThemeToggle + user name on right (F7.1) */}

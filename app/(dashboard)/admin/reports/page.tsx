@@ -34,6 +34,8 @@ import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
 import { ADMIN_REPORTS_TOUR_CONFIG } from "@/lib/tours/configs/admin-reports";
 import { toast } from "sonner";
+import { downloadBase64File as downloadFile } from "@/lib/download-base64-file";
+import { CashStatementExportCard } from "@/components/treasury/cash-statement-export-card";
 
 interface Category {
   id: string;
@@ -319,27 +321,6 @@ function ReportsPageContent() {
 
   const [generateReport, { loading }] = useMutation<ReportResponse>(GENERATE_CONTRIBUTION_REPORT);
 
-  const downloadFile = (base64Data: string, filename: string, contentType: string) => {
-    // Convert base64 to blob
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.codePointAt(i) ?? 0;
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: contentType });
-
-    // Create download link
-    const url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    globalThis.URL.revokeObjectURL(url);
-  };
-
   const runExportForActivity = async (activityId: string, requestVariables: ExportRequestVariables) => {
     try {
       const { data } = await generateReport({ variables: requestVariables });
@@ -386,14 +367,32 @@ function ReportsPageContent() {
     }
   };
 
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = async (
+    overrides: { reportType?: string; format?: string; selectedCategoryIds?: string[] } = {},
+  ) => {
+    // Explicit overrides avoid reading stale state right after a setState call
+    // (quick-export cards set the visible state and generate in the same click).
+    const effectiveReportType = overrides.reportType ?? reportType;
+    const effectiveFormat = overrides.format ?? format;
+    const effectiveCategoryIds = overrides.selectedCategoryIds
+      ? (overrides.selectedCategoryIds.length > 0
+        ? overrides.selectedCategoryIds
+        : (analyticsCategoryId !== "all" ? [analyticsCategoryId] : []))
+      : selectedExportCategoryIds;
+    const effectiveDateFrom = effectiveReportType === "custom" && dateFrom
+      ? new Date(dateFrom).toISOString()
+      : null;
+    const effectiveDateTo = effectiveReportType === "custom" && dateTo
+      ? new Date(dateTo).toISOString()
+      : null;
+
     // Validate custom date range
-    if (reportType === "custom" && (!dateFrom || !dateTo)) {
+    if (effectiveReportType === "custom" && (!dateFrom || !dateTo)) {
       toast.error("Please select both start and end dates for custom reports");
       return;
     }
 
-    if (reportType === "custom" && new Date(dateFrom) > new Date(dateTo)) {
+    if (effectiveReportType === "custom" && new Date(dateFrom) > new Date(dateTo)) {
       toast.error("Start date must be before end date");
       return;
     }
@@ -407,12 +406,12 @@ function ReportsPageContent() {
     ].join(" • ");
 
     const requestVariables: ExportRequestVariables = {
-      format,
-      reportType,
-      dateFrom: customDateFrom,
-      dateTo: customDateTo,
-      categoryIds: selectedExportCategoryIds.length > 0
-        ? selectedExportCategoryIds.map((id) => Number.parseInt(id, 10))
+      format: effectiveFormat,
+      reportType: effectiveReportType,
+      dateFrom: effectiveDateFrom,
+      dateTo: effectiveDateTo,
+      categoryIds: effectiveCategoryIds.length > 0
+        ? effectiveCategoryIds.map((id) => Number.parseInt(id, 10))
         : null,
       purposeId: analyticsPurposeId === "all" ? null : Number.parseInt(analyticsPurposeId, 10),
       groupId: analyticsGroupId === "all" ? null : Number.parseInt(analyticsGroupId, 10),
@@ -424,8 +423,8 @@ function ReportsPageContent() {
       {
         id: activityId,
         createdAt: new Date().toISOString(),
-        reportType,
-        format,
+        reportType: effectiveReportType,
+        format: effectiveFormat,
         scope: scopeSummary,
         status: "pending" as const,
         message: "Preparing export...",
@@ -642,6 +641,9 @@ function ReportsPageContent() {
           )}
         </div>
 
+        {/* Treasurer's Cash Statement (T3.4) */}
+        {isStaff && reportMode === "exports" && <CashStatementExportCard />}
+
         {/* Report Configuration */}
         {isStaff && reportMode === "exports" && (
         <Card>
@@ -795,7 +797,7 @@ function ReportsPageContent() {
             {/* Generate Button */}
             <div className="flex justify-end pt-4">
               <Button
-                onClick={handleGenerateReport}
+                onClick={() => handleGenerateReport()}
                 disabled={loading}
                 size="lg"
               >
@@ -815,7 +817,7 @@ function ReportsPageContent() {
               setReportType("daily");
               setFormat("excel");
               setSelectedCategoryIds([]);
-              setTimeout(handleGenerateReport, 100);
+              void handleGenerateReport({ reportType: "daily", format: "excel", selectedCategoryIds: [] });
             }}
           >
             <CardContent className="pt-6">
@@ -836,7 +838,7 @@ function ReportsPageContent() {
               setReportType("weekly");
               setFormat("excel");
               setSelectedCategoryIds([]);
-              setTimeout(handleGenerateReport, 100);
+              void handleGenerateReport({ reportType: "weekly", format: "excel", selectedCategoryIds: [] });
             }}
           >
             <CardContent className="pt-6">
@@ -857,7 +859,7 @@ function ReportsPageContent() {
               setReportType("monthly");
               setFormat("pdf");
               setSelectedCategoryIds([]);
-              setTimeout(handleGenerateReport, 100);
+              void handleGenerateReport({ reportType: "monthly", format: "pdf", selectedCategoryIds: [] });
             }}
           >
             <CardContent className="pt-6">

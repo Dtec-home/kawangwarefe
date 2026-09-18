@@ -11,7 +11,8 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@apollo/client/react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { useUserRole } from "@/lib/hooks/use-user-role";
+import { useUserRole, type AdminFeature } from "@/lib/hooks/use-user-role";
+import { usePendingVoidRequestCount } from "@/lib/hooks/use-pending-void-request-count";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { HelpButton } from "@/components/help/HelpButton";
@@ -35,6 +36,10 @@ import {
   Receipt,
   UsersRound,
   Info,
+  NotebookPen,
+  CalendarClock,
+  ReceiptText,
+  Coins,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminBottomNav } from "@/components/layouts/admin-bottom-nav";
@@ -46,7 +51,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-type FeatureType = "overview" | "contributions" | "members" | "categories" | "groups" | "category-admins" | "reports" | "c2b-transactions" | "content" | "messaging" | "prayers" | "expenses" | "leaders";
+type FeatureType = AdminFeature;
 
 interface NavItem {
   name: string;
@@ -68,7 +73,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, isPureRecorder, canVoidReceipts, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  // T2.6 — pending receipt void requests (treasurer/admin only)
+  const pendingVoidRequests = usePendingVoidRequestCount({ enabled: !!canVoidReceipts });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Errors ignored — the sidebar falls back to the user-initial icon if the
   // authenticated member can't be loaded.
@@ -91,14 +98,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: "Overview",      href: "/admin",               icon: LayoutDashboard, feature: "overview" },
         { name: "Contributions", href: "/admin/contributions", icon: DollarSign,      feature: "contributions" },
         { name: "Members",       href: "/admin/members",       icon: Users,           feature: "members" },
+        { name: "Record giving", href: "/record",              icon: NotebookPen,     feature: "record" },
       ],
     },
     {
       label: "Finance",
       items: [
         { name: "Reports",      href: "/admin/reports",          icon: FileText,  feature: "reports" },
+        { name: "Receipts",     href: "/admin/receipts",         icon: ReceiptText, feature: "receipts" },
         { name: "Expenses",     href: "/admin/expenses",         icon: Receipt,   feature: "expenses" },
         { name: "C2B / M-Pesa", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
+        { name: "Catch-up windows", href: "/admin/catch-up-windows", icon: CalendarClock, feature: "catch-up-windows" },
+        { name: "Collection sessions", href: "/admin/collection-sessions", icon: Coins, feature: "collection-sessions" },
       ],
     },
     {
@@ -132,6 +143,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     if (isCategoryAdmin) return { text: "Dept Admin",   tone: "warning" };
     if (isGroupAdmin)    return { text: "Group Admin",  tone: "success" };
     if (canSendBulkMessage) return { text: "Messaging",  tone: "neutral" };
+    if (isPureRecorder)  return { text: "Recorder",     tone: "info" };
     return null;
   };
 
@@ -165,9 +177,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <div className="flex items-center gap-3">
                 <div className="relative w-8 h-8">
                   <img
-                    src="/logo.png"
+                    src="/logo-mark.png"
                     alt="SDA Church"
-                    className="object-contain w-full h-full"
+                    className="object-contain w-full h-full dark:invert"
                   />
                 </div>
                 <h1 className="text-xl font-bold text-sidebar-foreground">Church Admin</h1>
@@ -259,6 +271,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/50"
                           }`} />
                           <span className="text-sm">{item.name}</span>
+                          {item.feature === "receipts" && pendingVoidRequests > 0 && (
+                            <span
+                              className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-xs font-semibold leading-none text-white"
+                              aria-label={`${pendingVoidRequests} pending void requests`}
+                            >
+                              {pendingVoidRequests}
+                            </span>
+                          )}
                         </Button>
                       );
                     })}
@@ -326,7 +346,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
               {/* Centre: logo + title on mobile only */}
               <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden pointer-events-none">
-                <img src="/logo.png" className="h-6 w-6 object-contain" alt="" />
+                <img src="/logo-mark.png" className="h-6 w-6 object-contain dark:invert" alt="" />
                 <span className="font-semibold text-sm">Church Admin</span>
               </div>
 

@@ -63,4 +63,45 @@ describe('AdminProtectedRoute', () => {
     render(<AdminProtectedRoute><div>Hidden</div></AdminProtectedRoute>)
     expect(mockPush).toHaveBeenCalledWith('/dashboard')
   })
+
+  type AuthValue = ReturnType<typeof useAuth>
+  type RoleValue = ReturnType<typeof useUserRole>
+
+  describe('recorder (T2.4)', () => {
+    const pureRecorder = {
+      isStaff: false, isCategoryAdmin: false, canAccessContent: false, canAccessAdmin: false,
+      canSendBulkMessage: false, isRecorder: true, isPureRecorder: true,
+      loading: false, roleInfo: { isAuthenticated: true },
+    }
+
+    it('lets a pure recorder into a requiredAccess="recorder" route', () => {
+      vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true, isLoading: false } as unknown as AuthValue)
+      vi.mocked(useUserRole).mockReturnValue(pureRecorder as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="recorder"><div>Record page</div></AdminProtectedRoute>)
+      expect(screen.getByText('Record page')).toBeInTheDocument()
+      expect(mockPush).not.toHaveBeenCalled()
+    })
+
+    it('lets staff into a requiredAccess="recorder" route', () => {
+      vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true, isLoading: false } as unknown as AuthValue)
+      vi.mocked(useUserRole).mockReturnValue({ ...pureRecorder, isStaff: true, isRecorder: false, isPureRecorder: false, canAccessAdmin: true } as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="recorder"><div>Record page</div></AdminProtectedRoute>)
+      expect(screen.getByText('Record page')).toBeInTheDocument()
+    })
+
+    it('redirects a pure recorder hitting another admin route to /record', () => {
+      vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true, isLoading: false } as unknown as AuthValue)
+      vi.mocked(useUserRole).mockReturnValue(pureRecorder as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="staff"><div>Reports</div></AdminProtectedRoute>)
+      expect(screen.queryByText('Reports')).not.toBeInTheDocument()
+      expect(mockPush).toHaveBeenCalledWith('/record')
+    })
+
+    it('redirects a regular member hitting the recorder route to /dashboard', () => {
+      vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true, isLoading: false } as unknown as AuthValue)
+      vi.mocked(useUserRole).mockReturnValue({ ...pureRecorder, isRecorder: false, isPureRecorder: false } as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="recorder"><div>Record page</div></AdminProtectedRoute>)
+      expect(mockPush).toHaveBeenCalledWith('/dashboard')
+    })
+  })
 })

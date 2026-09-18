@@ -16,7 +16,12 @@ import { Loader2 } from "lucide-react";
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
-  requiredAccess?: "staff" | "category-admin" | "content-admin" | "any-admin" | "messaging";
+  /**
+   * - `recorder`: staff or holders of the recorder role (the /record workspace).
+   * A pure recorder (recorder, not staff) who lacks access to a route is sent
+   * to `/record` instead of `/dashboard`.
+   */
+  requiredAccess?: "staff" | "category-admin" | "content-admin" | "any-admin" | "messaging" | "recorder";
 }
 
 export function AdminProtectedRoute({
@@ -25,7 +30,7 @@ export function AdminProtectedRoute({
 }: AdminProtectedRouteProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, loading: roleLoading, roleInfo } = useUserRole();
+  const { isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, isRecorder, isPureRecorder, loading: roleLoading, roleInfo } = useUserRole();
 
   // Treat as loading if: auth is loading, role query is loading, OR
   // role query returned loading:false but hasn't delivered data yet
@@ -45,10 +50,12 @@ export function AdminProtectedRoute({
         return canSendBulkMessage;
       case "any-admin":
         return canAccessAdmin || canAccessContent || canSendBulkMessage;
+      case "recorder":
+        return isStaff || isRecorder;
       default:
         return false;
     }
-  }, [requiredAccess, isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage]);
+  }, [requiredAccess, isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, isRecorder]);
 
   // Redirect when not authenticated or not authorized
   useEffect(() => {
@@ -57,9 +64,10 @@ export function AdminProtectedRoute({
     if (!isAuthenticated) {
       router.push("/login");
     } else if (!hasAccess) {
-      router.push("/dashboard");
+      // Pure recorders are confined to their workspace (RR-4)
+      router.push(isPureRecorder ? "/record" : "/dashboard");
     }
-  }, [isAuthenticated, hasAccess, isLoading, router]);
+  }, [isAuthenticated, hasAccess, isLoading, isPureRecorder, router]);
 
   // Single loading spinner for both auth + role check
   if (isLoading) {
