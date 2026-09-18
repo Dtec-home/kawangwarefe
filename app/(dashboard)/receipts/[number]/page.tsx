@@ -15,6 +15,10 @@ import { ArrowLeft, Ban, Printer, ReceiptText } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { MemberLayout } from "@/components/layouts/member-layout";
+import {
+  ReceiptPrintSizeControl,
+  useReceiptPrintSize,
+} from "@/components/receipts/receipt-print-size-control";
 import { ReceiptPrintStyles } from "@/components/receipts/receipt-print-styles";
 import { ReceiptView } from "@/components/receipts/receipt-view";
 import { VoidReceiptDialog } from "@/components/receipts/void-receipt-dialog";
@@ -32,6 +36,7 @@ function ReceiptDetail() {
   const number = decodeURIComponent(String(params?.number ?? ""));
   const { canVoidReceipts, isStaff, isRecorder, loading: roleLoading } = useUserRole();
   const [voidOpen, setVoidOpen] = useState(false);
+  const { size: printSize, setSize: setPrintSize } = useReceiptPrintSize();
 
   const { data, loading, error, refetch } = useQuery<ReceiptData>(GET_RECEIPT, {
     variables: { number },
@@ -65,7 +70,7 @@ function ReceiptDetail() {
 
   return (
     <Layout>
-      <ReceiptPrintStyles />
+      <ReceiptPrintStyles size={printSize} />
       <div className="space-y-4">
         <div className="receipt-no-print flex flex-wrap items-center justify-between gap-2 print:hidden">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
@@ -73,7 +78,8 @@ function ReceiptDetail() {
             Back
           </Button>
           {receipt && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <ReceiptPrintSizeControl value={printSize} onChange={setPrintSize} />
               {canVoidReceipts && receipt.status !== "void" && (
                 <Button variant="outline" size="sm" className="text-destructive" onClick={() => setVoidOpen(true)}>
                   <Ban className="h-4 w-4 mr-2" />

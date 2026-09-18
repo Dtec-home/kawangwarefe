@@ -83,8 +83,10 @@ export function ReceiptView({ receipt, churchName }: ReceiptViewProps) {
           {receipt.lines.map((line) => (
             <tr key={line.id} className="align-top">
               <td className="py-1 pr-2">
-                <div>{line.categoryName}</div>
-                {line.purposeName && <div className="text-xs text-muted-foreground">{line.purposeName}</div>}
+                <div className="break-words">{line.categoryName}</div>
+                {line.purposeName && (
+                  <div className="break-words text-xs text-muted-foreground">{line.purposeName}</div>
+                )}
               </td>
               <td className="py-1 text-right whitespace-nowrap">{formatKes(line.amount)}</td>
             </tr>
@@ -103,8 +105,10 @@ export function ReceiptView({ receipt, churchName }: ReceiptViewProps) {
       </table>
 
       {isVoid && (
-        <div className="mt-3 rounded-md border border-destructive/40 p-2 text-sm" role="note">
-          <p className="font-semibold text-destructive">This receipt is VOID</p>
+        <div className="receipt-void-note mt-3 rounded-md border-2 border-destructive/60 p-2 text-sm" role="note">
+          <p className="receipt-void-note-title font-semibold uppercase tracking-wide text-destructive">
+            This receipt is VOID
+          </p>
           {receipt.voidReason && <p className="mt-0.5">Reason: {receipt.voidReason}</p>}
           {receipt.voidedAt && (
             <p className="mt-0.5 text-xs text-muted-foreground">Voided {formatNairobiDateTime(receipt.voidedAt)}</p>
