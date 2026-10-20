@@ -19,7 +19,7 @@ export const LIST_TEXT = [
   '*Church Building* contributors',
   '1. Jane Wanjiku: KES 50,000',
   '2. Peter Otieno: KES 25,000',
-  'As at 20 Oct 2026, 09:00',
+  '_List as at 20 Oct 2026 9:00am_',
 ].join('\n')
 
 export function whatsappList(overrides: Partial<WhatsAppContributorList> = {}): WhatsAppContributorList {
