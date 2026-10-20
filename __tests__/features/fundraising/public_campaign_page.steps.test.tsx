@@ -22,6 +22,8 @@ import { PUBLIC_CAMPAIGNS, PUBLIC_CAMPAIGN_PAGE } from '@/lib/graphql/fundraisin
 import { PUBLIC_CAMPAIGN_FOR_GIVING } from '@/lib/graphql/fundraising/give'
 import { CampaignListView } from '@/components/campaigns/public/campaign-list-view'
 import { CampaignPageView } from '@/components/campaigns/public/campaign-page-view'
+import { campaignMetadata, fetchCampaignMeta } from '@/components/campaigns/public/server/campaign-meta'
+import type { Metadata } from 'next'
 
 const feature = loadFeature('./public_campaign_page.feature', { loadRelativePath: true })
 
@@ -312,6 +314,54 @@ defineFeature(feature, (test) => {
     })
     and('they are offered a link to all campaigns', () => {
       expect(screen.getByRole('link', { name: /see all campaigns/i })).toHaveAttribute('href', '/campaigns')
+    })
+  })
+
+  const previewSteps = (when: (m: RegExp, fn: (...a: string[]) => Promise<void>) => void, getFetch: () => typeof fetch, set: (m: Metadata) => void) =>
+    when(/^the link preview for "(.*)" is built$/, async (slug) => {
+      const meta = await fetchCampaignMeta(slug, { fetchImpl: getFetch(), endpoint: 'https://api.example/graphql/' })
+      set(campaignMetadata(slug, meta))
+    })
+
+  test('A shared campaign link shows a rich preview', ({ given, when, then, and }) => {
+    let fetchImpl: typeof fetch
+    let metadata: Metadata = {}
+    given(/^the church API describes the campaign "(.*)" "(.*)"$/, (slug, title) => {
+      const campaign = pageCampaign(slug, title, true)
+      fetchImpl = vi.fn(async () => new Response(JSON.stringify({ data: { publicCampaign: campaign } }))) as unknown as typeof fetch
+    })
+    previewSteps(when, () => fetchImpl, (m) => (metadata = m))
+    then(/^the preview title is "(.*)"$/, (title) => {
+      expect(metadata.title).toBe(title)
+      expect(metadata.openGraph?.title).toBe(title)
+    })
+    and(/^the preview description says "(.*)"$/, (text) => {
+      expect(String(metadata.description)).toContain(text)
+      expect(String(metadata.openGraph?.description)).toContain(text)
+    })
+    and(/^the preview points to "(.*)"$/, (path) => {
+      expect(metadata.alternates?.canonical).toBe(path)
+      expect(metadata.openGraph?.url).toBe(path)
+    })
+    and('the preview is a large-image card', () => {
+      expect((metadata.twitter as { card?: string })?.card).toBe('summary_large_image')
+    })
+  })
+
+  test('The link preview still works when the church API is unreachable', ({ given, when, then, and }) => {
+    let fetchImpl: typeof fetch
+    let metadata: Metadata = {}
+    given('the church API cannot be reached', () => {
+      fetchImpl = vi.fn(async () => {
+        throw new TypeError('fetch failed')
+      }) as unknown as typeof fetch
+    })
+    previewSteps(when, () => fetchImpl, (m) => (metadata = m))
+    then(/^the preview title is "(.*)"$/, (title) => {
+      expect(metadata.title).toBe(title)
+    })
+    and(/^the preview points to "(.*)"$/, (path) => {
+      expect(metadata.alternates?.canonical).toBe(path)
     })
   })
 })

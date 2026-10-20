@@ -58,3 +58,17 @@ Feature: Public campaign pages
     When a visitor opens the campaign page "no-such-thing"
     Then they are told the campaign could not be found
     And they are offered a link to all campaigns
+
+  Scenario: A shared campaign link shows a rich preview
+    Given the church API describes the campaign "new-church-roof" "New Church Roof"
+    When the link preview for "new-church-roof" is built
+    Then the preview title is "New Church Roof"
+    And the preview description says "KES 24,800 raised of KES 100,000"
+    And the preview points to "/campaigns/new-church-roof"
+    And the preview is a large-image card
+
+  Scenario: The link preview still works when the church API is unreachable
+    Given the church API cannot be reached
+    When the link preview for "new-church-roof" is built
+    Then the preview title is "Campaign"
+    And the preview points to "/campaigns/new-church-roof"
