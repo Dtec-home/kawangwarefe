@@ -20,8 +20,8 @@ import { ACTIVE_CAMPAIGNS_FOR_LINES } from '@/lib/graphql/fundraising/give'
 import { LineCampaignFields, staleCampaignLines } from '@/components/campaigns/give/line-campaign-fields'
 
 const CAMPAIGNS = [
-  { __typename: 'CampaignType', id: '42', title: 'New Church Roof', categoryId: '4', categoryName: 'Building Fund' },
-  { __typename: 'CampaignType', id: '43', title: 'Chairs', categoryId: '4', categoryName: 'Building Fund' },
+  { __typename: 'GivingCampaignOptionType', id: '42', title: 'New Church Roof', categoryId: '4', categoryName: 'Building Fund' },
+  { __typename: 'GivingCampaignOptionType', id: '43', title: 'Chairs', categoryId: '4', categoryName: 'Building Fund' },
 ]
 
 const ok: MockedResponse = {

@@ -1,10 +1,11 @@
 /**
- * LineCampaignFields — lets staff tag a manual-entry line with an active
+ * LineCampaignFields — lets staff and recorders tag a manual-entry line with an active
  * fundraising campaign of that line's department (Fundraising S0 slot in
  * ContributionLinesForm, filled by S1-UI-B, ticket 1.13).
  *
- * Only lines whose department has active campaigns get a select. If the
- * viewer may not list campaigns (e.g. a pure recorder), nothing renders.
+ * Only lines whose department has active campaigns get a select. The list
+ * comes from `givingCampaigns` (recorder-safe); if the viewer may not list
+ * campaigns, nothing renders.
  * A line whose department changed away from its campaign has the campaign
  * cleared. Champion codes arrive in S5.
  */

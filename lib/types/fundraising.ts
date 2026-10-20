@@ -263,3 +263,12 @@ export interface FileExportResponse extends MutationResult {
   filename: string | null;
   contentType: string | null;
 }
+
+/** Recorder-safe option for tagging a gift with a campaign (no money, no people). */
+export interface GivingCampaignOption {
+  id: string;
+  title: string;
+  paybillCode: string;
+  categoryId: string;
+  categoryName: string;
+}

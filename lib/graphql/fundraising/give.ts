@@ -96,10 +96,14 @@ export interface InitiateCampaignContributionData {
   };
 }
 
-/** Active campaigns a staff member can tag a manual-entry line with. */
+/**
+ * Campaigns taking gifts that a manual-entry line can be tagged with.
+ * `givingCampaigns` is open to recorders as well as staff (titles and
+ * departments only), aliased so the data shape stays `campaigns`.
+ */
 export const ACTIVE_CAMPAIGNS_FOR_LINES = gql`
   query ActiveCampaignsForLines {
-    campaigns(status: ACTIVE) {
+    campaigns: givingCampaigns {
       id
       title
       categoryId
