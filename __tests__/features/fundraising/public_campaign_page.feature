@@ -34,6 +34,13 @@ Feature: Public campaign pages
     And the gallery embeds the YouTube video "dQw4w9WgXcQ" without tracking cookies
     And the gallery leaves out the link that is not a real video
 
+  Scenario: A visitor gives from the campaign page
+    Given the campaign "new-church-roof" "New Church Roof" is accepting gifts
+    When a visitor opens the campaign page "new-church-roof"
+    Then they see the M-Pesa give form for the campaign
+    And they see the Pay Bill account "BUILD"
+    And they are told "Contributors to this campaign are listed by name and amount in the church WhatsApp group."
+
   Scenario: A paused campaign takes no gifts
     Given the campaign "new-church-roof" "New Church Roof" is not accepting gifts
     When a visitor opens the campaign page "new-church-roof"

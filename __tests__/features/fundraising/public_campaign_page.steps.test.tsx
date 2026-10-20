@@ -16,6 +16,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
+vi.mock('@/lib/auth/auth-context', () => ({ useAuth: () => ({ user: null }) }))
 
 import { PUBLIC_CAMPAIGNS, PUBLIC_CAMPAIGN_PAGE } from '@/lib/graphql/fundraising/public'
 import { PUBLIC_CAMPAIGN_FOR_GIVING } from '@/lib/graphql/fundraising/give'
@@ -254,6 +255,22 @@ defineFeature(feature, (test) => {
     })
   })
 
+  test('A visitor gives from the campaign page', ({ given, when, then, and }) => {
+    givenCampaign(given)
+    openPage(when)
+    then('they see the M-Pesa give form for the campaign', async () => {
+      expect(await screen.findByRole('button', { name: /send m-pesa prompt/i })).toBeInTheDocument()
+      expect(document.querySelector('[data-slot="campaign-give-panel"]')).not.toBeNull()
+    })
+    and(/^they see the Pay Bill account "(.*)"$/, (account) => {
+      const panel = document.querySelector('[data-slot="campaign-give-panel"]') as HTMLElement
+      expect(within(panel).getAllByText(account).length).toBeGreaterThan(0)
+    })
+    and(/^they are told "(.*)"$/, (notice) => {
+      expect(screen.getByText(notice)).toBeInTheDocument()
+    })
+  })
+
   test('A paused campaign takes no gifts', ({ given, when, then, and }) => {
     givenCampaign(given)
     openPage(when)
@@ -262,6 +279,8 @@ defineFeature(feature, (test) => {
     })
     and('there is no give form', () => {
       expect(document.querySelector('[data-slot="campaign-give-panel"]')).toBeNull()
+      expect(screen.queryByRole('button', { name: /send m-pesa prompt/i })).not.toBeInTheDocument()
+      expect(screen.queryByText(/listed by name and amount/i)).not.toBeInTheDocument()
       expect(screen.queryByLabelText(/phone/i)).not.toBeInTheDocument()
     })
   })

@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@apollo/client/react";
-import { PauseCircle, RefreshCw, SearchX } from "lucide-react";
+import { HeartHandshake, PauseCircle, RefreshCw, SearchX } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CampaignCover } from "./campaign-cover";
 import { CampaignGallery } from "./campaign-gallery";
+import { CampaignGiveSection } from "./campaign-give-section";
 import { CampaignStory } from "./campaign-story";
 import { CampaignUpdates } from "./campaign-updates";
 import { DaysLeft } from "./days-left";
@@ -90,6 +91,12 @@ function CampaignPageBody({ campaign }: { campaign: PublicCampaignPageCampaign }
             <CampaignProgress progress={campaign.progress} />
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <DaysLeft daysLeft={campaign.daysLeft} />
+              {accepting ? (
+                <a href="#give" className={buttonVariants({ size: "sm" })}>
+                  <HeartHandshake className="size-4" aria-hidden="true" />
+                  Give now
+                </a>
+              ) : null}
             </div>
           </section>
 
@@ -98,7 +105,9 @@ function CampaignPageBody({ campaign }: { campaign: PublicCampaignPageCampaign }
           <CampaignUpdates updates={campaign.updates} />
         </div>
 
-        <aside className="space-y-6 lg:sticky lg:top-24" aria-label="Give and share" />
+        <aside className="space-y-6 lg:sticky lg:top-24" aria-label="Give and share">
+          {accepting ? <CampaignGiveSection slug={campaign.slug} /> : null}
+        </aside>
       </div>
     </article>
   );
