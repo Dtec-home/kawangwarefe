@@ -72,3 +72,13 @@ Feature: Public campaign pages
     When the link preview for "new-church-roof" is built
     Then the preview title is "Campaign"
     And the preview points to "/campaigns/new-church-roof"
+
+  Scenario: After giving to a campaign the giver is invited to share it
+    Given the campaign "new-church-roof" "New Church Roof" is accepting gifts
+    When the giver reaches the confirmation page for campaign "new-church-roof"
+    Then they see "Share this campaign" for "New Church Roof"
+    And the WhatsApp share link points to "https://church.example/campaigns/new-church-roof"
+
+  Scenario: After giving without a campaign there is nothing to share
+    When the giver reaches the confirmation page without a campaign
+    Then they are not asked to share a campaign

@@ -10,15 +10,18 @@ import { render, screen, cleanup, within } from '@testing-library/react'
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing/react'
 import { vi } from 'vitest'
 
+const nav = vi.hoisted(() => ({ params: new URLSearchParams() }))
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn(), back: vi.fn() }),
   usePathname: () => '/campaigns',
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => nav.params,
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/lib/auth/auth-context', () => ({ useAuth: () => ({ user: null }) }))
 
-import { PUBLIC_CAMPAIGNS, PUBLIC_CAMPAIGN_PAGE } from '@/lib/graphql/fundraising/public'
+import { PUBLIC_CAMPAIGNS, PUBLIC_CAMPAIGN_PAGE, PUBLIC_CAMPAIGN_SHARE } from '@/lib/graphql/fundraising/public'
+import { ConfirmationCampaignShare } from '@/components/campaigns/public/confirmation-campaign-share'
 import { PUBLIC_CAMPAIGN_FOR_GIVING } from '@/lib/graphql/fundraising/give'
 import { CampaignListView } from '@/components/campaigns/public/campaign-list-view'
 import { CampaignPageView } from '@/components/campaigns/public/campaign-page-view'
@@ -135,6 +138,7 @@ defineFeature(feature, (test) => {
 
   beforeEach(() => {
     world = { mocks: [] }
+    nav.params = new URLSearchParams()
   })
   afterEach(cleanup)
 
@@ -147,6 +151,12 @@ defineFeature(feature, (test) => {
         maxUsageCount: 5,
       })
       world.mocks.push(givingMock(slug, title, accepting))
+      const { slug: s, title: t, publicUrl, paymentInstructions } = pageCampaign(slug, title, accepting)
+      world.mocks.push({
+        request: { query: PUBLIC_CAMPAIGN_SHARE, variables: { slug } },
+        result: { data: { publicCampaign: { __typename: 'PublicCampaignType', slug: s, title: t, publicUrl, paymentInstructions } } },
+        maxUsageCount: 5,
+      })
     })
 
   const openPage = (when: (m: RegExp, fn: (...a: string[]) => void) => void) =>
@@ -362,6 +372,48 @@ defineFeature(feature, (test) => {
     })
     and(/^the preview points to "(.*)"$/, (path) => {
       expect(metadata.alternates?.canonical).toBe(path)
+    })
+  })
+
+  const openConfirmation = (params: string) => {
+    nav.params = new URLSearchParams(params)
+    render(
+      <MockedProvider mocks={world.mocks}>
+        <ConfirmationCampaignShare />
+      </MockedProvider>,
+    )
+  }
+
+  test('After giving to a campaign the giver is invited to share it', ({ given, when, then, and }) => {
+    givenCampaign(given)
+    when(/^the giver reaches the confirmation page for campaign "(.*)"$/, (slug) => {
+      openConfirmation(`contributionId=9&checkoutRequestId=ws_1&campaign=${slug}`)
+    })
+    then(/^they see "(.*)" for "(.*)"$/, async (heading, title) => {
+      const card = (await screen.findByRole('heading', { name: heading })).closest(
+        '[data-slot="campaign-share-card"]',
+      ) as HTMLElement
+      expect(within(card).getByText(title)).toBeInTheDocument()
+    })
+    and(/^the WhatsApp share link points to "(.*)"$/, (url) => {
+      const href = screen.getByRole('link', { name: /whatsapp/i }).getAttribute('href') ?? ''
+      expect(decodeURIComponent(href).endsWith(` ${url}`)).toBe(true)
+    })
+  })
+
+  test('After giving without a campaign there is nothing to share', ({ when, then }) => {
+    let container: HTMLElement
+    when('the giver reaches the confirmation page without a campaign', () => {
+      nav.params = new URLSearchParams('contributionId=9&checkoutRequestId=ws_1')
+      container = render(
+        <MockedProvider mocks={[]}>
+          <ConfirmationCampaignShare />
+        </MockedProvider>,
+      ).container
+    })
+    then('they are not asked to share a campaign', async () => {
+      await new Promise((r) => setTimeout(r, 20))
+      expect(container.innerHTML).toBe('')
     })
   })
 })
