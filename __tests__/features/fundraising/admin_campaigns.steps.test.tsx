@@ -241,7 +241,10 @@ defineFeature(feature, (test) => {
 
   const choose = (step: (m: RegExp, fn: (name: string) => Promise<void>) => void) =>
     step(/^they choose "(.*)"$/, async (name) => {
-      fireEvent.click(await screen.findByRole('button', { name }))
+      // A button can appear while the previous action is still settling (and
+      // so disabled); a click on it then would be silently ignored.
+      await waitFor(() => expect(screen.getByRole('button', { name })).toBeEnabled())
+      fireEvent.click(screen.getByRole('button', { name }))
     })
 
   const thenMarked = (step: (m: RegExp, fn: (label: string) => Promise<void>) => void) =>

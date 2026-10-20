@@ -81,7 +81,12 @@ export function CampaignGivePanel({ slug, className }: CampaignGivePanelProps) {
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
         <CampaignProgress progress={campaign.progress} />
-        <CampaignStkForm slug={campaign.slug} categoryId={campaign.categoryId} campaignId={campaign.campaignId} />
+        <CampaignStkForm
+          slug={campaign.slug}
+          categoryId={campaign.categoryId}
+          purposeId={campaign.purposeId}
+          campaignId={campaign.campaignId}
+        />
         <PaybillInstructions instructions={campaign.paymentInstructions} />
       </CardContent>
     </Card>

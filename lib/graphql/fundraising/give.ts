@@ -26,6 +26,7 @@ export const PUBLIC_CAMPAIGN_FOR_GIVING = gql`
       summary
       isAcceptingGifts
       categoryId
+      purposeId
       campaignId
       paymentInstructions {
         paybillNumber
@@ -41,7 +42,7 @@ export const PUBLIC_CAMPAIGN_FOR_GIVING = gql`
 
 export type GivingCampaign = Pick<
   PublicCampaign,
-  "slug" | "title" | "summary" | "isAcceptingGifts" | "categoryId" | "campaignId"
+  "slug" | "title" | "summary" | "isAcceptingGifts" | "categoryId" | "purposeId" | "campaignId"
 > & {
   paymentInstructions: PaymentInstructions;
   progress: CampaignProgress;
@@ -57,12 +58,14 @@ export const INITIATE_CAMPAIGN_CONTRIBUTION = gql`
     $phoneNumber: String!
     $amount: String!
     $categoryId: ID!
+    $purposeId: ID
     $campaignId: ID
   ) {
     initiateContribution(
       phoneNumber: $phoneNumber
       amount: $amount
       categoryId: $categoryId
+      purposeId: $purposeId
       campaignId: $campaignId
     ) {
       success
@@ -79,6 +82,8 @@ export interface InitiateCampaignContributionVars {
   phoneNumber: string;
   amount: string;
   categoryId: string;
+  /** Only sent when the campaign targets a purpose. */
+  purposeId?: string;
   campaignId: string;
 }
 

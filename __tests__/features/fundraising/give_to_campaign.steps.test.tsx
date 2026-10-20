@@ -59,6 +59,7 @@ function publicCampaign(slug: string, title: string, accepting: boolean) {
     summary: 'Replace the leaking iron sheets before the long rains.',
     isAcceptingGifts: accepting,
     categoryId: '4',
+    purposeId: null,
     campaignId: '42',
     paymentInstructions: {
       __typename: 'PaymentInstructionsType',

@@ -128,6 +128,8 @@ export interface PublicCampaign {
   allowPledges: boolean;
   allowChampions: boolean;
   categoryId: string;
+  /** Sent with the gift so a department's auto-split never splits campaign money. */
+  purposeId: string | null;
   campaignId: string;
   publicUrl: string;
   paymentInstructions: PaymentInstructions;

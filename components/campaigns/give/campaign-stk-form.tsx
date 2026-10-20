@@ -41,6 +41,8 @@ type FormValues = z.infer<typeof schema>;
 export interface CampaignStkFormProps {
   slug: string;
   categoryId: string;
+  /** The campaign's purpose, so a department's auto-split never splits the gift. */
+  purposeId?: string | null;
   campaignId: string;
 }
 
@@ -55,7 +57,7 @@ function localPhone(msisdn?: string | null): string {
   return local ? local.slice(3) : "";
 }
 
-export function CampaignStkForm({ slug, categoryId, campaignId }: CampaignStkFormProps) {
+export function CampaignStkForm({ slug, categoryId, purposeId, campaignId }: CampaignStkFormProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -79,6 +81,7 @@ export function CampaignStkForm({ slug, categoryId, campaignId }: CampaignStkFor
           phoneNumber: toKenyanMsisdn(values.phoneNumber)!,
           amount: values.amount,
           categoryId,
+          ...(purposeId ? { purposeId } : {}),
           campaignId,
         },
       });
