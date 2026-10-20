@@ -118,3 +118,84 @@ export interface CreateCampaignData {
 export interface CreateCampaignVars {
   input: CampaignInput;
 }
+
+export const GET_CAMPAIGN = gql`
+  query GetCampaign($id: ID!) {
+    campaign(id: $id) {
+      ${CAMPAIGN_FIELDS}
+    }
+  }
+`;
+
+export interface CampaignData {
+  campaign: Campaign | null;
+}
+
+export interface CampaignVars {
+  id: string;
+}
+
+export const UPDATE_CAMPAIGN = gql`
+  mutation UpdateCampaign($id: ID!, $input: CampaignInput!) {
+    updateCampaign(id: $id, input: $input) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export interface UpdateCampaignData {
+  updateCampaign: CampaignResponse;
+}
+
+export interface UpdateCampaignVars {
+  id: string;
+  input: CampaignInput;
+}
+
+export const SUBMIT_CAMPAIGN = gql`
+  mutation SubmitCampaign($id: ID!) {
+    submitCampaign(id: $id) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export const APPROVE_CAMPAIGN = gql`
+  mutation ApproveCampaign($id: ID!) {
+    approveCampaign(id: $id) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export const PAUSE_CAMPAIGN = gql`
+  mutation PauseCampaign($id: ID!) {
+    pauseCampaign(id: $id) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export const RESUME_CAMPAIGN = gql`
+  mutation ResumeCampaign($id: ID!) {
+    resumeCampaign(id: $id) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export const RETURN_CAMPAIGN_TO_DRAFT = gql`
+  mutation ReturnCampaignToDraft($id: ID!, $reason: String!) {
+    returnCampaignToDraft(id: $id, reason: $reason) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export interface ReturnCampaignToDraftVars {
+  id: string;
+  reason: string;
+}
+
+/** Every status-change mutation answers with a CampaignResponse under its own field name. */
+export type CampaignActionData = Record<string, CampaignResponse>;

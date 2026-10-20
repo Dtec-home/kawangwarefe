@@ -44,13 +44,24 @@ vi.mock('@/components/ui/select', () => ({
   ),
 }))
 
-import { CREATE_CAMPAIGN, GET_CAMPAIGNS } from '@/lib/graphql/fundraising/campaigns'
+import {
+  APPROVE_CAMPAIGN,
+  CREATE_CAMPAIGN,
+  GET_CAMPAIGN,
+  GET_CAMPAIGNS,
+  PAUSE_CAMPAIGN,
+  RESUME_CAMPAIGN,
+  RETURN_CAMPAIGN_TO_DRAFT,
+  SUBMIT_CAMPAIGN,
+  UPDATE_CAMPAIGN,
+} from '@/lib/graphql/fundraising/campaigns'
 import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from '@/lib/graphql/queries'
 import { GET_CURRENT_USER_ROLE } from '@/lib/hooks/use-user-role'
 import type { CampaignInput } from '@/lib/types/fundraising'
 import { CampaignList } from '@/components/campaigns/admin/list/campaign-list'
 import { CreateCampaign } from '@/components/campaigns/admin/form/create-campaign'
-import { campaign, category, listItem, role } from '../../components/campaigns/s1_ui_a/fixtures'
+import { CampaignOverview } from '@/components/campaigns/admin/campaign-overview'
+import { campaign, category, listItem, progress, role } from '../../components/campaigns/s1_ui_a/fixtures'
 
 const feature = loadFeature('./admin_campaigns.feature', { loadRelativePath: true })
 
@@ -60,6 +71,67 @@ interface World {
   categories: ReturnType<typeof category>[]
   createMessage: string | null
   created: CampaignInput | null
+  current: ReturnType<typeof campaign>
+  refusal: string | null
+  returnedReason: string | null
+}
+
+const ACTIONS = [
+  { query: SUBMIT_CAMPAIGN, field: 'submitCampaign', status: 'PENDING_APPROVAL', message: 'Submitted for approval' },
+  { query: APPROVE_CAMPAIGN, field: 'approveCampaign', status: 'ACTIVE', message: 'Campaign approved' },
+  { query: PAUSE_CAMPAIGN, field: 'pauseCampaign', status: 'PAUSED', message: 'Campaign paused' },
+  { query: RESUME_CAMPAIGN, field: 'resumeCampaign', status: 'ACTIVE', message: 'Campaign resumed' },
+  { query: RETURN_CAMPAIGN_TO_DRAFT, field: 'returnCampaignToDraft', status: 'DRAFT', message: 'Returned to draft' },
+] as const
+
+function respond(world: World, field: string, change: Record<string, unknown>, message: string) {
+  if (world.refusal) {
+    return { data: { [field]: { __typename: 'CampaignResponse', success: false, message: world.refusal, campaign: null } } }
+  }
+  world.current = { ...world.current, ...change }
+  return { data: { [field]: { __typename: 'CampaignResponse', success: true, message, campaign: world.current } } }
+}
+
+function openOverview(world: World) {
+  const mocks: MockedResponse[] = [
+    ...formMocks(world),
+    {
+      request: { query: GET_CAMPAIGN, variables: { id: '9' } },
+      result: () => ({ data: { campaign: world.current } }),
+      maxUsageCount: 20,
+    },
+    ...ACTIONS.map((a) => ({
+      request: {
+        query: a.query,
+        variables: (vars: { id: string; reason?: string }) => {
+          if (vars.reason) world.returnedReason = vars.reason
+          return vars.id === '9'
+        },
+      },
+      result: () => respond(world, a.field, { status: a.status }, a.message),
+      maxUsageCount: 5,
+    })),
+    {
+      request: {
+        query: UPDATE_CAMPAIGN,
+        variables: (vars: { id: string; input: CampaignInput }) => {
+          world.created = vars.input
+          return vars.id === '9'
+        },
+      },
+      result: () => respond(world, 'updateCampaign', { title: world.created?.title }, 'Campaign updated'),
+      maxUsageCount: 5,
+    },
+  ]
+  render(
+    <MockedProvider mocks={mocks}>
+      <CampaignOverview campaignId="9" />
+    </MockedProvider>
+  )
+}
+
+async function expectStatus(label: string) {
+  await waitFor(() => expect(screen.getByTestId('campaign-status')).toHaveTextContent(label))
 }
 
 function formMocks(world: World): MockedResponse[] {
@@ -152,8 +224,48 @@ defineFeature(feature, (test) => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
-    world = { campaigns: [], role: role(), categories: [], createMessage: null, created: null }
+    world = {
+      campaigns: [],
+      role: role(),
+      categories: [category('3', 'Building Fund', 'BUILDING')],
+      createMessage: null,
+      created: null,
+      current: campaign(),
+      refusal: null,
+      returnedReason: null,
+    }
   })
+
+  const whenOpenOverview = (when: (m: string, fn: () => void) => void) =>
+    when('they open the campaign overview', () => openOverview(world))
+
+  const choose = (step: (m: RegExp, fn: (name: string) => Promise<void>) => void) =>
+    step(/^they choose "(.*)"$/, async (name) => {
+      fireEvent.click(await screen.findByRole('button', { name }))
+    })
+
+  const thenMarked = (step: (m: RegExp, fn: (label: string) => Promise<void>) => void) =>
+    step(/^the campaign is marked "(.*)"$/, (label) => expectStatus(label))
+
+  const givenDraft = (given: (m: RegExp, fn: () => void) => void) =>
+    given(/^a draft campaign "(.*)" they created$/, () => {
+      world.current = campaign({ status: 'DRAFT' })
+    })
+
+  const givenPending = (given: (m: RegExp, fn: (who: string) => void) => void) =>
+    given(/^a campaign "(.*)" awaiting approval that (they|someone else) created$/, (_title: string, who?: string) => {
+      world.current = campaign({ status: 'PENDING_APPROVAL', canApprove: who === 'someone else' })
+    })
+
+  const givenActive = (given: (m: RegExp, fn: (...args: string[]) => void) => void) =>
+    given(/^an active campaign "(.*)" with code "(.*)" that has "KES (.*)" pledged$/, (title, code, pledged) => {
+      world.current = campaign({
+        title,
+        paybillCode: code,
+        status: 'ACTIVE',
+        progress: progress('250000.00', '1000000.00', pledged.replace(/,/g, '')),
+      })
+    })
 
   const givenDepartments = (step: (m: RegExp, fn: (...args: string[]) => void) => void) =>
     step(/^departments "(.*)" and "(.*)" are active$/, (first, second) => {
@@ -338,5 +450,108 @@ defineFeature(feature, (test) => {
       expect(pushMock).not.toHaveBeenCalled()
       expect(screen.getByLabelText('Title')).toBeInTheDocument()
     })
+  })
+
+  test("Staff see a campaign's details and how to give", ({ given, when, then, and }) => {
+    givenActive(given)
+    whenOpenOverview(when)
+    then(/^they see "(.*)" marked "(.*)"$/, async (title, label) => {
+      expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
+      await expectStatus(label)
+    })
+    and(/^they see the giving instructions "(.*)"$/, (text) => {
+      expect(screen.getByText(text)).toBeInTheDocument()
+    })
+    and(/^they see "(.*)"$/, (text) => {
+      expect(screen.getByText(text)).toBeInTheDocument()
+    })
+    and('they can copy the public link', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined)
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+      expect(screen.getByText(world.current.publicUrl)).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: /Copy link/ }))
+      await waitFor(() => expect(writeText).toHaveBeenCalledWith(world.current.publicUrl))
+      await toldThat('Link copied')
+    })
+  })
+
+  test('The creator submits a draft for approval', ({ given, when, then, and }) => {
+    givenDraft(given)
+    whenOpenOverview(when)
+    choose(and)
+    thenTold(then)
+    thenMarked(and)
+  })
+
+  test('The creator cannot approve their own campaign', ({ given, when, then, and }) => {
+    givenPending(given)
+    whenOpenOverview(when)
+    then('no approve action is offered', async () => {
+      await expectStatus('Awaiting approval')
+      expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    })
+    and('they are told another admin or pastor must approve it', () => {
+      expect(screen.getByText(/another admin or pastor/i)).toBeInTheDocument()
+    })
+  })
+
+  test('Another admin approves the campaign', ({ given, when, then, and }) => {
+    givenPending(given)
+    whenOpenOverview(when)
+    choose(and)
+    thenTold(then)
+    thenMarked(and)
+  })
+
+  test('An approver returns a campaign to draft with a reason', ({ given, when, then, and }) => {
+    givenPending(given)
+    whenOpenOverview(when)
+    and(/^they return it to draft with reason "(.*)"$/, async (reason) => {
+      fireEvent.click(await screen.findByRole('button', { name: 'Return to draft' }))
+      const dialog = await screen.findByRole('dialog')
+      fireEvent.change(within(dialog).getByLabelText('Reason'), { target: { value: reason } })
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Return to draft' }))
+    })
+    then(/^the campaign was returned with reason "(.*)"$/, async (reason) => {
+      await waitFor(() => expect(world.returnedReason).toBe(reason))
+    })
+    thenMarked(and)
+  })
+
+  test('Staff pause and resume an active campaign', ({ given, when, then, and }) => {
+    givenActive(given)
+    whenOpenOverview(when)
+    choose(and)
+    thenMarked(then)
+    choose(and)
+    thenMarked(and)
+  })
+
+  test('Staff edit a campaign', ({ given, when, then, and }) => {
+    givenDraft(given)
+    whenOpenOverview(when)
+    choose(and)
+    and(/^they change the title to "(.*)"$/, async (title) => {
+      const input = await screen.findByLabelText('Title')
+      fireEvent.change(input, { target: { value: title } })
+    })
+    choose(and)
+    thenTold(then)
+    and(/^they see "(.*)" marked "(.*)"$/, async (title, label) => {
+      expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
+      await expectStatus(label)
+      expect(world.created).toMatchObject({ title, paybillCode: 'BUILD', categoryId: '3' })
+    })
+  })
+
+  test('The server refuses an action', ({ given, when, then, and }) => {
+    givenDraft(given)
+    and(/^the server refuses with "(.*)"$/, (message) => {
+      world.refusal = message
+    })
+    whenOpenOverview(when)
+    choose(and)
+    thenTold(then)
+    thenMarked(and)
   })
 })

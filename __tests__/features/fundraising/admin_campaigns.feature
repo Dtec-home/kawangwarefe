@@ -64,3 +64,63 @@ Feature: Admin campaigns
     And they save the campaign
     Then they are told "Code TITHE is already used by a department"
     And they stay on the new campaign form
+
+  Scenario: Staff see a campaign's details and how to give
+    Given an active campaign "Church Building" with code "BUILD" that has "KES 100,000.00" pledged
+    When they open the campaign overview
+    Then they see "Church Building" marked "Active"
+    And they see the giving instructions "Pay Bill 247247, Account BUILD"
+    And they see "KES 100,000.00 pledged"
+    And they can copy the public link
+
+  Scenario: The creator submits a draft for approval
+    Given a draft campaign "Church Building" they created
+    When they open the campaign overview
+    And they choose "Submit for approval"
+    Then they are told "Submitted for approval"
+    And the campaign is marked "Awaiting approval"
+
+  Scenario: The creator cannot approve their own campaign
+    Given a campaign "Church Building" awaiting approval that they created
+    When they open the campaign overview
+    Then no approve action is offered
+    And they are told another admin or pastor must approve it
+
+  Scenario: Another admin approves the campaign
+    Given a campaign "Church Building" awaiting approval that someone else created
+    When they open the campaign overview
+    And they choose "Approve"
+    Then they are told "Campaign approved"
+    And the campaign is marked "Active"
+
+  Scenario: An approver returns a campaign to draft with a reason
+    Given a campaign "Church Building" awaiting approval that someone else created
+    When they open the campaign overview
+    And they return it to draft with reason "Target needs board sign-off"
+    Then the campaign was returned with reason "Target needs board sign-off"
+    And the campaign is marked "Draft"
+
+  Scenario: Staff pause and resume an active campaign
+    Given an active campaign "Church Building" with code "BUILD" that has "KES 0.00" pledged
+    When they open the campaign overview
+    And they choose "Pause"
+    Then the campaign is marked "Paused"
+    And they choose "Resume"
+    And the campaign is marked "Active"
+
+  Scenario: Staff edit a campaign
+    Given a draft campaign "Church Building" they created
+    When they open the campaign overview
+    And they choose "Edit"
+    And they change the title to "New Sanctuary"
+    And they choose "Save changes"
+    Then they are told "Campaign updated"
+    And they see "New Sanctuary" marked "Draft"
+
+  Scenario: The server refuses an action
+    Given a draft campaign "Church Building" they created
+    And the server refuses with "Add an end date before submitting"
+    When they open the campaign overview
+    And they choose "Submit for approval"
+    Then they are told "Add an end date before submitting"
+    And the campaign is marked "Draft"
