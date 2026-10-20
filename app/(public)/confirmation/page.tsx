@@ -12,6 +12,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { ConfirmationCampaignShare } from "@/components/campaigns/public/confirmation-campaign-share";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_CONTRIBUTION } from "@/lib/graphql/queries";
 import { GET_CONTRIBUTIONS_BY_CHECKOUT_ID, CHECK_PAYMENT_STATUS } from "@/lib/graphql/payment-status-query";
@@ -358,6 +359,8 @@ function ConfirmationLayout({ children }: { children: React.ReactNode }) {
           Back to Contribute
         </Button>
         {children}
+        {/* fundraising-hook: "Share this campaign" after a campaign gift (S2-UI-C) */}
+        <ConfirmationCampaignShare />
       </div>
     </div>
   );

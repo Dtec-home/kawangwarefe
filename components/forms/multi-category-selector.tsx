@@ -33,6 +33,10 @@ export interface CategoryAmount {
   amount: string;
   purposeId?: string;
   memberIdentifier?: string;
+  /** Fundraising campaign this line is given towards (manual entry only). */
+  campaignId?: string;
+  /** Campaign champion code the gift came through. */
+  championCode?: string;
 }
 
 interface MultiCategorySelectorProps {

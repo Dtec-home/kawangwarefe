@@ -80,7 +80,9 @@ export type AdminFeature =
   | "record"
   | "catch-up-windows"
   | "collection-sessions"
-  | "receipts";
+  | "receipts"
+  | "campaigns"
+  | "pledges";
 
 interface UserRoleData {
   currentUserRole: UserRoleInfo;
@@ -165,8 +167,17 @@ export function useUserRole() {
       // Category (department) admins can access overview, contributions, scoped
       // reports, and expenses — they raise expense requests for their own funds
       // (approval is enforced server-side under the four-eyes rule).
+      // They also run fundraising campaigns and pledges for their own
+      // departments (decision 2; the backend scopes and re-checks).
       if (roleInfo.isCategoryAdmin) {
-        return feature === "overview" || feature === "contributions" || feature === "reports" || feature === "expenses";
+        return (
+          feature === "overview" ||
+          feature === "contributions" ||
+          feature === "reports" ||
+          feature === "expenses" ||
+          feature === "campaigns" ||
+          feature === "pledges"
+        );
       }
 
       // Group admins can access overview, their scoped contributions, and scoped reports

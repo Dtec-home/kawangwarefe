@@ -18,6 +18,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ExpenseCampaignSelect } from "@/components/campaigns/expense-select/expense-campaign-select";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
   GET_EXPENSES,
@@ -203,6 +204,8 @@ function RequestExpenseDialog({
   const [beneficiaryAccountNumber, setBeneficiaryAccountNumber] = useState<string>("");
   const [beneficiaryPhoneNumber, setBeneficiaryPhoneNumber] = useState<string>("");
   const [beneficiaryBankCode, setBeneficiaryBankCode] = useState<string>("");
+  // fundraising-hook: campaign the expense is charged to ("" = none, S4-UI-H)
+  const [campaignId, setCampaignId] = useState<string>("");
   // "Simple recording": treasurers/admins can log already-spent money directly,
   // skipping the request→approve step. Hidden from department admins.
   const { isStaff } = useUserRole();
@@ -231,6 +234,7 @@ function RequestExpenseDialog({
     setBeneficiaryAccountNumber("");
     setBeneficiaryPhoneNumber("");
     setBeneficiaryBankCode("");
+    setCampaignId("");
   };
 
   const handleSave = async () => {
@@ -277,6 +281,7 @@ function RequestExpenseDialog({
           beneficiaryAccountNumber: payoutChannel === "bank" ? beneficiaryAccountNumber.trim() : null,
           beneficiaryPhoneNumber: payoutChannel === "mobile_money" ? beneficiaryPhoneNumber.trim() : null,
           beneficiaryBankCode: payoutChannel === "bank" ? beneficiaryBankCode.trim() : null,
+          ...(campaignId ? { campaignId } : {}),
         },
       });
       if (data?.createExpense.success) {
@@ -306,7 +311,7 @@ function RequestExpenseDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="exp-fund">Fund *</Label>
-            <Select value={categoryId} onValueChange={(v) => { setCategoryId(v); setPurposeId("none"); }}>
+            <Select value={categoryId} onValueChange={(v) => { setCategoryId(v); setPurposeId("none"); setCampaignId(""); }}>
               <SelectTrigger id="exp-fund">
                 <SelectValue placeholder="Select fund" />
               </SelectTrigger>
@@ -423,6 +428,9 @@ function RequestExpenseDialog({
             </Select>
           </div>
 
+          {/* fundraising-hook: charge to a campaign of this fund (S4-UI-H) */}
+          <ExpenseCampaignSelect categoryId={categoryId} value={campaignId} onChange={setCampaignId} />
+
           <div className="space-y-2">
             <Label htmlFor="exp-attachment">Attachment URL (optional)</Label>
             <Input
@@ -509,6 +517,8 @@ function EditExpenseDialog({
   const [beneficiaryAccountNumber, setBeneficiaryAccountNumber] = useState<string>("");
   const [beneficiaryPhoneNumber, setBeneficiaryPhoneNumber] = useState<string>("");
   const [beneficiaryBankCode, setBeneficiaryBankCode] = useState<string>("");
+  // fundraising-hook: campaign the expense is charged to ("" = none, S4-UI-H)
+  const [campaignId, setCampaignId] = useState<string>("");
   const [hydratedFor, setHydratedFor] = useState<string>("");
 
   // Hydrate the form whenever a new expense is opened for editing.
@@ -576,6 +586,7 @@ function EditExpenseDialog({
           beneficiaryAccountNumber: payoutChannel === "bank" ? beneficiaryAccountNumber.trim() : "",
           beneficiaryPhoneNumber: payoutChannel === "mobile_money" ? beneficiaryPhoneNumber.trim() : "",
           beneficiaryBankCode: payoutChannel === "bank" ? beneficiaryBankCode.trim() : "",
+          ...(campaignId ? { campaignId } : {}),
         },
       });
       if (data?.updateExpense.success) {
@@ -690,6 +701,13 @@ function EditExpenseDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {/* fundraising-hook: charge to a campaign of this fund (S4-UI-H) */}
+          <ExpenseCampaignSelect
+            categoryId={expense?.category?.id ?? ""}
+            value={campaignId}
+            onChange={setCampaignId}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="edit-attachment">Attachment URL (optional)</Label>

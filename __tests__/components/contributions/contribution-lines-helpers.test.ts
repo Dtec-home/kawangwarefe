@@ -45,3 +45,20 @@ describe('contribution line helpers', () => {
     expect(transactionDateVariables('2026-08-29')).toEqual({ transactionDate: '2026-08-29' })
   })
 })
+
+describe('toManualCategoryInputs campaign fields (Fundraising S0)', () => {
+  it('sends campaignId and championCode only on lines that have them', () => {
+    expect(
+      toManualCategoryInputs([
+        { categoryId: '1', amount: '100' },
+        { categoryId: '2', amount: '500', campaignId: '7', championCode: 'JOHN' },
+      ]),
+    ).toEqual([
+      { categoryId: '1', amount: '100', purposeId: null, memberIdentifier: null },
+      {
+        categoryId: '2', amount: '500', purposeId: null, memberIdentifier: null,
+        campaignId: '7', championCode: 'JOHN',
+      },
+    ])
+  })
+})

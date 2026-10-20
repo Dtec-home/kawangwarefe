@@ -16,6 +16,7 @@ import {
   type CategoryAmount,
 } from "@/components/forms/multi-category-selector";
 import { formatKes } from "@/lib/receipts/format";
+import { LineCampaignFields } from "@/components/campaigns/give/line-campaign-fields";
 
 export type { CategoryAmount };
 
@@ -28,6 +29,8 @@ export interface ManualCategoryAmountInput {
   amount: string;
   purposeId: string | null;
   memberIdentifier: string | null;
+  campaignId?: string;
+  championCode?: string;
 }
 
 export type ContributionLinesValidation =
@@ -61,6 +64,9 @@ export function toManualCategoryInputs(lines: CategoryAmount[]): ManualCategoryA
     amount: c.amount,
     purposeId: c.purposeId || null,
     memberIdentifier: c.memberIdentifier || null,
+    // Campaign fields only when set, so untagged lines keep their old shape.
+    ...(c.campaignId ? { campaignId: c.campaignId } : {}),
+    ...(c.championCode ? { championCode: c.championCode } : {}),
   }));
 }
 
@@ -97,6 +103,8 @@ export function ContributionLinesForm({
     <div className="space-y-2">
       <Label>{label}</Label>
       <MultiCategorySelector contributions={lines} onChange={onChange} phoneNumber={phoneNumber} giver={giver} />
+      {/* fundraising-hook: tag lines with a campaign (S1-UI-B) */}
+      <LineCampaignFields lines={lines} onChange={onChange} />
       {showTotal && (
         <div
           className="flex items-center justify-between rounded-lg bg-muted px-4 py-3"
