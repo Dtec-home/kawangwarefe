@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Heart, Home, BookOpen, Calendar, LogIn, LayoutDashboard, LogOut, Bell, Video } from "lucide-react";
+import { Menu, X, Heart, Home, BookOpen, Calendar, LogIn, LayoutDashboard, LogOut, Bell, Video, Target } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -29,6 +29,7 @@ export function Navigation() {
     { href: "/devotionals", label: "Devotionals", icon: BookOpen },
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/sermons", label: "Sermons", icon: Video },
+    { href: "/campaigns", label: "Campaigns", icon: Target },
     { href: "/contribute", label: "Give", icon: Heart, highlight: true },
     // Auth-aware: show Dashboard for logged-in users, Login for guests
     ...(isAuthenticated
