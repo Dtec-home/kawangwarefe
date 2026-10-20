@@ -41,6 +41,12 @@ Feature: Public campaign pages
     And they see the Pay Bill account "BUILD"
     And they are told "Contributors to this campaign are listed by name and amount in the church WhatsApp group."
 
+  Scenario: A visitor shares the campaign
+    Given the campaign "new-church-roof" "New Church Roof" is accepting gifts
+    When a visitor opens the campaign page "new-church-roof"
+    Then they can share the campaign on WhatsApp with the message "Help us raise funds for New Church Roof. Give via M-Pesa Pay Bill 247247, account BUILD, or online:"
+    And the shared link is "https://church.example/campaigns/new-church-roof"
+
   Scenario: A paused campaign takes no gifts
     Given the campaign "new-church-roof" "New Church Roof" is not accepting gifts
     When a visitor opens the campaign page "new-church-roof"

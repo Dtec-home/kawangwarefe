@@ -271,6 +271,20 @@ defineFeature(feature, (test) => {
     })
   })
 
+  test('A visitor shares the campaign', ({ given, when, then, and }) => {
+    let whatsappText = ''
+    givenCampaign(given)
+    openPage(when)
+    then(/^they can share the campaign on WhatsApp with the message "(.*)"$/, async (message) => {
+      const link = await screen.findByRole('link', { name: /whatsapp/i })
+      whatsappText = decodeURIComponent((link.getAttribute('href') ?? '').replace('https://wa.me/?text=', ''))
+      expect(whatsappText.startsWith(`${message} `)).toBe(true)
+    })
+    and(/^the shared link is "(.*)"$/, (url) => {
+      expect(whatsappText.endsWith(` ${url}`)).toBe(true)
+    })
+  })
+
   test('A paused campaign takes no gifts', ({ given, when, then, and }) => {
     givenCampaign(given)
     openPage(when)

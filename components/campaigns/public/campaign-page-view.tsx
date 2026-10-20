@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { CampaignCover } from "./campaign-cover";
 import { CampaignGallery } from "./campaign-gallery";
 import { CampaignGiveSection } from "./campaign-give-section";
+import { CampaignShareCard } from "./campaign-share-card";
 import { CampaignStory } from "./campaign-story";
 import { CampaignUpdates } from "./campaign-updates";
 import { DaysLeft } from "./days-left";
@@ -107,6 +108,7 @@ function CampaignPageBody({ campaign }: { campaign: PublicCampaignPageCampaign }
 
         <aside className="space-y-6 lg:sticky lg:top-24" aria-label="Give and share">
           {accepting ? <CampaignGiveSection slug={campaign.slug} /> : null}
+          <CampaignShareCard campaign={campaign} />
         </aside>
       </div>
     </article>
