@@ -25,3 +25,42 @@ Feature: Admin campaigns
     When they open the campaign list
     Then they are told there are no campaigns yet
     And they can start a new campaign
+
+  Scenario: Staff draft a new campaign
+    Given departments "Building Fund" and "Youth" are active
+    When they start a new campaign
+    And they fill in title "Church Building", department "Building Fund", target "1000000" and code "build"
+    And they save the campaign
+    Then the campaign is created as a draft with code "BUILD" and the default reminders
+    And they are told "Campaign saved as a draft"
+    And they are taken to the campaign page
+
+  Scenario: A department admin can only start campaigns for their own department
+    Given a department admin for "Youth"
+    And departments "Building Fund" and "Youth" are active
+    When they start a new campaign
+    Then the department choices are only "Youth"
+
+  Scenario: The Pay Bill code must be 2 to 10 capital letters or digits
+    Given departments "Building Fund" and "Youth" are active
+    When they start a new campaign
+    And they fill in title "Church Building", department "Building Fund", target "1000000" and code "B"
+    And they save the campaign
+    Then they are told "Use 2 to 10 capital letters or digits, e.g. BUILD"
+
+  Scenario: The end date cannot be before the start date
+    Given departments "Building Fund" and "Youth" are active
+    When they start a new campaign
+    And they fill in title "Church Building", department "Building Fund", target "1000000" and code "BUILD"
+    And they set the dates from "2026-12-01" to "2026-11-01"
+    And they save the campaign
+    Then they are told "The end date cannot be before the start date"
+
+  Scenario: The server refuses a code that is already in use
+    Given departments "Building Fund" and "Youth" are active
+    And the code "TITHE" is already used by a department
+    When they start a new campaign
+    And they fill in title "Tithe Drive", department "Building Fund", target "5000" and code "tithe"
+    And they save the campaign
+    Then they are told "Code TITHE is already used by a department"
+    And they stay on the new campaign form

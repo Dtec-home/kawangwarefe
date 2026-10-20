@@ -7,7 +7,7 @@
 
 import { gql } from "@apollo/client";
 
-import type { Campaign, CampaignStatus } from "@/lib/types/fundraising";
+import type { Campaign, CampaignInput, CampaignResponse, CampaignStatus } from "@/lib/types/fundraising";
 
 const PROGRESS_FIELDS = `
   progress {
@@ -49,4 +49,72 @@ export interface CampaignsData {
 export interface CampaignsVars {
   status: CampaignStatus | null;
   search: string | null;
+}
+
+/** Every field of a campaign, for the overview and the edit form. */
+const CAMPAIGN_FIELDS = `
+  id
+  title
+  slug
+  summary
+  story
+  coverImageUrl
+  gallery {
+    kind
+    url
+  }
+  categoryId
+  categoryName
+  purposeId
+  purposeName
+  targetAmount
+  startDate
+  endDate
+  paybillCode
+  status
+  isPublic
+  allowPledges
+  allowChampions
+  reminderPolicy {
+    frequency
+    daysBeforeDue
+    overdueNotices
+  }
+  createdByName
+  approvedByName
+  approvedAt
+  closedAt
+  createdAt
+  publicUrl
+  paymentInstructions {
+    paybillNumber
+    accountReference
+    text
+  }
+  ${PROGRESS_FIELDS}
+  canApprove
+`;
+
+const CAMPAIGN_RESPONSE_FIELDS = `
+  success
+  message
+  campaign {
+    ${CAMPAIGN_FIELDS}
+  }
+`;
+
+export const CREATE_CAMPAIGN = gql`
+  mutation CreateCampaign($input: CampaignInput!) {
+    createCampaign(input: $input) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export interface CreateCampaignData {
+  createCampaign: CampaignResponse;
+}
+
+export interface CreateCampaignVars {
+  input: CampaignInput;
 }
