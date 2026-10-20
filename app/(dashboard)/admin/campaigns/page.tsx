@@ -1,13 +1,12 @@
 /**
- * /admin/campaigns — campaign list. Owned by lane S1-UI-A.
- * S0 placeholder; the lane replaces this page.
+ * /admin/campaigns — campaign list (Fundraising S1, ticket 1.9, lane S1-UI-A).
  */
 
 "use client";
 
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { AdminLayout } from "@/components/layouts/admin-layout";
-import { PlannedFeature } from "@/components/campaigns/shared/planned-feature";
+import { CampaignList, NewCampaignButton } from "@/components/campaigns/admin/list/campaign-list";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default function AdminCampaignsPage() {
@@ -15,8 +14,12 @@ export default function AdminCampaignsPage() {
     <AdminProtectedRoute requiredAccess="category-admin">
       <AdminLayout>
         <div className="space-y-6">
-          <PageHeader title="Campaigns" description="Fundraising drives with a target, a deadline and their own Pay Bill code." />
-          <PlannedFeature title="Campaigns" sprint="Sprint 1" />
+          <PageHeader
+            title="Campaigns"
+            description="Fundraising drives with a target, a deadline and their own Pay Bill code."
+            actions={<NewCampaignButton />}
+          />
+          <CampaignList />
         </div>
       </AdminLayout>
     </AdminProtectedRoute>
