@@ -62,6 +62,8 @@ export const PUBLIC_CAMPAIGN_PAGE = gql`
       endDate
       daysLeft
       isAcceptingGifts
+      allowPledges
+      allowChampions
       publicUrl
       paymentInstructions {
         paybillNumber
@@ -97,6 +99,8 @@ export type PublicCampaignPageCampaign = Pick<
   | "endDate"
   | "daysLeft"
   | "isAcceptingGifts"
+  | "allowPledges"
+  | "allowChampions"
   | "publicUrl"
   | "paymentInstructions"
   | "progress"

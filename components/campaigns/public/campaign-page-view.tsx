@@ -30,6 +30,8 @@ import { CampaignShareCard } from "./campaign-share-card";
 import { CampaignStory } from "./campaign-story";
 import { CampaignUpdates } from "./campaign-updates";
 import { DaysLeft } from "./days-left";
+import { LeaderboardSlot } from "@/components/champions/public/leaderboard-slot";
+import { PublicPledgeSlot } from "@/components/pledges/public/public-pledge-slot";
 
 export function CampaignPageView({ slug }: { slug: string }) {
   const { data, loading, error, refetch } = useQuery<PublicCampaignPageData>(PUBLIC_CAMPAIGN_PAGE, {
@@ -108,6 +110,9 @@ function CampaignPageBody({ campaign }: { campaign: PublicCampaignPageCampaign }
 
         <aside className="space-y-6 lg:sticky lg:top-24" aria-label="Give and share">
           {accepting ? <CampaignGiveSection slug={campaign.slug} /> : null}
+          {/* fundraising-hook: pledges (S3-UI-E) and champion leaderboard (S5-UI-I) */}
+          <PublicPledgeSlot campaign={campaign} />
+          <LeaderboardSlot campaign={campaign} />
           <CampaignShareCard campaign={campaign} />
         </aside>
       </div>

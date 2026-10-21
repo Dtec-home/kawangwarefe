@@ -82,6 +82,8 @@ function pageCampaign(slug: string, title: string, accepting: boolean) {
     endDate: '2026-11-01',
     daysLeft: 12,
     isAcceptingGifts: accepting,
+    allowPledges: true,
+    allowChampions: false,
     publicUrl: `https://church.example/campaigns/${slug}`,
     paymentInstructions: PAYMENT,
     progress: PROGRESS,

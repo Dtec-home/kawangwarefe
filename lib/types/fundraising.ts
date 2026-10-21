@@ -160,6 +160,8 @@ export interface Pledge {
   memberName: string;
   campaignId: string | null;
   campaignTitle: string | null;
+  /** For "Pay balance": /contribute?campaign=<slug>. */
+  campaignSlug: string | null;
   categoryId: string | null;
   categoryName: string | null;
   amount: string;
