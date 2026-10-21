@@ -1,5 +1,6 @@
 /**
- * GraphQL documents for giving to a fundraising campaign (lane S1-UI-B).
+ * GraphQL documents for giving to a fundraising campaign (lane S1-UI-B;
+ * owned by S5-UI-I from S5, which added the champion code).
  *
  * Typed with lib/types/fundraising.ts (frozen contract).
  */
@@ -60,6 +61,7 @@ export const INITIATE_CAMPAIGN_CONTRIBUTION = gql`
     $categoryId: ID!
     $purposeId: ID
     $campaignId: ID
+    $championCode: String
   ) {
     initiateContribution(
       phoneNumber: $phoneNumber
@@ -67,6 +69,7 @@ export const INITIATE_CAMPAIGN_CONTRIBUTION = gql`
       categoryId: $categoryId
       purposeId: $purposeId
       campaignId: $campaignId
+      championCode: $championCode
     ) {
       success
       message
@@ -85,6 +88,8 @@ export interface InitiateCampaignContributionVars {
   /** Only sent when the campaign targets a purpose. */
   purposeId?: string;
   campaignId: string;
+  /** Only sent when the gift comes through a champion's link. */
+  championCode?: string;
 }
 
 export interface InitiateCampaignContributionData {

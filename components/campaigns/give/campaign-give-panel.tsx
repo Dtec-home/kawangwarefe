@@ -5,6 +5,10 @@
  * Reads the public, aggregates-only `publicCampaign(slug)`, so it is safe on
  * public pages. Exported for reuse by the public campaign page (S2-UI-C) and
  * the "Pay balance" flow (S3-UI-E).
+ *
+ * With a `championCode` the prompt carries the code and the Pay Bill account
+ * is the champion's ("ROOF JOHN"); pass the champion's own
+ * `paymentInstructions` when you have them (S5-UI-I).
  */
 
 "use client";
@@ -21,12 +25,18 @@ import {
   PUBLIC_CAMPAIGN_FOR_GIVING,
   type PublicCampaignForGivingData,
 } from "@/lib/graphql/fundraising/give";
+import type { PaymentInstructions } from "@/lib/types/fundraising";
+import { championPaymentInstructions } from "./champion-account";
 import { CampaignStkForm } from "./campaign-stk-form";
 import { PaybillInstructions } from "./paybill-instructions";
 
 export interface CampaignGivePanelProps {
   slug: string;
   className?: string;
+  /** Give through this champion. */
+  championCode?: string | null;
+  /** The champion's Pay Bill instructions; derived from the code when left out. */
+  paymentInstructions?: PaymentInstructions | null;
 }
 
 function BackToGiving() {
@@ -37,7 +47,7 @@ function BackToGiving() {
   );
 }
 
-export function CampaignGivePanel({ slug, className }: CampaignGivePanelProps) {
+export function CampaignGivePanel({ slug, className, championCode, paymentInstructions }: CampaignGivePanelProps) {
   const { data, loading, error } = useQuery<PublicCampaignForGivingData>(PUBLIC_CAMPAIGN_FOR_GIVING, {
     variables: { slug },
   });
@@ -73,6 +83,12 @@ export function CampaignGivePanel({ slug, className }: CampaignGivePanelProps) {
     );
   }
 
+  const instructions =
+    paymentInstructions ??
+    (championCode
+      ? championPaymentInstructions(campaign.paymentInstructions, championCode)
+      : campaign.paymentInstructions);
+
   return (
     <Card className={className} data-slot="campaign-give-panel">
       <CardHeader className="space-y-2 border-b pb-4">
@@ -86,8 +102,9 @@ export function CampaignGivePanel({ slug, className }: CampaignGivePanelProps) {
           categoryId={campaign.categoryId}
           purposeId={campaign.purposeId}
           campaignId={campaign.campaignId}
+          championCode={championCode}
         />
-        <PaybillInstructions instructions={campaign.paymentInstructions} />
+        <PaybillInstructions instructions={instructions} />
       </CardContent>
     </Card>
   );
