@@ -45,6 +45,7 @@ import { TREASURER_PERIOD_SUMMARY_ARTICLE } from "./articles/treasurer-period-su
 import { TREASURER_RECEIPTS_AND_VOIDS_ARTICLE } from "./articles/treasurer-receipts-and-voids";
 import { TREASURER_SESSIONS_AND_CERTIFICATION_ARTICLE } from "./articles/treasurer-sessions-and-certification";
 import { TREASURER_STATEMENT_DEPARTMENTS_ARTICLE } from "./articles/treasurer-statement-departments";
+import { FUNDRAISING_ARTICLES } from "./articles/fundraising";
 
 /**
  * Registry of all Help Center articles.
@@ -97,6 +98,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
   TREASURER_RECEIPTS_AND_VOIDS_ARTICLE,
   TREASURER_SESSIONS_AND_CERTIFICATION_ARTICLE,
   TREASURER_STATEMENT_DEPARTMENTS_ARTICLE,
+  // Fundraising campaigns (S6-DOC-A): its own list, so lanes never edit this one.
+  ...FUNDRAISING_ARTICLES,
 ];
 
 /**
