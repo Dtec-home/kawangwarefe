@@ -83,3 +83,26 @@ Feature: Admin pledge register
     Given "Peter Otieno" pledged "10000.00" to department "Youth", paid "10000.00", due none
     When they open the pledge register
     Then "Peter Otieno" cannot be cancelled
+
+  Scenario: A campaign's Pledges tab shows only that campaign's pledges
+    Given "Jane Wanjiku" pledged "50000.00" to campaign "Church Building", paid "20000.00", due "2026-12-31"
+    And "Peter Otieno" pledged "10000.00" to department "Youth", paid "10000.00", due none
+    When they open the Pledges tab of campaign "Church Building"
+    Then the tab lists "Jane Wanjiku" with "KES 30,000.00" still owed
+    And the register does not show "Peter Otieno"
+    And the totals were asked for campaign "Church Building"
+    And there is no campaign or department filter
+
+  Scenario: A pledge card recorded on the Pledges tab is for that campaign
+    Given there are no pledges
+    When they open the Pledges tab of campaign "Church Building"
+    And they choose "Record a pledge card"
+    And they enter phone "0712345678", name "", amount "5000" and due date ""
+    And they choose "Save pledge"
+    Then a pledge of "5000" to campaign "Church Building" is recorded for "254712345678"
+
+  Scenario: The Pledges tab exports only that campaign
+    Given "Jane Wanjiku" pledged "50000.00" to campaign "Church Building", paid "20000.00", due "2026-12-31"
+    When they open the Pledges tab of campaign "Church Building"
+    And they choose "Export PDF"
+    Then the export is for campaign "Church Building" as "pdf"

@@ -309,6 +309,17 @@ defineFeature(feature, (test) => {
       }
     )
 
+  const whenOpenTab = (step: Step) =>
+    step(/^they open the Pledges tab of campaign "(.*)"$/, (title) =>
+      openRegister(world, CAMPAIGNS.find((c) => c.title === title)!.id)
+    )
+
+  const thenTotalsFor = (step: Step) =>
+    step(/^the totals were asked for campaign "(.*)"$/, async (title) => {
+      const id = CAMPAIGNS.find((c) => c.title === title)?.id
+      await waitFor(() => expect(world.summaryAsked).toContainEqual({ campaignId: id, categoryId: null }))
+    })
+
   test('Staff see the totals and every pledge', ({ given, when, then, and }) => {
     givenPledged(given)
     and(
@@ -360,10 +371,7 @@ defineFeature(feature, (test) => {
     })
     thenShows(then)
     thenNotShown(and)
-    and(/^the totals were asked for campaign "(.*)"$/, async (title) => {
-      const id = CAMPAIGNS.find((c) => c.title === title)?.id
-      await waitFor(() => expect(world.summaryAsked).toContainEqual({ campaignId: id, categoryId: null }))
-    })
+    thenTotalsFor(and)
   })
 
   test('A department admin only chooses from their own departments and campaigns', ({ given, when, then, and }) => {
@@ -468,6 +476,57 @@ defineFeature(feature, (test) => {
     then(/^"(.*)" cannot be cancelled$/, async (name) => {
       const row = await rowFor(name)
       expect(within(row).queryByRole('button', { name: /Cancel pledge/ })).not.toBeInTheDocument()
+    })
+  })
+
+  test("A campaign's Pledges tab shows only that campaign's pledges", ({ given, when, then, and }) => {
+    givenPledged(given)
+    givenPledged(and)
+    whenOpenTab(when)
+    then(/^the tab lists "(.*)" with "(.*)" still owed$/, async (name, balance) => {
+      const row = await rowFor(name)
+      expect(within(row).getByText(balance)).toBeInTheDocument()
+      expect(world.pledgesAsked.every((v) => v.campaignId === '9' && v.categoryId === null)).toBe(true)
+    })
+    thenNotShown(and)
+    thenTotalsFor(and)
+    and('there is no campaign or department filter', () => {
+      expect(screen.queryByLabelText('campaign')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('department')).not.toBeInTheDocument()
+      expect(screen.queryByRole('columnheader', { name: 'For' })).not.toBeInTheDocument()
+    })
+  })
+
+  test('A pledge card recorded on the Pledges tab is for that campaign', ({ given, when, then, and }) => {
+    givenNoPledges(given)
+    whenOpenTab(when)
+    chooseStep(and)
+    and(/^they enter phone "(.*)", name "(.*)", amount "(.*)" and due date "(.*)"$/, async (phone, name, amount, due) => {
+      await screen.findByRole('dialog')
+      expect(screen.queryByLabelText('campaignId')).not.toBeInTheDocument()
+      fireEvent.change(screen.getByLabelText(/Phone Number/), { target: { value: phone } })
+      fireEvent.change(screen.getByLabelText('Member name'), { target: { value: name } })
+      fireEvent.change(screen.getByLabelText(/Amount \(KES\)/), { target: { value: amount } })
+      fireEvent.change(screen.getByLabelText(/Due date/), { target: { value: due } })
+    })
+    chooseStep(and)
+    then(/^a pledge of "(.*)" to campaign "(.*)" is recorded for "(.*)"$/, async (amount, title, phone) => {
+      await waitFor(() => expect(world.recorded).not.toBeNull())
+      expect(world.recorded).toEqual({
+        phoneNumber: phone,
+        memberName: null,
+        input: { amount, campaignId: CAMPAIGNS.find((c) => c.title === title)?.id, categoryId: null, dueDate: null },
+      })
+    })
+  })
+
+  test('The Pledges tab exports only that campaign', ({ given, when, then, and }) => {
+    givenPledged(given)
+    whenOpenTab(when)
+    chooseStep(and)
+    then(/^the export is for campaign "(.*)" as "(.*)"$/, async (title, format) => {
+      await waitFor(() => expect(downloadMock).toHaveBeenCalled())
+      expect(world.exported).toEqual({ format, campaignId: CAMPAIGNS.find((c) => c.title === title)?.id, categoryId: null })
     })
   })
 })
