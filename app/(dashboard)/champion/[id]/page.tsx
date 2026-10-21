@@ -1,19 +1,23 @@
 /**
- * /champion/[id] — a champion's own dashboard (donor names and amounts, decision 4). Owned by lane S5-UI-J.
- * S0 placeholder; the lane replaces this page.
+ * /champion/[id] — a champion's own dashboard: their tally, their donors with
+ * names and amounts (decision 4) and their share kit (Fundraising S5, lane
+ * S5-UI-J, ticket 5.9).
  */
 
 "use client";
 
+import { useParams } from "next/navigation";
+
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ChampionDashboardView } from "@/components/champions/dashboard/champion-dashboard-view";
 import { MemberLayout } from "@/components/layouts/member-layout";
-import { PlannedFeature } from "@/components/campaigns/shared/planned-feature";
 
 export default function ChampionDashboardPage() {
+  const params = useParams<{ id: string }>();
   return (
     <ProtectedRoute>
       <MemberLayout>
-        <PlannedFeature title="Champion dashboard" sprint="Sprint 5" />
+        <ChampionDashboardView championId={String(params?.id ?? "")} />
       </MemberLayout>
     </ProtectedRoute>
   );
