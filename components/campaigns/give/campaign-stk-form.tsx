@@ -2,6 +2,9 @@
  * CampaignStkForm — phone + amount → one M-Pesa prompt for the campaign's
  * department, tagged with the campaign (S1-UI-B, ticket 1.12).
  *
+ * Given a `championCode` (a champion's page), the prompt carries it so the
+ * gift counts towards that champion (S5-UI-I, ticket 5.7).
+ *
  * On success it goes to /confirmation with `&campaign=<slug>` so the
  * confirmation page can offer to share the campaign.
  */
@@ -44,6 +47,8 @@ export interface CampaignStkFormProps {
   /** The campaign's purpose, so a department's auto-split never splits the gift. */
   purposeId?: string | null;
   campaignId: string;
+  /** The champion the gift comes through, if any. */
+  championCode?: string | null;
 }
 
 /** Confirmation URL for a campaign gift. */
@@ -57,7 +62,7 @@ function localPhone(msisdn?: string | null): string {
   return local ? local.slice(3) : "";
 }
 
-export function CampaignStkForm({ slug, categoryId, purposeId, campaignId }: CampaignStkFormProps) {
+export function CampaignStkForm({ slug, categoryId, purposeId, campaignId, championCode }: CampaignStkFormProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -83,6 +88,7 @@ export function CampaignStkForm({ slug, categoryId, purposeId, campaignId }: Cam
           categoryId,
           ...(purposeId ? { purposeId } : {}),
           campaignId,
+          ...(championCode ? { championCode } : {}),
         },
       });
       const result = data?.initiateContribution;
