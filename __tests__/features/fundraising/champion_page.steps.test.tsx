@@ -21,8 +21,9 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/lib/auth/auth-context', () => ({ useAuth: () => ({ user: null }) }))
 
 import { INITIATE_CAMPAIGN_CONTRIBUTION } from '@/lib/graphql/fundraising/give'
-import { PUBLIC_CHAMPION_PAGE } from '@/lib/graphql/fundraising/public-champions'
+import { CAMPAIGN_LEADERBOARD, PUBLIC_CHAMPION_PAGE } from '@/lib/graphql/fundraising/public-champions'
 import { ChampionPageView } from '@/components/champions/public/champion-page-view'
+import { LeaderboardSlot } from '@/components/champions/public/leaderboard-slot'
 
 const feature = loadFeature('./champion_page.feature', { loadRelativePath: true })
 
@@ -72,13 +73,14 @@ function champion(name: string, code: string, raised: string, donors: number) {
 interface World {
   champion: ReturnType<typeof champion> | null
   initiated: Record<string, unknown>[]
+  leaderboard: MockedResponse[]
 }
 
 defineFeature(feature, (test) => {
   let world: World
 
   beforeEach(() => {
-    world = { champion: null, initiated: [] }
+    world = { champion: null, initiated: [], leaderboard: [] }
     nav.push.mockReset()
   })
   afterEach(cleanup)
@@ -241,5 +243,78 @@ defineFeature(feature, (test) => {
       expect(await screen.findByText(/couldn.t find that champion/i)).toBeInTheDocument()
     })
     campaignLink(and)
+  })
+
+  const leaderboardMock = (slug: string, rows: Record<string, unknown>[]): MockedResponse => ({
+    request: { query: CAMPAIGN_LEADERBOARD, variables: { slug, limit: 10 } },
+    result: {
+      data: { campaignLeaderboard: rows.map((r) => ({ __typename: 'LeaderboardEntryType', ...r })) },
+    },
+    maxUsageCount: 5,
+  })
+
+  const showLeaderboard = (when: Step) =>
+    when(/^the leaderboard for "(.*)" is shown$/, (slug) => {
+      render(
+        <MockedProvider mocks={world.leaderboard}>
+          <LeaderboardSlot campaign={{ slug, allowChampions: true }} />
+        </MockedProvider>,
+      )
+    })
+
+  const rows = async () => {
+    const table = await screen.findByRole('list', { name: /Top champions/ })
+    return within(table).getAllByRole('listitem')
+  }
+
+  test('The campaign page shows the champion leaderboard', ({ given, when, then, and }) => {
+    given(
+      /^the campaign "(.*)" has champions "(.*)" "(.*)" with "(.*)" from (\d+) and "(.*)" "(.*)" with "(.*)" from (\d+)$/,
+      (slug, n1, c1, r1, d1, n2, c2, r2, d2) => {
+        world.leaderboard.push(
+          leaderboardMock(slug, [
+            { rank: 1, championName: n1, code: c1, raised: r1, donorCount: Number(d1) },
+            { rank: 2, championName: n2, code: c2, raised: r2, donorCount: Number(d2) },
+          ]),
+        )
+      },
+    )
+    showLeaderboard(when)
+    const row = async (n: string, name: string, raised: string, donors: string) => {
+      const item = (await rows())[Number(n) - 1]
+      expect(item).toHaveTextContent(name)
+      expect(item).toHaveTextContent(raised)
+      expect(item).toHaveTextContent(donors)
+    }
+    then(/^row (\d+) is "(.*)" with "(.*)" and "(.*)"$/, row)
+    and(/^row (\d+) is "(.*)" with "(.*)" and "(.*)"$/, row)
+    and(/^"(.*)" links to "(.*)"$/, async (name, href) => {
+      expect(await screen.findByRole('link', { name: new RegExp(name) })).toHaveAttribute('href', href)
+    })
+  })
+
+  test('A campaign with no champions yet', ({ given, when, then }) => {
+    given(/^the campaign "(.*)" has no champions yet$/, (slug) => {
+      world.leaderboard.push(leaderboardMock(slug, []))
+    })
+    showLeaderboard(when)
+    then('they are invited to become a champion', async () => {
+      expect(await screen.findByText(/No champions yet/)).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /become a champion/i })).toBeInTheDocument()
+    })
+  })
+
+  test('A campaign without champions shows no leaderboard', ({ when, then }) => {
+    let container: HTMLElement
+    when('the leaderboard is shown for a campaign that does not allow champions', () => {
+      ;({ container } = render(
+        <MockedProvider mocks={[]}>
+          <LeaderboardSlot campaign={{ slug: 'new-church-roof', allowChampions: false }} />
+        </MockedProvider>,
+      ))
+    })
+    then('no leaderboard is shown', () => {
+      expect(container).toBeEmptyDOMElement()
+    })
   })
 })

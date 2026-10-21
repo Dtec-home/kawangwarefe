@@ -45,3 +45,19 @@ Feature: A champion's public page
     When a visitor opens the champion page "new-church-roof" "NOBODY"
     Then they are told the champion link could not be found
     And there is a link to the main campaign page "new-church-roof"
+
+  Scenario: The campaign page shows the champion leaderboard
+    Given the campaign "new-church-roof" has champions "Mary Wanjiku" "MARY" with "12500.00" from 9 and "John Otieno" "JOHN" with "8000.00" from 4
+    When the leaderboard for "new-church-roof" is shown
+    Then row 1 is "Mary Wanjiku" with "KES 12,500.00" and "9 donors"
+    And row 2 is "John Otieno" with "KES 8,000.00" and "4 donors"
+    And "John Otieno" links to "/campaigns/new-church-roof/c/JOHN"
+
+  Scenario: A campaign with no champions yet
+    Given the campaign "new-church-roof" has no champions yet
+    When the leaderboard for "new-church-roof" is shown
+    Then they are invited to become a champion
+
+  Scenario: A campaign without champions shows no leaderboard
+    When the leaderboard is shown for a campaign that does not allow champions
+    Then no leaderboard is shown
