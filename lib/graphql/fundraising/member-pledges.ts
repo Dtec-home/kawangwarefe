@@ -8,7 +8,13 @@
 
 import { gql } from "@apollo/client";
 
-import type { Pledge, PledgeInput, PledgeResponse, PublicCampaign } from "@/lib/types/fundraising";
+import type {
+  GuestPledgeStartResponse,
+  Pledge,
+  PledgeInput,
+  PledgeResponse,
+  PublicCampaign,
+} from "@/lib/types/fundraising";
 
 const PLEDGE_FIELDS = `
   id
@@ -131,5 +137,62 @@ export interface CancelPledgeVars {
 export interface CancelPledgeData {
   cancelPledge: Omit<PledgeResponse, "pledge"> & {
     pledge: Pick<Pledge, "id" | "status" | "balance"> | null;
+  };
+}
+
+/** Public page, step 1: SMS a one-time code to the guest's phone (decision 3). */
+export const START_GUEST_PLEDGE = gql`
+  mutation StartGuestPledge(
+    $slug: String!
+    $name: String!
+    $phoneNumber: String!
+    $amount: String!
+    $dueDate: Date
+  ) {
+    startGuestPledge(slug: $slug, name: $name, phoneNumber: $phoneNumber, amount: $amount, dueDate: $dueDate) {
+      success
+      message
+      pledgeId
+    }
+  }
+`;
+
+export interface StartGuestPledgeVars {
+  slug: string;
+  name: string;
+  /** 2547XXXXXXXX */
+  phoneNumber: string;
+  amount: string;
+  dueDate: string | null;
+}
+
+export interface StartGuestPledgeData {
+  startGuestPledge: GuestPledgeStartResponse;
+}
+
+/** Public page, step 2: the code makes the pledge active. */
+export const CONFIRM_GUEST_PLEDGE = gql`
+  mutation ConfirmGuestPledge($pledgeId: ID!, $code: String!) {
+    confirmGuestPledge(pledgeId: $pledgeId, code: $code) {
+      success
+      message
+      pledge {
+        id
+        amount
+        dueDate
+        status
+      }
+    }
+  }
+`;
+
+export interface ConfirmGuestPledgeVars {
+  pledgeId: string;
+  code: string;
+}
+
+export interface ConfirmGuestPledgeData {
+  confirmGuestPledge: Omit<PledgeResponse, "pledge"> & {
+    pledge: Pick<Pledge, "id" | "amount" | "dueDate" | "status"> | null;
   };
 }
