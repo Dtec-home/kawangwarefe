@@ -172,7 +172,10 @@ async function pick(label: string) {
 }
 
 async function makePledge(kind: 'campaign' | 'department', target: string, amount: string, due: string | null) {
-  await clickEnabled('Make a pledge')
+  // The page header always has the button; an empty list adds a second one,
+  // so aim at the header's to stay independent of when the list arrives.
+  const header = (await screen.findByRole('heading', { name: 'My pledges' })).closest('[data-slot="page-header"]') as HTMLElement
+  await clickEnabled('Make a pledge', header)
   const dialog = await screen.findByRole('dialog')
   if (kind === 'department') fireEvent.click(within(dialog).getByLabelText('A department'))
   await pick(target)

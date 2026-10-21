@@ -41,6 +41,8 @@ const NO_CAMPAIGN = "none";
  * The campaigns of the fund in server order, plus the selected campaign if it
  * isn't one of them. Empty until a fund is chosen.
  */
+const NOT_CHARGEABLE = new Set(["DRAFT", "PENDING_APPROVAL"]);
+
 export function expenseCampaignChoices(
   campaigns: readonly ExpenseCampaignOption[],
   categoryId: string,
@@ -51,7 +53,9 @@ export function expenseCampaignChoices(
   const selected = value && !listed.some((c) => c.id === value) ? campaigns.find((c) => c.id === value) : undefined;
   return [...listed, ...(selected ? [selected] : [])].map((campaign) => ({
     campaign,
-    disabled: campaign.status === "CLOSED" && campaign.id !== value,
+    // Closed campaigns still take late bills (S4-BE-H); drafts and campaigns
+    // awaiting approval never take expenses.
+    disabled: NOT_CHARGEABLE.has(campaign.status) && campaign.id !== value,
   }));
 }
 

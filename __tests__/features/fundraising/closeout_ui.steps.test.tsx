@@ -44,6 +44,7 @@ function campaign(overrides: Partial<CloseoutCampaign>): CloseoutCampaign {
     categoryId: '4',
     categoryName: 'Building Fund',
     paybillCode: 'CODE',
+    closedByName: null,
     closedAt: null,
     ...overrides,
   }

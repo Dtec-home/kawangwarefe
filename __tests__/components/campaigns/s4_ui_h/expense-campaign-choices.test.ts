@@ -27,12 +27,16 @@ describe('expenseCampaignChoices', () => {
     expect(expenseCampaignChoices(ALL, '9', '')).toEqual([])
   })
 
-  it('disables a closed campaign unless the expense is already charged to it', () => {
+  it('lets a closed campaign take a late bill', () => {
     const fresh = expenseCampaignChoices(ALL, '4', '')
-    expect(fresh.find((x) => x.campaign.id === '3')?.disabled).toBe(true)
+    expect(fresh.find((x) => x.campaign.id === '3')?.disabled).toBe(false)
     expect(fresh.find((x) => x.campaign.id === '1')?.disabled).toBe(false)
-    const charged = expenseCampaignChoices(ALL, '4', '3')
-    expect(charged.find((x) => x.campaign.id === '3')?.disabled).toBe(false)
+  })
+
+  it('disables a draft campaign unless the expense is already charged to it', () => {
+    const draft = { ...ALL[0], id: '8', status: 'DRAFT' as const }
+    expect(expenseCampaignChoices([...ALL, draft], '4', '').find((x) => x.campaign.id === '8')?.disabled).toBe(true)
+    expect(expenseCampaignChoices([...ALL, draft], '4', '8').find((x) => x.campaign.id === '8')?.disabled).toBe(false)
   })
 
   it('keeps the currently selected campaign even when it is not one of the fund campaigns', () => {

@@ -31,7 +31,9 @@ function CloseoutBody({ campaign, onClosed }: { campaign: CloseoutCampaign; onCl
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          {campaign.closedAt ? `Closed on ${formatNairobiDateTime(campaign.closedAt)}. ` : ""}
+          {campaign.closedAt
+            ? `Closed${campaign.closedByName ? ` by ${campaign.closedByName}` : ""} on ${formatNairobiDateTime(campaign.closedAt)}. `
+            : ""}
           It no longer takes gifts, and {campaign.paybillCode} is matched to departments as normal.
         </p>
         <FinalStatementSummary campaignId={campaign.id} categoryName={campaign.categoryName} />

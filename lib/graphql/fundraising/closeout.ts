@@ -40,12 +40,13 @@ const CLOSEOUT_CAMPAIGN_FIELDS = `
   categoryId
   categoryName
   paybillCode
+  closedByName
   closedAt
 `;
 
 export type CloseoutCampaign = Pick<
   Campaign,
-  "id" | "title" | "status" | "categoryId" | "categoryName" | "paybillCode" | "closedAt"
+  "id" | "title" | "status" | "categoryId" | "categoryName" | "paybillCode" | "closedByName" | "closedAt"
 >;
 
 export const CLOSEOUT_CAMPAIGN = gql`

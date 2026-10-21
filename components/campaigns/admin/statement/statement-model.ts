@@ -17,6 +17,7 @@ const STATEMENT_CHANNEL_LABELS: Record<string, string> = {
   envelope: "Envelope",
   expense: "Expense",
   payout: "Payout",
+  opening: "Brought forward",
 };
 
 /** A statement line's channel in plain words. */

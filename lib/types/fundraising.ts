@@ -64,6 +64,7 @@ export interface Campaign {
   createdByName: string | null;
   approvedByName: string | null;
   approvedAt: string | null;
+  closedByName: string | null;
   closedAt: string | null;
   createdAt: string;
   publicUrl: string;
