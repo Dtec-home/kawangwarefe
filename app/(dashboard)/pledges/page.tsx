@@ -1,19 +1,18 @@
 /**
- * /pledges — the member's own pledges. Owned by lane S3-UI-E.
- * S0 placeholder; the lane replaces this page.
+ * /pledges — the member's own pledges (Fundraising S3, lane S3-UI-E, 3.8).
  */
 
 "use client";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
-import { PlannedFeature } from "@/components/campaigns/shared/planned-feature";
+import { MyPledgesView } from "@/components/pledges/member/my-pledges-view";
 
 export default function MyPledgesPage() {
   return (
     <ProtectedRoute>
       <MemberLayout>
-        <PlannedFeature title="My pledges" sprint="Sprint 3" />
+        <MyPledgesView />
       </MemberLayout>
     </ProtectedRoute>
   );
