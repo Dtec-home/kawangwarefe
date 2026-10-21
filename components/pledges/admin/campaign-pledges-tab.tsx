@@ -1,11 +1,17 @@
 /**
- * CampaignPledgesTab — This campaign's pledges. Owned by lane S3-UI-F.
- * S0 stub rendered by app/(dashboard)/admin/campaigns/[id]/page.tsx.
+ * CampaignPledgesTab: the Pledges tab of /admin/campaigns/[id]
+ * (Fundraising S3, lane S3-UI-F, ticket 3.12).
+ *
+ * The admin pledge register, fixed to this campaign: its totals, its pledges,
+ * export, "Record a pledge card" and cancel.
  */
 
-import type { CampaignTabProps } from "@/components/campaigns/admin/types";
-import { PlannedFeature } from "@/components/campaigns/shared/planned-feature";
+"use client";
 
-export const CampaignPledgesTab: React.FC<CampaignTabProps> = () => (
-  <PlannedFeature title="This campaign's pledges" sprint="Sprint 3" />
+import type { CampaignTabProps } from "@/components/campaigns/admin/types";
+
+import { PledgeRegister } from "./pledge-register";
+
+export const CampaignPledgesTab: React.FC<CampaignTabProps> = ({ campaignId }) => (
+  <PledgeRegister campaignId={campaignId} />
 );
