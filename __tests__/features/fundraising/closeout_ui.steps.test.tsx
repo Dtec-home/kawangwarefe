@@ -181,10 +181,10 @@ defineFeature(feature, (test) => {
     then(/^they are warned "(.*)"$/, async (text) => {
       expect(within(await screen.findByRole('alertdialog')).getByText(text)).toBeInTheDocument()
     })
-    and(/^they are warned the campaign stops taking gifts and "(.*)" returns to normal department matching$/, (code) => {
+    and(/^they are warned the campaign stops taking gifts and payments to "(.*)" wait in the unmatched list$/, (code) => {
       const dialog = screen.getByRole('alertdialog')
       expect(dialog).toHaveTextContent(/stops taking gifts/)
-      expect(dialog).toHaveTextContent(new RegExp(`${code}.*normal department matching`))
+      expect(dialog).toHaveTextContent(new RegExp(`${code}.*unmatched Pay Bill list`))
     })
     confirmClose(when)
     then('the campaign is closed', async () => {

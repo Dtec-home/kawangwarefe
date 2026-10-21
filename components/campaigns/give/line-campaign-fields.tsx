@@ -7,7 +7,8 @@
  * comes from `givingCampaigns` (recorder-safe); if the viewer may not list
  * campaigns, nothing renders.
  * A line whose department changed away from its campaign has the campaign
- * cleared. Champion codes arrive in S5.
+ * cleared. A line given to a campaign can also name the champion it came
+ * through (their code, e.g. JOHN); the server checks the code.
  */
 
 "use client";
@@ -16,6 +17,7 @@ import { useEffect, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { Megaphone } from "lucide-react";
 import type { CategoryAmount } from "@/components/forms/multi-category-selector";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -44,7 +46,9 @@ export function staleCampaignLines(
     campaigns.some((c) => c.id === line.campaignId && c.categoryId === line.categoryId);
   const stale = lines.some((line) => line.campaignId && !isValid(line));
   if (!stale) return null;
-  return lines.map((line) => (line.campaignId && !isValid(line) ? { ...line, campaignId: undefined } : line));
+  return lines.map((line) =>
+    line.campaignId && !isValid(line) ? { ...line, campaignId: undefined, championCode: undefined } : line
+  );
 }
 
 export function LineCampaignFields({ lines, onChange }: LineCampaignFieldsProps) {
@@ -75,7 +79,13 @@ export function LineCampaignFields({ lines, onChange }: LineCampaignFieldsProps)
 
   const setCampaign = (index: number, value: string) => {
     const campaignId = value === NO_CAMPAIGN ? undefined : value;
-    onChange(lines.map((line, i) => (i === index ? { ...line, campaignId } : line)));
+    // A champion code belongs to one campaign, so a new choice clears it.
+    onChange(lines.map((line, i) => (i === index ? { ...line, campaignId, championCode: undefined } : line)));
+  };
+
+  const setChampion = (index: number, value: string) => {
+    const championCode = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 9) || undefined;
+    onChange(lines.map((line, i) => (i === index ? { ...line, championCode } : line)));
   };
 
   return (
@@ -106,6 +116,20 @@ export function LineCampaignFields({ lines, onChange }: LineCampaignFieldsProps)
               ))}
             </SelectContent>
           </Select>
+          {line.campaignId ? (
+            <div className="flex flex-col gap-1 sm:w-40">
+              <Label htmlFor={`line-champion-${index}`} className="sr-only">
+                Champion code for line {index + 1}
+              </Label>
+              <Input
+                id={`line-champion-${index}`}
+                placeholder="Champion code (optional)"
+                autoComplete="off"
+                value={line.championCode ?? ""}
+                onChange={(e) => setChampion(index, e.target.value)}
+              />
+            </div>
+          ) : null}
         </div>
       ))}
     </div>

@@ -4,7 +4,7 @@
  *
  * The dialog spells out decision 6 before anything happens: any money left
  * over stays in the department and nothing is moved; the campaign stops
- * taking gifts and its Pay Bill code goes back to normal department matching.
+ * taking gifts; later Pay Bill payments to its code wait in the unmatched list.
  */
 
 "use client";
@@ -97,9 +97,9 @@ export function CloseCampaignAction({ campaign, onClosed }: CloseCampaignActionP
                   Any money left over stays in {campaign.categoryName}; nothing is moved.
                 </p>
                 <p>
-                  The campaign stops taking gifts, and its Pay Bill code{" "}
-                  <span className="font-mono font-medium text-foreground">{campaign.paybillCode}</span> returns to
-                  normal department matching.
+                  The campaign stops taking gifts. Any later Pay Bill payment to{" "}
+                  <span className="font-mono font-medium text-foreground">{campaign.paybillCode}</span> is no
+                  longer credited to it and waits in the unmatched Pay Bill list for staff to allocate.
                 </p>
                 <p>A closed campaign can&apos;t be reopened.</p>
               </div>

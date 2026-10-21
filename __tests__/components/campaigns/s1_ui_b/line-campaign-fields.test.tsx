@@ -66,6 +66,38 @@ describe('LineCampaignFields', () => {
     expect(onChange).toHaveBeenCalledWith([{ categoryId: '1', amount: '' }, { categoryId: '4', amount: '', campaignId: '43' }])
   })
 
+  it('lets the desk credit a campaign line to a champion code', async () => {
+    const onChange = vi.fn()
+    render(
+      <MockedProvider mocks={[ok]}>
+        <LineCampaignFields lines={[{ categoryId: '4', amount: '', campaignId: '42' }]} onChange={onChange} />
+      </MockedProvider>
+    )
+    const code = await screen.findByLabelText('Champion code for line 1')
+    fireEvent.change(code, { target: { value: 'jo hn!' } })
+    expect(onChange).toHaveBeenCalledWith([{ categoryId: '4', amount: '', campaignId: '42', championCode: 'JOHN' }])
+  })
+
+  it('asks for a champion code only once a campaign is chosen, and a new campaign clears it', async () => {
+    const onChange = vi.fn()
+    const { rerender } = render(
+      <MockedProvider mocks={[ok]}>
+        <LineCampaignFields lines={[{ categoryId: '4', amount: '' }]} onChange={onChange} />
+      </MockedProvider>
+    )
+    await screen.findByTestId('line-campaign-0')
+    expect(screen.queryByLabelText('Champion code for line 1')).not.toBeInTheDocument()
+    rerender(
+      <MockedProvider mocks={[ok]}>
+        <LineCampaignFields lines={[{ categoryId: '4', amount: '', campaignId: '42', championCode: 'JOHN' }]} onChange={onChange} />
+      </MockedProvider>
+    )
+    fireEvent.change(screen.getByTestId('line-campaign-0').querySelector('select')!, { target: { value: '43' } })
+    const [[lines]] = onChange.mock.calls.slice(-1)
+    expect(lines[0]).toMatchObject({ campaignId: '43' })
+    expect(lines[0].championCode).toBeUndefined()
+  })
+
   it('choosing "No campaign" clears the tag', async () => {
     const onChange = vi.fn()
     render(

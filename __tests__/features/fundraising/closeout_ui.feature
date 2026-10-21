@@ -1,6 +1,6 @@
 Feature: Close out a campaign
   When a campaign has done its job, staff close it. A closed campaign stops
-  taking gifts and its Pay Bill code goes back to normal department matching.
+  taking gifts; later Pay Bill payments to its code wait in the unmatched list.
   Any money left over stays in the campaign's department; nothing is moved.
   After closing, staff see the final statement.
 
@@ -11,7 +11,7 @@ Feature: Close out a campaign
     Then the campaign status shows "Active"
     When they choose to close the campaign
     Then they are warned "Any money left over stays in Building Fund; nothing is moved."
-    And they are warned the campaign stops taking gifts and "ROOF" returns to normal department matching
+    And they are warned the campaign stops taking gifts and payments to "ROOF" wait in the unmatched list
     When they confirm closing the campaign
     Then the campaign is closed
     And they are told "Campaign closed"

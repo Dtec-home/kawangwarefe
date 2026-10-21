@@ -34,7 +34,8 @@ function CloseoutBody({ campaign, onClosed }: { campaign: CloseoutCampaign; onCl
           {campaign.closedAt
             ? `Closed${campaign.closedByName ? ` by ${campaign.closedByName}` : ""} on ${formatNairobiDateTime(campaign.closedAt)}. `
             : ""}
-          It no longer takes gifts, and {campaign.paybillCode} is matched to departments as normal.
+          It no longer takes gifts. Pay Bill payments to {campaign.paybillCode} now wait in the unmatched
+          Pay Bill list for staff to allocate.
         </p>
         <FinalStatementSummary campaignId={campaign.id} categoryName={campaign.categoryName} />
       </div>
