@@ -21,6 +21,7 @@ import {
   Newspaper,
   Info,
   NotebookPen,
+  HandCoins,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +39,7 @@ const memberNavigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Profile", href: "/profile", icon: UserRound },
   { name: "Give", href: "/contribute", icon: Heart },
+  { name: "My pledges", href: "/pledges", icon: HandCoins },
   { name: "Prayer Request", href: "/prayers/new", icon: Heart },
   { name: "Family", href: "/profile/family", icon: Users },
   { name: "About", href: "/about", icon: Info },
