@@ -62,3 +62,8 @@ Feature: Pledge from the public campaign page
     Given the public campaign "new-church-roof" "New Church Roof" takes pledges but is not accepting gifts
     When a visitor opens the pledge card
     Then there is no pledge card
+
+  Scenario: The pledge card shows pledged and received totals only
+    Given the public campaign "new-church-roof" "New Church Roof" takes pledges
+    When a visitor opens the pledge card
+    Then they see "Pledged KES 61,500.00 · Received KES 24,800.00" above the pledge form

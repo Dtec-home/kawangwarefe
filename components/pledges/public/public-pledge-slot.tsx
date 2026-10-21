@@ -3,9 +3,9 @@
  * hosted by components/campaigns/public/campaign-page-view.tsx).
  *
  * Owned by lane S3-UI-E: when the campaign takes pledges and gifts, a
- * "Pledge to give later" card with the guest pledge form (name, phone,
- * amount, due date, then the SMS code step: startGuestPledge /
- * confirmGuestPledge). Renders nothing otherwise.
+ * "Pledge to give later" card with "Pledged X · Received Y" (totals only)
+ * above the guest pledge form (name, phone, amount, due date, then the SMS
+ * code step: startGuestPledge / confirmGuestPledge). Renders nothing otherwise.
  */
 
 "use client";
@@ -15,6 +15,7 @@ import { CalendarHeart } from "lucide-react";
 import type { PublicCampaign } from "@/lib/types/fundraising";
 
 import { GuestPledgeFlow } from "./guest-pledge-flow";
+import { PledgeTotals } from "./pledge-totals";
 
 export interface PublicPledgeSlotProps {
   campaign: Pick<PublicCampaign, "slug" | "title" | "allowPledges" | "isAcceptingGifts" | "progress">;
@@ -37,6 +38,7 @@ export const PublicPledgeSlot: React.FC<PublicPledgeSlotProps> = ({ campaign }) 
           Can&apos;t give today? Promise an amount and give it when you can.
         </p>
       </header>
+      <PledgeTotals progress={campaign.progress} />
       <GuestPledgeFlow slug={campaign.slug} title={campaign.title} />
     </section>
   );

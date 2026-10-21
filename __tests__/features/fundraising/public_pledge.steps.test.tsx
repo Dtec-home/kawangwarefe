@@ -256,4 +256,15 @@ defineFeature(feature, (test) => {
     whenOpen(when)
     thenNoCard(then)
   })
+
+  test('The pledge card shows pledged and received totals only', ({ given, when, then }) => {
+    givenTakesPledges(given)
+    whenOpen(when)
+    then(/^they see "(.*)" above the pledge form$/, (text) => {
+      const totals = screen.getByTestId('pledge-totals')
+      expect(totals).toHaveTextContent(text)
+      const form = screen.getByRole('form', { name: 'Pledge to give later' })
+      expect(totals.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+  })
 })
