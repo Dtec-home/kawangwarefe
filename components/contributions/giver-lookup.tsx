@@ -4,7 +4,8 @@
  *
  * Shared by the admin manual-entry page and the recorder workspace. A pure
  * recorder only gets `giver { id displayName }` back from the lookup (RR-3);
- * staff also get the full `member`.
+ * staff also get the full `member`. When the phone is new, both ask for the
+ * giver's name (`needsName`), which names the new guest member.
  */
 
 "use client";
@@ -34,6 +35,7 @@ interface LookupMemberResult {
     isGuest?: boolean;
     member?: LookedUpMember | null;
     giver?: { id: string; displayName: string } | null;
+    needsName?: boolean;
   };
 }
 
@@ -44,6 +46,8 @@ export interface GiverLookupResult {
   /** Full member record — staff only */
   member: LookedUpMember | null;
   isGuest: boolean;
+  /** The phone is new (or its guest is still "Guest Member"): ask for the giver's name */
+  needsName: boolean;
 }
 
 /** Phone lookup; resolves null for a blank phone. Errors propagate. */
@@ -66,6 +70,7 @@ export function useGiverLookup() {
         displayName: result.giver?.displayName ?? member?.fullName ?? null,
         member,
         isGuest: member ? member.isGuest : !result.found,
+        needsName: result.needsName ?? !result.found,
       };
     },
     [lookupMember]
@@ -85,6 +90,10 @@ interface GiverIdentityFieldsProps {
   lookupLoading?: boolean;
   /** Lookup result area, shown under the phone field */
   children?: React.ReactNode;
+  /** Ask for the name of a giver whose phone is new to the church */
+  needsName?: boolean;
+  newGiverName?: string;
+  onNewGiverNameChange?: (name: string) => void;
 }
 
 export function GiverIdentityFields({
@@ -97,6 +106,9 @@ export function GiverIdentityFields({
   onLookup,
   lookupLoading = false,
   children,
+  needsName = false,
+  newGiverName = "",
+  onNewGiverNameChange,
 }: GiverIdentityFieldsProps) {
   return (
     <div className="space-y-4">
@@ -147,6 +159,23 @@ export function GiverIdentityFields({
             </div>
           </div>
           {children}
+          {needsName && onNewGiverNameChange && (
+            <div className="space-y-2">
+              <Label htmlFor="new-giver-name">Giver&apos;s full name *</Label>
+              <Input
+                id="new-giver-name"
+                type="text"
+                placeholder="e.g. Mary Wanjiku"
+                autoComplete="off"
+                value={newGiverName}
+                onChange={(e) => onNewGiverNameChange(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                This phone number is new to the church. The name is saved with it and shown on
+                receipts and contributor lists.
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

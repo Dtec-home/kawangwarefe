@@ -322,4 +322,42 @@ describe('ManualEntryPage', () => {
       expect(toastMock.success).not.toHaveBeenCalled()
     })
   })
+
+  describe('a phone new to the church', () => {
+    async function fillPhoneEntry() {
+      lookupMock.mockResolvedValue({ data: { lookupMemberByPhone: { found: false, needsName: true } } })
+      fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '0733111222' } })
+      const department = screen
+        .getAllByRole('combobox')
+        .find((el) => el.querySelector('option[value="1"]')) as HTMLSelectElement
+      fireEvent.change(department, { target: { value: '1' } })
+      fireEvent.change(document.getElementById('amount-0') as HTMLInputElement, { target: { value: '500' } })
+    }
+
+    afterEach(() => {
+      lookupMock.mockResolvedValue({ data: { lookupMemberByPhone: { found: false } } })
+    })
+
+    it("asks for the giver's name before saving", async () => {
+      render(<ManualEntryPage />)
+      await fillPhoneEntry()
+      fireEvent.click(screen.getByRole('button', { name: /Save Contribution/i }))
+      expect(await screen.findByText("This phone number is new. Enter the giver's name.")).toBeInTheDocument()
+      expect(screen.getByLabelText(/Giver's full name/)).toBeInTheDocument()
+      expect(createMock).not.toHaveBeenCalled()
+    })
+
+    it('sends the name so the new guest is saved with it', async () => {
+      render(<ManualEntryPage />)
+      await fillPhoneEntry()
+      fireEvent.blur(screen.getByLabelText('Phone Number'))
+      fireEvent.change(await screen.findByLabelText(/Giver's full name/), { target: { value: 'Mary Wanjiku' } })
+      fireEvent.click(screen.getByRole('button', { name: /Save Contribution/i }))
+      await waitFor(() => expect(createMock).toHaveBeenCalled())
+      expect(createMock.mock.calls[0][0].variables).toMatchObject({
+        phoneNumber: '0733111222',
+        newGiverName: 'Mary Wanjiku',
+      })
+    })
+  })
 })

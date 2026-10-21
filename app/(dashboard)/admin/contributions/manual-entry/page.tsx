@@ -83,6 +83,9 @@ function ManualContributionPageContent() {
   const [giverName, setGiverName] = useState("");
   const [member, setMember] = useState<Member | null>(null);
   const [isGuest, setIsGuest] = useState(false);
+  /** The phone is new to the church: ask for the giver's name */
+  const [needsName, setNeedsName] = useState(false);
+  const [newGiverName, setNewGiverName] = useState("");
   const [contributions, setContributions] = useState<CategoryAmount[]>([emptyContributionLine()]);
   const [entryType, setEntryType] = useState("envelope");
   const [oldBookNumber, setOldBookNumber] = useState("");
@@ -120,6 +123,7 @@ function ManualContributionPageContent() {
     try {
       const result = await lookupGiver(phoneNumber);
       if (result) {
+        setNeedsName(result.needsName);
         if (result.found && result.member) {
           setMember(result.member);
           setIsGuest(result.member.isGuest);
@@ -141,6 +145,8 @@ function ManualContributionPageContent() {
       setPhoneNumber("");
       setMember(null);
       setIsGuest(false);
+      setNeedsName(false);
+      setNewGiverName("");
     } else {
       setGiverName("");
     }
@@ -152,6 +158,8 @@ function ManualContributionPageContent() {
     setGiverName("");
     setMember(null);
     setIsGuest(false);
+    setNeedsName(false);
+    setNewGiverName("");
     setContributions([emptyContributionLine()]);
     setOldBookNumber("");
     setNotes("");
@@ -177,6 +185,23 @@ function ManualContributionPageContent() {
       return;
     }
 
+    // A phone new to the church needs the giver's name (looked up again here,
+    // as the number may have been typed without leaving the field).
+    let askName = false;
+    if (!walkIn) {
+      try {
+        const looked = await lookupGiver(phoneNumber);
+        askName = !!looked?.needsName;
+      } catch {
+        askName = needsName;
+      }
+      setNeedsName(askName);
+      if (askName && !newGiverName.trim()) {
+        setError("This phone number is new. Enter the giver's name.");
+        return;
+      }
+    }
+
     // Line-item validation
     const validation = validateContributionLines(contributions);
     if (!validation.ok) {
@@ -190,6 +215,8 @@ function ManualContributionPageContent() {
     const submission = {
       phoneNumber: walkIn ? null : phoneNumber.trim(),
       giverName: walkIn ? giverName.trim() : null,
+      // Only for a phone new to the church, so other submissions keep their shape.
+      ...(askName && newGiverName.trim() ? { newGiverName: newGiverName.trim() } : {}),
       contributions: toManualCategoryInputs(cleaned),
       entryType,
       receiptNumber: oldBookNumber.trim() || null,
@@ -330,6 +357,9 @@ function ManualContributionPageContent() {
                 giverName={giverName}
                 onGiverNameChange={setGiverName}
                 onLookup={handlePhoneNumberLookup}
+                needsName={needsName}
+                newGiverName={newGiverName}
+                onNewGiverNameChange={setNewGiverName}
               >
                 {/* Member Display */}
                 {member && (

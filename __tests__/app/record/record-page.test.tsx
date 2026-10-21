@@ -178,6 +178,27 @@ describe('Recorder workspace /record', () => {
     expect(screen.getByTestId('giver-found')).toHaveTextContent('Confirm the name with the giver')
   })
 
+  it("asks for a new giver's name and sends it with the gift", async () => {
+    lookupMock.mockResolvedValue({
+      data: { lookupMemberByPhone: { success: true, found: false, message: 'Not found', giver: null, needsName: true } },
+    })
+    render(<RecordGivingPage />)
+    fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '0733111222' } })
+    fireEvent.click(screen.getByRole('button', { name: /Search/ }))
+    const nameField = await screen.findByLabelText(/Giver's full name/)
+    fillLine(0, '1', '1000')
+
+    fireEvent.click(screen.getByRole('button', { name: /Review & save/ }))
+    await waitFor(() => expect(toastMock.error).toHaveBeenCalledWith("This phone number is new. Enter the giver's name."))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    fireEvent.change(nameField, { target: { value: 'Mary Wanjiku' } })
+    const dialog = await reviewAndConfirm()
+    expect(within(dialog).getByText('Mary Wanjiku')).toBeInTheDocument()
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1))
+    expect(createMock.mock.calls[0][0].variables).toMatchObject({ phoneNumber: '0733111222', newGiverName: 'Mary Wanjiku' })
+  })
+
   it('adds and removes lines with a running total', () => {
     render(<RecordGivingPage />)
     fillLine(0, '1', '500')

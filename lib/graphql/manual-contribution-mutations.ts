@@ -67,6 +67,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
     $notes: String
     $giverName: String
     $idempotencyKey: String
+    $newGiverName: String
   ) {
     createManualMultiContribution(
       contributions: $contributions
@@ -77,6 +78,7 @@ export const CREATE_MANUAL_MULTI_CONTRIBUTION = gql`
       notes: $notes
       giverName: $giverName
       idempotencyKey: $idempotencyKey
+      newGiverName: $newGiverName
     ) {
       success
       message
@@ -126,6 +128,7 @@ export const LOOKUP_MEMBER_BY_PHONE = gql`
         id
         displayName
       }
+      needsName
     }
   }
 `;

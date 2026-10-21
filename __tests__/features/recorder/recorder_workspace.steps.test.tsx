@@ -222,6 +222,7 @@ defineFeature(feature, (test) => {
               phoneNumber: null,
               member: null,
               giver: { __typename: 'MemberLookupGiverType', id: '7', displayName: name },
+              needsName: false,
             },
           },
         },

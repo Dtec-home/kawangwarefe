@@ -114,6 +114,8 @@ export function RecordGiftForm({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [giverName, setGiverName] = useState("");
   const [giver, setGiver] = useState<GiverLookupResult | null>(null);
+  /** Name for a giver whose phone is new to the church */
+  const [newGiverName, setNewGiverName] = useState("");
   const [lines, setLines] = useState<CategoryAmount[]>([emptyContributionLine()]);
   const [recordFor, setRecordFor] = useState(RECORD_FOR_TODAY);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -160,9 +162,13 @@ export function RecordGiftForm({
     setPhoneNumber(phone);
     // A previous lookup no longer matches the typed number.
     setGiver(null);
+    setNewGiverName("");
   };
 
-  const giverLabel = walkIn ? giverName.trim() : giver?.displayName || phoneNumber.trim();
+  const needsName = !walkIn && !!giver?.needsName;
+  const giverLabel = walkIn
+    ? giverName.trim()
+    : (needsName && newGiverName.trim()) || giver?.displayName || phoneNumber.trim();
 
   const handleReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,9 +182,11 @@ export function RecordGiftForm({
         toast.error("Enter the giver's phone number, or choose walk-in");
         return;
       }
-      if (!giver) {
-        const result = await runLookup();
-        if (!result) return;
+      const looked = giver ?? (await runLookup());
+      if (!looked) return;
+      if (looked.needsName && !newGiverName.trim()) {
+        toast.error("This phone number is new. Enter the giver's name.");
+        return;
       }
     }
     const validation = validateContributionLines(lines);
@@ -200,6 +208,8 @@ export function RecordGiftForm({
       contributions: toManualCategoryInputs(confirmedLines),
       phoneNumber: walkIn ? null : phoneNumber.trim(),
       giverName: walkIn ? giverName.trim() : null,
+      // Only for a phone new to the church, so other submissions keep their shape.
+      ...(needsName && newGiverName.trim() ? { newGiverName: newGiverName.trim() } : {}),
       entryType,
       ...transactionDateVariables(recordingFor),
     };
@@ -251,6 +261,7 @@ export function RecordGiftForm({
     setPhoneNumber("");
     setGiverName("");
     setGiver(null);
+    setNewGiverName("");
     setLines([emptyContributionLine()]);
     setConfirmedLines([]);
   };
@@ -321,6 +332,9 @@ export function RecordGiftForm({
               onGiverNameChange={setGiverName}
               onLookup={runLookup}
               lookupLoading={lookupLoading}
+              needsName={needsName}
+              newGiverName={newGiverName}
+              onNewGiverNameChange={setNewGiverName}
             >
               {lookupLoading && (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
