@@ -54,6 +54,8 @@ function makeExpense(overrides: Record<string, unknown> = {}) {
     beneficiaryAccountNumber: "",
     beneficiaryPhoneNumber: "254712345678",
     beneficiaryBankCode: "",
+    campaignId: null,
+    campaignTitle: null,
     kcbDisbursement: null,
     ...overrides,
   };

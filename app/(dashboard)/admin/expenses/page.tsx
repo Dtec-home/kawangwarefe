@@ -87,6 +87,8 @@ interface Expense {
   beneficiaryAccountNumber: string | null;
   beneficiaryPhoneNumber: string | null;
   beneficiaryBankCode: string | null;
+  campaignId?: string | null;
+  campaignTitle?: string | null;
   kcbDisbursement: KcbDisbursement | null;
 }
 
@@ -530,6 +532,7 @@ function EditExpenseDialog({
     setPaymentMethod(expense.paymentMethod || "cash");
     setReferenceNumber(expense.referenceNumber ?? "");
     setPurposeId(expense.purpose?.id ?? "none");
+    setCampaignId(expense.campaignId ?? "");
     setAttachmentUrl(expense.attachmentUrl ?? "");
     setPayoutChannel(expense.payoutChannel || "manual");
     setBeneficiaryAccountNumber(expense.beneficiaryAccountNumber ?? "");

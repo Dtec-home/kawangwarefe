@@ -39,6 +39,8 @@ const EXPENSE_FIELDS = `
   beneficiaryAccountNumber
   beneficiaryPhoneNumber
   beneficiaryBankCode
+  campaignId
+  campaignTitle
   kcbDisbursement {
     id
     status
