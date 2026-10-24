@@ -47,3 +47,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Full-stack e2e (playwright-bdd generated tests and reports)
+.features-gen/
+playwright-report-fullstack/
