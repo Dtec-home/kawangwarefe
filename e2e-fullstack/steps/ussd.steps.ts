@@ -42,9 +42,9 @@ When(
 );
 
 When("the USSD caller presses {string}", async ({ request, world }, key: string) => {
-  const so_far = world.values[KEYS.ussdText];
+  const soFar = world.values[KEYS.ussdText];
   expect(screen(world).responseType, `the session already ended: ${screen(world).text}`).toBe("CON");
-  await press(request, world, so_far ? `${so_far}*${key}` : key);
+  await press(request, world, soFar ? `${soFar}*${key}` : key);
 });
 
 Then("the USSD screen offers {string}", async ({ world }, text: string) => {
