@@ -302,3 +302,45 @@ Then(
     await backend.expectSms(phoneFor(world, who), [first, second], world.smsMark);
   },
 );
+
+// ── leaderboard ───────────────────────────────────────────────────────────
+
+Then("the campaign page's champion leaderboard reads:", async ({ page, world }, table: { hashes(): Record<string, string>[] }) => {
+  await openPublicCampaignPage(page, campaign(world).slug);
+  const rows = page.getByRole("list", { name: "Top champions" }).getByRole("listitem");
+  const expected = table.hashes();
+  await expect(rows).toHaveCount(expected.length);
+  for (const [i, row] of expected.entries()) {
+    const item = rows.nth(i);
+    await expect(item.getByLabel(`Rank ${row.rank}`)).toBeVisible();
+    await expect(item.getByRole("link")).toHaveText(row.champion);
+    await expect(item).toContainText(row.raised);
+    await expect(item).toContainText(row.donors);
+  }
+});
+
+Then("no donor name appears on the public campaign or champion pages:", async ({ page, world }, table: { raw(): string[][] }) => {
+  const names = table.raw().flat();
+  const { slug } = campaign(world);
+  await openPublicCampaignPage(page, slug);
+  const leaderboard = page.getByRole("list", { name: "Top champions" });
+  const championPaths = await leaderboard.getByRole("link").evaluateAll(
+    (links) => links.map((a) => (a as HTMLAnchorElement).getAttribute("href")!),
+  );
+  // Each page is read once what it loads client-side has arrived.
+  const pages: [string, () => Promise<void>][] = [
+    [`/campaigns/${slug}`, () => expect(leaderboard).toBeVisible()],
+    ["/campaigns", () => expect(page.getByText(campaign(world).title).first()).toBeVisible()],
+    ...championPaths.map((path): [string, () => Promise<void>] => [
+      path,
+      () => expect(page.getByTestId("champion-totals")).toBeVisible(),
+    ]),
+  ];
+  expect(championPaths.length).toBeGreaterThan(0);
+  for (const [path, loaded] of pages) {
+    await page.goto(path);
+    await loaded();
+    const text = await page.locator("body").innerText();
+    for (const name of names) expect(text, `${name} is shown on ${path}`).not.toContain(name);
+  }
+});
