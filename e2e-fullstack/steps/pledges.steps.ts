@@ -71,7 +71,7 @@ Given(
       dueDate: nairobiDate(0),
     });
     const yesterday = nairobiDate(-1);
-    backdatePledgeDue(id, yesterday);
+    await backdatePledgeDue(backend, id, yesterday);
     world.values[`due:${name}`] = yesterday;
   },
 );

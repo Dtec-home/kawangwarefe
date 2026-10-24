@@ -116,6 +116,12 @@ export class Backend {
     return response.json();
   }
 
+  /** Move a pledge's due date (the product refuses past dates, so overdue needs this). */
+  async backdatePledge(pledgeId: string, dueDate: string) {
+    const response = await this.request.post(this.url("pledge/backdate/"), { data: { pledgeId, dueDate } });
+    expect(response.ok()).toBeTruthy();
+  }
+
   async blockedRequests() {
     const response = await this.request.get(this.url("blocked/"));
     return (await response.json()).blocked as { method: string; url: string }[];

@@ -3,13 +3,9 @@
  *
  * Setup shortcuts go through the real GraphQL API the way a client would
  * (campaign creation is lane E2E-A's subject, so it is only a shortcut here).
- * The one exception is `backdatePledgeDue`: the product refuses a due date in
- * the past, so an overdue pledge needs its date moved in the e2e database
- * (REQUEST: a /e2e/ endpoint for this, see the lane block in the sprint plan).
+ * `backdatePledgeDue` moves a due date into the past through /e2e/ (the product
+ * refuses past due dates, so an overdue pledge cannot be made any other way).
  */
-
-import { execFileSync } from "node:child_process";
-import path from "node:path";
 
 import { Page, expect } from "@playwright/test";
 
@@ -131,18 +127,9 @@ export function smsDate(isoDate: string): string {
 }
 
 /** Move a pledge's due date into the past, straight in the e2e SQLite database. */
-export function backdatePledgeDue(pledgeId: string, isoDate: string) {
-  const backendDir = process.env.E2E_BACKEND_DIR ?? path.resolve(process.cwd(), "../church_BE");
-  const port = process.env.E2E_BACKEND_PORT ?? "8001";
-  const db = path.join(backendDir, ".e2e", `e2e-${port}.sqlite3`);
-  const script = [
-    "import sqlite3, sys",
-    "c = sqlite3.connect(sys.argv[1], timeout=20)",
-    "n = c.execute('UPDATE fundraising_pledge SET due_date = ? WHERE id = ?', (sys.argv[2], int(sys.argv[3]))).rowcount",
-    "c.commit()",
-    "sys.exit(0 if n == 1 else 3)",
-  ].join("\n");
-  execFileSync("python3", ["-c", script, db, isoDate, pledgeId]);
+/** Make a pledge overdue by moving its due date (through /e2e/pledge/backdate/). */
+export async function backdatePledgeDue(backend: Backend, pledgeId: string, isoDate: string) {
+  await backend.backdatePledge(pledgeId, isoDate);
 }
 
 // ── the screens ────────────────────────────────────────────────────────────
