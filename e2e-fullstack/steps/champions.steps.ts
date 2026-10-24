@@ -438,3 +438,33 @@ Then(
     }
   },
 );
+
+// ── deactivated champions ─────────────────────────────────────────────────
+
+When("staff deactivate champion {string} on the Champions tab", async ({ page, world }, code: string) => {
+  await openChampionsTab(page, world);
+  const row = page.getByRole("table", { name: "Champions" }).getByRole("row").filter({ hasText: code });
+  await row.getByRole("button", { name: "Deactivate" }).click();
+  const confirm = page.getByRole("alertdialog");
+  await expect(confirm).toContainText(`New gifts with code ${code} will no longer be counted for them.`);
+  await confirm.getByRole("button", { name: "Deactivate champion" }).click();
+  await expect(row.getByTestId("champion-status")).toHaveText("Inactive");
+});
+
+Then("the champion page for {string} says the champion was not found", async ({ page, world }, code: string) => {
+  await page.goto(`/campaigns/${campaign(world).slug}/c/${code}`);
+  await expect(page.getByText("We couldn't find that champion")).toBeVisible();
+});
+
+Then(
+  "staff find the KES {int} Pay Bill payment to {string} waiting to be placed",
+  async ({ backend, world }, amount: number, account: string) => {
+    await expect
+      .poll(async () =>
+        (await desk(backend, world).unmatchedPaybill()).some(
+          (t) => t.billRefNumber === account && Number.parseFloat(t.transAmount) === amount,
+        ),
+      )
+      .toBe(true);
+  },
+);

@@ -175,6 +175,15 @@ export class ChampionDesk {
     return data.allContributions.items;
   }
 
+  /** Pay Bill payments staff still have to place (no account matched). */
+  async unmatchedPaybill(): Promise<{ billRefNumber: string; transAmount: string }[]> {
+    const data = await this.as<{ c2bTransactions: { items: { billRefNumber: string; transAmount: string }[] } }>(
+      "treasurer",
+      `query { c2bTransactions(status: "unmatched", pagination: { limit: 100, offset: 0 }) { items { billRefNumber transAmount } } }`,
+    );
+    return data.c2bTransactions.items;
+  }
+
   /** Turns on Welfare numbers and gives `role` the number `identifier`. */
   async giveWelfareNumber(role: string, identifier: string) {
     const welfare = String(this.seed.departments.WELF.id);
