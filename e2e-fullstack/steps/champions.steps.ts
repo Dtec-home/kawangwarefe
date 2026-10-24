@@ -344,3 +344,53 @@ Then("no donor name appears on the public campaign or champion pages:", async ({
     for (const name of names) expect(text, `${name} is shown on ${path}`).not.toContain(name);
   }
 });
+
+// ── champion dashboard ────────────────────────────────────────────────────
+
+When("they open their champion page for the Pay Bill campaign", async ({ page, world }) => {
+  await page.goto("/champion");
+  await page.getByRole("link", { name: `${campaign(world).title} champion page` }).click();
+  await page.waitForURL(/\/champion\/\d+$/);
+});
+
+When("they open champion {string}'s dashboard by its link", async ({ page, world }, code: string) => {
+  const id = world.values[`champion:${code}`];
+  if (!id) throw new Error(`champion ${code} was not set up in this scenario`);
+  await page.goto(`/champion/${id}`);
+});
+
+Then("the champion dashboard shows {string} raised from {int} donor(s)", async ({ page }, raised: string, donors: number) => {
+  const tally = page.getByRole("region", { name: "What you have raised" });
+  await expect(tally).toContainText(raised);
+  await expect(tally.getByText("Donors").locator("xpath=following-sibling::dd")).toHaveText(String(donors));
+});
+
+Then("the champion dashboard lists these donors:", async ({ page }, table: { hashes(): Record<string, string>[] }) => {
+  const list = page.getByRole("list", { name: "Your donors" });
+  const expected = table.hashes();
+  await expect(list.getByTestId("donor-name")).toHaveText(expected.map((row) => row.name));
+  await expect(list.getByTestId("donor-amount")).toHaveText(expected.map((row) => row.amount));
+});
+
+Then("the champion's share kit links to their page {string}", async ({ page, world }, suffix: string) => {
+  await expect(page.getByTestId("champion-link")).toHaveText(
+    new RegExp(`/campaigns/${campaign(world).slug}${suffix.replace(/[/]/g, "\\/")}$`),
+  );
+});
+
+Then("the champion's share kit Pay Bill line ends with {string}", async ({ page }, text: string) => {
+  await expect(page.getByTestId("champion-paybill")).toHaveText(new RegExp(`^Pay Bill \\d+, ${text}$`));
+});
+
+Then("the champion dashboard stays closed to them, showing no donors", async ({ page }) => {
+  // The page has settled once it shows one of its refusal states.
+  await expect(page.getByText(/Champion page not found|Your champion page could not be loaded/)).toBeVisible();
+  await expect(page.getByRole("list", { name: "Your donors" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "What you have raised" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Share kit" })).toHaveCount(0);
+});
+
+Then("they are told the champion page was not found", async ({ page }) => {
+  await expect(page.getByText("Champion page not found")).toBeVisible();
+  await expect(page.getByText("Check your connection")).toHaveCount(0);
+});
