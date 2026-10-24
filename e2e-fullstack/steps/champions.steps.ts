@@ -394,3 +394,47 @@ Then("they are told the champion page was not found", async ({ page }) => {
   await expect(page.getByText("Champion page not found")).toBeVisible();
   await expect(page.getByText("Check your connection")).toHaveCount(0);
 });
+
+// ── champion digest SMS ───────────────────────────────────────────────────
+
+const DIGEST = "came through your code";
+
+async function digestsTo(backend: Backend, world: World, role: string) {
+  return (await backend.outbox(phoneFor(world, role))).filter((m) => m.body.includes(DIGEST));
+}
+
+When("the hourly champion digest job runs", async ({ backend, world }) => {
+  world.values.digestsSent = String((await backend.runJob("champion-digests")).sent);
+});
+
+Then("the champion digest job sends nothing", async ({ world }) => {
+  expect(world.values.digestsSent).toBe("0");
+});
+
+Then(
+  "the {word} has received {int} champion digest SMS(s)",
+  async ({ backend, world }, role: string, count: number) => {
+    await expect.poll(async () => (await digestsTo(backend, world, role)).length).toBe(count);
+  },
+);
+
+Then(
+  "the {word}'s champion digest reads {string}",
+  async ({ backend, world, baseURL }, role: string, text: string) => {
+    // <dashboard> is the champion's dashboard on the site the backend links to (this app).
+    const code = text.match(/your code (\w+)/)?.[1] ?? "";
+    const expected = text.replace("<dashboard>", `${baseURL}/champion/${world.values[`champion:${code}`]}`);
+    await expect.poll(async () => (await digestsTo(backend, world, role)).map((m) => m.body)).toEqual([expected]);
+  },
+);
+
+Then(
+  "no champion digest names a donor:",
+  async ({ backend, world }, table: { raw(): string[][] }) => {
+    const bodies = (await backend.outbox()).filter((m) => m.body.includes(DIGEST)).map((m) => m.body);
+    expect(bodies.length).toBeGreaterThan(0);
+    for (const name of table.raw().flat()) {
+      for (const body of bodies) expect(body, `digest names ${name}`).not.toContain(name);
+    }
+  },
+);
