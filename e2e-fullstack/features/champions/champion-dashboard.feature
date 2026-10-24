@@ -29,9 +29,8 @@ Feature: A champion's own dashboard
     Then the champion dashboard stays closed to them, showing no donors
     And no request left the machine
 
-  # REQUEST (E2E-C): championDashboard refuses with a GraphQL error, so the page
-  # says "could not be loaded. Check your connection" instead of "not found".
-  @fixme
+  # Was @fixme (E2E-C REQUEST 1): fixed in ChampionDashboardView, which now
+  # reads the server's refusal as "not found".
   Scenario: Another member is told the champion page was not found
     When the member signs in to look after champions
     And they open champion "JOHN"'s dashboard by its link
