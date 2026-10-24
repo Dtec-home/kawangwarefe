@@ -221,3 +221,84 @@ Then(
     await expect(card.getByTestId("champion-status")).toHaveText(status);
   },
 );
+
+// ── giving through a champion ─────────────────────────────────────────────
+
+Given(
+  "staff have made the {word} champion {string} of the Pay Bill campaign",
+  async ({ backend, world }, role: string, code: string) => {
+    const champion = await desk(backend, world).inviteChampion(campaign(world).id, phoneFor(world, role), code);
+    world.values[`champion:${code}`] = champion.id;
+  },
+);
+
+Then(
+  "staff see KES {int} raised through champion {string} from {int} donor(s)",
+  async ({ backend, world }, amount: number, code: string, donors: number) => {
+    await expect
+      .poll(async () => {
+        const champion = await desk(backend, world).champion(campaign(world).id, code);
+        return [Number.parseFloat(champion.raised), champion.donorCount];
+      })
+      .toEqual([amount, donors]);
+  },
+);
+
+When("a visitor opens champion {string}'s page", async ({ page, world }, code: string) => {
+  await page.goto(`/campaigns/${campaign(world).slug}/c/${code}`);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Raised by");
+});
+
+Then("the champion page is headed {string}", async ({ page }, heading: string) => {
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
+});
+
+Then("the champion page tells givers {string}", async ({ page }, notice: string) => {
+  await expect(page.getByTestId("champion-visibility-notice")).toHaveText(notice);
+});
+
+Then("the champion page shows the Pay Bill account {string}", async ({ page }, account: string) => {
+  await expect(page.getByTestId("paybill-account")).toHaveText(account);
+});
+
+When(
+  "they give KES {int} through the champion page from {string}",
+  async ({ page, backend, world }, amount: number, phone: string) => {
+    const card = page.locator("#give");
+    await card.locator("#phoneNumber").fill(phone.replace(/^254/, ""));
+    await card.locator("#campaign-amount").fill(String(amount));
+    world.smsMark = await backend.lastSmsId();
+    await card.getByRole("button", { name: "Send M-Pesa prompt" }).click();
+    await page.waitForURL(/\/confirmation/);
+    world.values.stkPhone = phone;
+  },
+);
+
+Then("the M-Pesa prompt on {string} is for account {string}", async ({ backend }, phone: string, account: string) => {
+  await expect
+    .poll(async () => (await backend.stkRequests(phone)).map((r) => r.accountReference))
+    .toContain(account);
+});
+
+When("they approve the champion gift's M-Pesa prompt on their phone", async ({ backend, world }) => {
+  await backend.respondToStk(world.values.stkPhone, "pay");
+});
+
+Then(
+  "the champion page shows {string} raised from {string}",
+  async ({ page }, raised: string, donors: string) => {
+    const totals = page.getByTestId("champion-totals");
+    await expect(async () => {
+      await page.reload();
+      await expect(totals).toContainText(raised, { timeout: 3_000 });
+    }).toPass({ timeout: 30_000 });
+    await expect(totals).toContainText(donors);
+  },
+);
+
+Then(
+  "{string} gets a receipt SMS saying {string} and {string}",
+  async ({ backend, world }, who: string, first: string, second: string) => {
+    await backend.expectSms(phoneFor(world, who), [first, second], world.smsMark);
+  },
+);
