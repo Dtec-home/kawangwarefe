@@ -8,6 +8,7 @@
 "use client";
 
 import Link from "next/link";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useQuery } from "@apollo/client/react";
 import { ArrowLeft, Clock, Info, RefreshCw, SearchX } from "lucide-react";
 
@@ -37,6 +38,9 @@ export function ChampionDashboardView({ championId }: { championId: string }) {
     { variables: { championId }, skip: !championId }
   );
   const dashboard = data?.championDashboard;
+  // The server refuses someone else's (or an unknown) champion page with a
+  // GraphQL error; that is "not found" to the member, not a connection problem.
+  const refused = !!error && CombinedGraphQLErrors.is(error);
 
   return (
     <div className="space-y-6">
@@ -49,7 +53,7 @@ export function ChampionDashboardView({ championId }: { championId: string }) {
 
       {loading && !data ? (
         <DashboardSkeleton />
-      ) : error && !data ? (
+      ) : error && !refused && !data ? (
         <Empty
           icon={RefreshCw}
           title="Your champion page could not be loaded"

@@ -11,6 +11,7 @@ import { render, screen, waitFor, fireEvent, cleanup, within } from '@testing-li
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing/react'
 import React from 'react'
 import { vi } from 'vitest'
+import { GraphQLError } from 'graphql'
 
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
 
@@ -84,6 +85,8 @@ function donor(rank: number, name: string, amount: string) {
 
 interface World {
   champion: ReturnType<typeof champion> | null
+  /** The server refuses the page (someone else's or an unknown id), as it really does */
+  refused?: boolean
   donors: ReturnType<typeof donor>[]
   championships: ReturnType<typeof champion>[]
   campaigns: Record<string, unknown>[]
@@ -94,7 +97,9 @@ function mocks(world: World): MockedResponse[] {
   return [
     {
       request: { query: CHAMPION_DASHBOARD, variables: { championId: CHAMPION_ID } },
-      result: () => ({
+      result: () => world.refused ? {
+        errors: [new GraphQLError("Champion not found, or you are not allowed to see this champion's dashboard.")],
+      } : ({
         data: {
           championDashboard: world.champion
             ? { __typename: 'ChampionDashboardType', champion: world.champion, donors: world.donors }
@@ -284,6 +289,18 @@ defineFeature(feature, (test) => {
     whenOpenDashboard(when)
     then('she is told the champion page was not found', async () => {
       expect(await screen.findByText('Champion page not found')).toBeInTheDocument()
+    })
+  })
+
+  test("Someone else's champion page is refused as not found", ({ given, when, then }) => {
+    given("the server refuses the champion page", () => {
+      world.champion = null
+      world.refused = true
+    })
+    whenOpenDashboard(when)
+    then('she is told the champion page was not found, not to check her connection', async () => {
+      expect(await screen.findByText('Champion page not found')).toBeInTheDocument()
+      expect(screen.queryByText(/could not be loaded/)).not.toBeInTheDocument()
     })
   })
 

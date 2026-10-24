@@ -39,6 +39,11 @@ Feature: Champion dashboard
     When she opens her champion dashboard
     Then she is told the champion page was not found
 
+  Scenario: Someone else's champion page is refused as not found
+    Given the server refuses the champion page
+    When she opens her champion dashboard
+    Then she is told the champion page was not found, not to check her connection
+
   Scenario: A member sees their champion pages
     Given "Jane Wanjiku" is an active champion of "New Church Roof" with code "JANE"
     When she opens her champion pages
