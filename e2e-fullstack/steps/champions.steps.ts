@@ -143,3 +143,81 @@ Then(
       .toBe(true);
   },
 );
+
+// ── signing in as someone else in the same browser ────────────────────────
+
+/** Signs out whoever is signed in (tokens live in localStorage), then signs `role` in. */
+async function signInAs(page: Page, backend: Backend, world: World, role: string) {
+  await page.context().clearCookies();
+  if (page.url().startsWith("http")) await page.evaluate(() => window.localStorage.clear());
+  await signInThroughUi(page, backend, phoneFor(world, role));
+}
+
+When("the {word} signs in to look after champions", async ({ page, backend, world }, role: string) => {
+  await signInAs(page, backend, world, role);
+});
+
+// ── Champions tab (staff) ─────────────────────────────────────────────────
+
+async function openChampionsTab(page: Page, world: World) {
+  await page.goto(`/admin/campaigns/${campaign(world).id}?tab=champions`);
+  await expect(page.getByRole("button", { name: "Invite a champion" })).toBeEnabled();
+}
+
+When(
+  "staff invite the {word} as champion {string} on the campaign's Champions tab",
+  async ({ page, world }, role: string, code: string) => {
+    await openChampionsTab(page, world);
+    await page.getByRole("button", { name: "Invite a champion" }).click();
+    const dialog = page.getByRole("dialog", { name: "Invite a champion" });
+    await dialog.locator("#phoneNumber").fill(phoneFor(world, role).replace(/^254/, ""));
+    await dialog.locator("#invite-champion-code").fill(code);
+    await expect(dialog).toContainText(`Givers will use M-Pesa account ${campaign(world).code} ${code}.`);
+    await dialog.getByRole("button", { name: "Invite", exact: true }).click();
+    await expect(dialog).toBeHidden();
+  },
+);
+
+When("staff approve champion {string} on the Champions tab", async ({ page, world }, code: string) => {
+  await openChampionsTab(page, world);
+  const row = page.getByRole("table", { name: "Champions" }).getByRole("row").filter({ hasText: code });
+  await row.getByRole("button", { name: "Approve" }).click();
+  await expect(row.getByTestId("champion-status")).toHaveText("Active");
+});
+
+Then(
+  "the Champions tab lists {string} with code {string} as {string}",
+  async ({ page, world }, name: string, code: string, status: string) => {
+    if (!page.url().includes(`/admin/campaigns/${campaign(world).id}`)) await openChampionsTab(page, world);
+    const row = page.getByRole("row", { name, exact: true });
+    await expect(row.getByRole("cell").nth(1)).toHaveText(code);
+    await expect(row.getByTestId("champion-status")).toHaveText(status);
+  },
+);
+
+// ── /champion (members) ───────────────────────────────────────────────────
+
+When(
+  "they ask to champion the Pay Bill campaign with code {string}",
+  async ({ page, world }, code: string) => {
+    await page.goto("/champion");
+    await page.getByRole("button", { name: "Become a champion" }).click();
+    const dialog = page.getByRole("dialog", { name: "Become a champion" });
+    await dialog.locator("#champion-campaign").click();
+    await page.getByRole("option", { name: campaign(world).title }).click();
+    await dialog.locator("#champion-code").fill(code);
+    await expect(dialog).toContainText(`Givers will use M-Pesa account ${campaign(world).code} ${code}.`);
+    await dialog.getByRole("button", { name: "Send request" }).click();
+    await expect(dialog.getByText("Waiting for approval")).toBeVisible();
+    await dialog.getByRole("button", { name: "Done" }).click();
+  },
+);
+
+Then(
+  "their champion pages show code {string} as {string}",
+  async ({ page }, code: string, status: string) => {
+    if (!page.url().endsWith("/champion")) await page.goto("/champion");
+    const card = page.getByRole("list", { name: "My champion pages" }).getByRole("listitem").filter({ hasText: `Code ${code}` });
+    await expect(card.getByTestId("champion-status")).toHaveText(status);
+  },
+);
