@@ -21,7 +21,10 @@ If that department has an active campaign, a "Fundraising campaign (optional)" b
 The gift is recorded in the department as normal, tagged with the campaign. The giver's SMS receipt adds "Towards: <campaign>" and a note that contributors are listed by name and amount in the church WhatsApp group.
 
 **Giving through a champion?**
-Champion codes can't be entered at the desk yet. Tag the campaign as above; the gift counts for the campaign, but not for the champion.
+After choosing the campaign, type the champion's code in the box next to it (for example JOHN). If the code isn't an active champion of that campaign, the entry is refused with a message, so check the code with the giver.
+
+**A phone number the church hasn't seen before?**
+You'll be asked for the giver's full name. It is saved with the number, so their receipts and the campaign's contributor list show their name instead of "Guest Member".
 
 **Tagged the wrong campaign?**
 You can't edit an entry. Ask for it to be voided and record it again (see "Reprinting, resending and requesting a void").

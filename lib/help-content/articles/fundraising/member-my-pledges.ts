@@ -20,6 +20,9 @@ Under "Pledge to give later", enter your name, phone, amount and an optional "gi
 **Pay towards your pledge**
 Tap "Pay balance" on the pledge to open the campaign's give page (or the normal Give page for a department pledge), or just give as usual (M-Pesa prompt, Pay Bill with the campaign's account code, or at the desk). Every gift to that campaign pays your oldest pledge to it first. For a department pledge, an ordinary gift to that department counts. You don't need to mention the pledge.
 
+**On any phone (USSD)**
+Dial the church USSD code and choose 4. Campaigns & Pledges. "2. My pledges" shows each balance and lets you pay it now; "3. Make a pledge" records a new pledge to a campaign.
+
 **Your list**
 Each pledge shows Pledged, Paid and Balance, the due date, and its status: Open, Overdue (past the due date with money still to pay) or Fulfilled (paid in full).
 

@@ -20,7 +20,10 @@ Open Campaigns (/campaigns) on the church website, or use a link someone shared 
 Use the church Pay Bill number shown on the page, and type the campaign's account code as the account number, for example BUILD. If you are giving through a champion, add their code: BUILD JOHN.
 
 **Option 3: At church**
-Give cash or an envelope at the desk and ask the recorder to put it towards the campaign.
+Give cash or an envelope at the desk and ask the recorder to put it towards the campaign (and, if a champion invited you, give the recorder their code).
+
+**Option 4: USSD (any phone)**
+Dial the church USSD code and choose 4. Campaigns & Pledges, then 1. Give to a campaign. Pick the campaign, enter the amount (and a champion code if you have one), confirm, then enter your M-Pesa PIN.
 
 **Your receipt**
 Your SMS receipt says which campaign your gift went towards ("Towards: ..."). It also reminds you that contributors to the campaign are listed by name and amount in the church WhatsApp group. If you gave through a champion, it tells you that the champion can see your name and amount.
