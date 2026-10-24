@@ -324,6 +324,8 @@ Then("no donor name appears on the public campaign or champion pages:", async ({
   const { slug } = campaign(world);
   await openPublicCampaignPage(page, slug);
   const leaderboard = page.getByRole("list", { name: "Top champions" });
+  // evaluateAll does not wait, and the leaderboard loads client-side.
+  await expect(leaderboard.getByRole("link").first()).toBeVisible();
   const championPaths = await leaderboard.getByRole("link").evaluateAll(
     (links) => links.map((a) => (a as HTMLAnchorElement).getAttribute("href")!),
   );
