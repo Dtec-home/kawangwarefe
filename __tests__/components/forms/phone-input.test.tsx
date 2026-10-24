@@ -85,10 +85,10 @@ describe('PhoneInput', () => {
     expect(screen.getByText(/9-digit m-pesa number/i)).toBeInTheDocument()
   })
 
-  it('the input has maxLength=9', () => {
+  it('has no maxLength, so a pasted 0… or +254… number is not cut before it is cleaned', () => {
     render(<PhoneInputWrapper />)
-    const input = screen.getByRole('textbox')
-    expect(input).toHaveAttribute('maxLength', '9')
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    expect(input).not.toHaveAttribute('maxLength')
   })
 
   it('strips non-digit characters on input', () => {
@@ -110,5 +110,16 @@ describe('PhoneInput', () => {
     const input = screen.getByRole('textbox') as HTMLInputElement
     fireEvent.change(input, { target: { value: '7987654321234' } })
     expect(input.value).toBe('798765432')
+  })
+
+  it.each([
+    ['0711222333', '711222333'],
+    ['+254 711 222 333', '711222333'],
+    ['254711222333', '711222333'],
+  ])('keeps a pasted or autofilled %s as %s (no early length cut)', (pasted, kept) => {
+    render(<PhoneInputWrapper />)
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    fireEvent.change(input, { target: { value: pasted } })
+    expect(input.value).toBe(kept)
   })
 })
