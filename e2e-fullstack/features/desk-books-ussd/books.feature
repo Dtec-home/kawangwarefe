@@ -42,10 +42,8 @@ Feature: A campaign's own books, from first gift to close-out
     Then the finance integrity job reports no campaign problems
     And no request left the machine
 
-  # REQUEST (lane E2E-D): components/ui/dialog.tsx keeps sm:overflow-visible and
-  # sm:max-h-none, so the expense page's max-h-[90vh] overflow-y-auto only works
-  # below 640px. On a 1280x720 desktop the dialog's bottom is off screen.
-  @fixme
+  # Was @fixme (E2E-D REQUEST 1): the dialog base dropped its height cap on
+  # desktop; fixed in components/ui/dialog.tsx.
   Scenario: The expense form fits a laptop screen
     Given I am signed in as the treasurer
     When the treasurer opens the expense form on a 1280 by 720 desktop screen

@@ -5,9 +5,9 @@
  *
  * `value` is a campaign id or "" for none. Renders nothing until a fund is
  * chosen, when the fund has no campaigns, or when the viewer may not list
- * campaigns. Closed campaigns show (with their status) but can't be newly
- * chosen; the campaign an expense is already charged to always shows, so the
- * edit dialog's pre-fill displays.
+ * campaigns. Closed campaigns can still be chosen (late bills); drafts and
+ * campaigns awaiting approval can't. The campaign an expense is already
+ * charged to always shows, so the edit dialog's pre-fill displays.
  */
 
 "use client";
@@ -91,7 +91,7 @@ export const ExpenseCampaignSelect: React.FC<ExpenseCampaignSelectProps> = ({ ca
         </SelectContent>
       </Select>
       <p className="text-xs text-muted-foreground">
-        The spend shows on that campaign&apos;s statement. Closed campaigns can&apos;t take new expenses.
+        The spend shows on that campaign&apos;s statement. A closed campaign can still take a late bill.
       </p>
     </div>
   );

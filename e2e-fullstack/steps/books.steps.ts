@@ -19,12 +19,10 @@ Given(
 );
 
 /**
- * The expense dialog does not scroll on screens 640px wide or more (REQUEST in
- * the lane's progress block): on a 720px-high desktop its bottom, with the
- * "Record Expense" button, is off screen. The journeys use a taller desktop
- * screen; "@fixme" scenario in books.feature pins the bug.
+ * The expense dialog scrolls at every width (the dialog base no longer drops
+ * its height cap on desktop), so the journeys use the default laptop screen;
+ * "The expense form fits a laptop screen" in books.feature pins it.
  */
-const TALL_DESKTOP = { width: 1280, height: 1400 };
 
 async function openExpenseDialog(page: Page, backend: Backend) {
   await dismissTours(backend, page, ["admin_expenses_v1"]);
@@ -38,7 +36,6 @@ async function openExpenseDialog(page: Page, backend: Backend) {
 When(
   "the treasurer records a paid expense of {int} to {string} charged to the desk campaign",
   async ({ page, backend, world }, amount: number, payee: string) => {
-    await page.setViewportSize(TALL_DESKTOP);
     const dialog = await openExpenseDialog(page, backend);
     await pickOption(page, "exp-fund", "Building Fund");
     await page.locator("#exp-amount").fill(String(amount));

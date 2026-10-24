@@ -16,7 +16,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./setupTests.ts'],
-    exclude: ['**/node_modules/**', '**/e2e/**'],
+    // e2e/, e2e-fullstack/ and the generated .features-gen/ are Playwright suites.
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/e2e-fullstack/**', '**/.features-gen/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

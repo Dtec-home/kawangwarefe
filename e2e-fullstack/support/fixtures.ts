@@ -16,11 +16,12 @@ export interface World {
 }
 
 export const test = base.extend<{ backend: Backend; world: World }>({
-  backend: async ({ request }, use) => {
-    await use(new Backend(request));
+  // Playwright's "use" callback, renamed so the React hooks lint rule leaves it alone.
+  backend: async ({ request }, provide) => {
+    await provide(new Backend(request));
   },
-  world: async ({}, use) => {
-    await use({ smsMark: 0, values: {} });
+  world: async ({}, provide) => {
+    await provide({ smsMark: 0, values: {} });
   },
 });
 
