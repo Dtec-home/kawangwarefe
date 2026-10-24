@@ -150,8 +150,12 @@ Then(
 When(
   "I cancel my pledge of {string} to {string} giving the reason {string}",
   async ({ page }, pledged: string, target: string, reason: string) => {
-    await myPledgeCard(page, target, pledged).getByRole("button", { name: "Cancel pledge" }).click();
     const dialog = page.getByRole("dialog", { name: "Cancel this pledge?" });
+    // After a refused reason the dialog is still open: give the new reason there.
+    if (!(await dialog.isVisible())) {
+      await myPledgeCard(page, target, pledged).getByRole("button", { name: "Cancel pledge" }).click();
+    }
+    await expect(dialog).toContainText(pledged);
     await dialog.getByLabel("Reason").fill(reason);
     await dialog.getByRole("button", { name: "Cancel pledge" }).click();
   },
