@@ -38,6 +38,8 @@ interface Contribution {
   transactionDate: string | null;
   notes: string | null;
   manualReceiptNumber?: string | null;
+  /** System receipt number (YYYYMMDD-NNNN), shared by a giving event's lines */
+  receiptNumber?: string | null;
   contributionGroupId?: string | null;
   routedGroupName?: string | null;
   purposeName?: string | null;
@@ -142,6 +144,18 @@ interface AttachBookReceiptData {
   };
 }
 
+/** A system receipt number linking to the printable receipt page. */
+function ReceiptNumberLink({ number }: { number: string }) {
+  return (
+    <Link
+      href={`/receipts/${encodeURIComponent(number)}`}
+      className="font-mono text-primary underline-offset-4 hover:underline"
+    >
+      {number}
+    </Link>
+  );
+}
+
 /**
  * Dialog to attach/update the church's physical book receipt number on a
  * contribution (Ticket 8). Calls attachBookReceiptNumber and refetches the list.
@@ -180,7 +194,7 @@ function BookReceiptDialog({
         variables: { contributionId: contribution.id, receiptNumber: trimmed },
       });
       if (data?.attachBookReceiptNumber.success) {
-        toast.success("Book receipt number saved");
+        toast.success("Old book number saved");
         onSaved();
         onOpenChange(false);
       } else {
@@ -195,10 +209,10 @@ function BookReceiptDialog({
     <Dialog open={open} onOpenChange={(v) => { if (!v) setLastId(null); onOpenChange(v); }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Book Receipt Number</DialogTitle>
+          <DialogTitle>Old book receipt number</DialogTitle>
           <DialogDescription>
-            Record the church's physical book receipt number for reconciling
-            against paper records.
+            Record the old paper receipt book number for reconciling against
+            paper records. The system receipt number is not changed.
             {contribution?.mpesaTransaction?.mpesaReceiptNumber && (
               <span className="block mt-1">
                 M-Pesa: <span className="font-mono">{contribution.mpesaTransaction.mpesaReceiptNumber}</span>
@@ -207,11 +221,11 @@ function BookReceiptDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="bookReceipt">Book Receipt #</Label>
+          <Label htmlFor="bookReceipt">Old book no.</Label>
           <Input
             id="bookReceipt"
             value={value}
-            placeholder="e.g. MB-1003"
+            placeholder="e.g. 1043"
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
           />
@@ -746,6 +760,12 @@ export default function ContributionsPage() {
                               : 'Pending'}
                           </span>
                         </div>
+                        {rep.receiptNumber && (
+                          <div className="text-xs" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-muted-foreground">Receipt No.: </span>
+                            <ReceiptNumberLink number={rep.receiptNumber} />
+                          </div>
+                        )}
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="font-mono">{rep.member.phoneNumber}</span>
                           {rep.mpesaTransaction?.mpesaReceiptNumber && (
@@ -757,7 +777,7 @@ export default function ContributionsPage() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <span>
-                            Book #:{" "}
+                            Old book no.:{" "}
                             {rep.manualReceiptNumber
                               ? <span className="font-mono">{rep.manualReceiptNumber}</span>
                               : <span>—</span>}
@@ -766,7 +786,7 @@ export default function ContributionsPage() {
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2"
-                            aria-label={rep.manualReceiptNumber ? "Edit book receipt number" : "Add book receipt number"}
+                            aria-label={rep.manualReceiptNumber ? "Edit old book number" : "Add old book number"}
                             onClick={() => setBookReceiptTarget(rep)}
                           >
                             <Pencil className="h-3 w-3" />
@@ -811,6 +831,7 @@ export default function ContributionsPage() {
                 <table className="w-full">
                   <thead className="sticky top-0 z-10 bg-card [&_th]:bg-card [&_tr]:shadow-[inset_0_-1px_0_0_var(--border)]">
                     <tr className="border-b">
+                      <th className="text-left p-3 font-medium">Receipt No.</th>
                       <th className="text-left p-3 font-medium">Date</th>
                       <th className="text-left p-3 font-medium">Member</th>
                       <th className="text-left p-3 font-medium">Phone</th>
@@ -822,8 +843,8 @@ export default function ContributionsPage() {
                       <th className="text-left p-3 font-medium">Group</th>
                       <th className="text-right p-3 font-medium">Amount</th>
                       <th className="text-center p-3 font-medium">Status</th>
-                      <th className="text-left p-3 font-medium">Receipt</th>
-                      <th className="text-left p-3 font-medium">Book Receipt #</th>
+                      <th className="text-left p-3 font-medium">M-Pesa code</th>
+                      <th className="text-left p-3 font-medium">Old book no.</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -837,6 +858,13 @@ export default function ContributionsPage() {
                             className={`border-b hover:bg-muted/60 ${group.isSplit ? "cursor-pointer" : ""}`}
                             onClick={() => group.isSplit && toggleGroup(group.groupId)}
                           >
+                            <td className="p-3 text-sm whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                              {rep.receiptNumber ? (
+                                <ReceiptNumberLink number={rep.receiptNumber} />
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
                             <td className="p-3 text-sm">
                               {rep.transactionDate
                                 ? new Date(rep.transactionDate).toLocaleDateString('en-GB', {
@@ -926,7 +954,7 @@ export default function ContributionsPage() {
                                   variant="ghost"
                                   size="sm"
                                   className="h-7 px-2"
-                                  aria-label={rep.manualReceiptNumber ? "Edit book receipt number" : "Add book receipt number"}
+                                  aria-label={rep.manualReceiptNumber ? "Edit old book number" : "Add old book number"}
                                   onClick={() => setBookReceiptTarget(rep)}
                                 >
                                   <Pencil className="h-3 w-3" />
@@ -936,6 +964,7 @@ export default function ContributionsPage() {
                           </tr>
                           {group.isSplit && isExpanded && group.contributions.map((c) => (
                             <tr key={c.id} className="border-b bg-muted">
+                              <td />
                               <td />
                               <td />
                               <td />

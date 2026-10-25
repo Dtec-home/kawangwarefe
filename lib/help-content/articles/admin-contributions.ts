@@ -25,12 +25,13 @@ Click Clear Filters to reset everything back to defaults. On mobile, tap Show/Hi
 If you're a group admin (and not staff or a department/category admin), you instead see a "My Group" selector scoped to the groups you administer, and the summary cards are hidden.
 
 **The contributions list**
-Each row shows the date, member (with member number if known), phone number, department, purpose, group, amount, status, M-Pesa receipt number, and — if the department tracks per-member identifiers — a "Dept. Member #" column.
+Each row shows the system Receipt No. (click it to open the printable receipt), date, member (with member number if known), phone number, department, purpose, group, amount, status, M-Pesa code, and — if the department tracks per-member identifiers — a "Dept. Member #" column.
 
 A single contribution that was automatically split across multiple departments (from one M-Pesa prompt) is shown as one grouped row with the combined total; click it to expand and see each split line's department/purpose and amount.
 
-**Book Receipt #**
-This column is separate from the M-Pesa receipt number — it's for recording the church's own physical receipt book number, so you can cross-check the system against paper records. Click the pencil icon on any row to add or update it; a receipt number is required to save.
+**Receipt No. and Old book no.**
+Every completed giving event gets a system receipt number automatically, in the form YYYYMMDD-NNNN (e.g. 20260829-0017); lines of the same gift share it. It can't be edited — mistakes are corrected by voiding the receipt (see "Receipts register, voids and void requests").
+The "Old book no." column is only for matching a gift to an old paper receipt book. Click the pencil icon on a row to add or update it; the system receipt number is not changed.
 
 **Recording a new contribution**
 Click Manual Entry (top right) to open the Manual Contribution Entry form for envelope, cash, or other manual contributions — see the "Recording a manual contribution" article for details.

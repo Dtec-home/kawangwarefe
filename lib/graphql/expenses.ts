@@ -39,6 +39,8 @@ const EXPENSE_FIELDS = `
   beneficiaryAccountNumber
   beneficiaryPhoneNumber
   beneficiaryBankCode
+  campaignId
+  campaignTitle
   kcbDisbursement {
     id
     status
@@ -110,6 +112,7 @@ export const CREATE_EXPENSE = gql`
     $beneficiaryAccountNumber: String
     $beneficiaryPhoneNumber: String
     $beneficiaryBankCode: String
+    $campaignId: ID
   ) {
     createExpense(
       categoryId: $categoryId
@@ -126,6 +129,7 @@ export const CREATE_EXPENSE = gql`
       beneficiaryAccountNumber: $beneficiaryAccountNumber
       beneficiaryPhoneNumber: $beneficiaryPhoneNumber
       beneficiaryBankCode: $beneficiaryBankCode
+      campaignId: $campaignId
     ) {
       success
       message
@@ -151,6 +155,7 @@ export const UPDATE_EXPENSE = gql`
     $beneficiaryAccountNumber: String
     $beneficiaryPhoneNumber: String
     $beneficiaryBankCode: String
+    $campaignId: ID
   ) {
     updateExpense(
       id: $id
@@ -166,6 +171,7 @@ export const UPDATE_EXPENSE = gql`
       beneficiaryAccountNumber: $beneficiaryAccountNumber
       beneficiaryPhoneNumber: $beneficiaryPhoneNumber
       beneficiaryBankCode: $beneficiaryBankCode
+      campaignId: $campaignId
     ) {
       success
       message

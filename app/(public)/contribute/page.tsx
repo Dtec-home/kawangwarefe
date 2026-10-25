@@ -1,7 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ContributionForm } from "@/components/forms/contribution-form";
+import { CampaignGiveSlot } from "@/components/campaigns/give/campaign-give-slot";
 import { Navigation } from "@/components/landing/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { MemberLayout } from "@/components/layouts/member-layout";
@@ -86,7 +88,12 @@ export default function ContributePage() {
           </div>
 
           <div data-tour="contribution-form" className="animate-slide-up">
-            <ContributionForm onSuccess={handleSuccess} />
+            {/* fundraising-hook: ?campaign=<slug> gives to one campaign (S1-UI-B) */}
+            <Suspense fallback={<ContributionForm onSuccess={handleSuccess} />}>
+              <CampaignGiveSlot>
+                <ContributionForm onSuccess={handleSuccess} />
+              </CampaignGiveSlot>
+            </Suspense>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-slide-up">

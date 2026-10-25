@@ -25,6 +25,7 @@ export const CHECK_PAYMENT_STATUS = gql`
         amount
         status
         transactionDate
+        receiptNumber
         member {
           id
           fullName
@@ -59,6 +60,7 @@ export const GET_CONTRIBUTIONS_BY_CHECKOUT_ID = gql`
       purposeName
       departmentMemberIdentifier
       contributionGroupId
+      receiptNumber
       member {
         id
         fullName

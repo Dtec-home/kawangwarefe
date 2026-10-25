@@ -31,6 +31,8 @@ function renderFields(overrides: Partial<Parameters<typeof PayoutChannelFields>[
     beneficiaryPhoneNumber: "",
     setBeneficiaryPhoneNumber: vi.fn(),
     beneficiaryBankCode: "",
+    campaignId: null,
+    campaignTitle: null,
     setBeneficiaryBankCode: vi.fn(),
     ...overrides,
   };

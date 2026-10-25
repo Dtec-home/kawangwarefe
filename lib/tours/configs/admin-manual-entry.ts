@@ -5,7 +5,7 @@
  * Walks a staff/admin user through recording a contribution that wasn't
  * paid via the M-Pesa till prompt (envelope, cash, or another manual
  * method): identifying the giver, entering department/purpose/amount
- * lines, the auto-assigned book receipt number, and the save actions.
+ * lines, the optional old book receipt number, and the save actions.
  */
 
 import { createTourConfig } from "../tour-configs";
@@ -34,16 +34,16 @@ export const ADMIN_MANUAL_ENTRY_TOUR_CONFIG = createTourConfig([
   },
   {
     element: '[data-tour="manual-entry-receipt"]',
-    title: "Book Receipt Number",
+    title: "Old Book Receipt Number",
     description:
-      "Leave this blank to use the next auto-assigned book receipt number shown, or type your own to override it.",
+      "A receipt number is issued automatically when you save. Only type a number here if a paper receipt book was also used.",
     side: "top",
   },
   {
     element: '[data-tour="manual-entry-actions"]',
     title: "Save & Next Steps",
     description:
-      "Save Contribution records the entry. Add Another appears after a successful save so you can log the next one quickly. View All Contributions and Receipt Book Settings are shortcuts from here too.",
+      "Save Contribution records the entry. Add Another appears after a successful save so you can log the next one quickly. The receipt number is shown after saving, and View All Contributions takes you back to the list.",
     side: "top",
   },
 ]);

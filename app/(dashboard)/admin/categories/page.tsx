@@ -48,9 +48,12 @@ import {
   FolderOpen,
   ListChecks,
   Wallet,
+  Columns3,
 } from "lucide-react";
+import { StatementColumnsPreviewDialog } from "@/components/treasury/statement-columns-preview";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 
 type Audience = "all" | "adult" | "children";
 type RoutingMode = "TOP_LEVEL" | "AUTO_MEMBER_GROUP" | "REQUIRES_PURPOSE" | "OPTIONAL_DETAILS";
@@ -67,8 +70,25 @@ interface Category {
   tracksMemberIdentifier?: boolean;
   identifierLabel?: string;
   identifierFormat?: string;
+  isTrustFund?: boolean;
+  statementOrder?: number;
   allowedGroups?: GroupItem[];
 }
+
+const DEFAULT_STATEMENT_ORDER = "100";
+const MAX_STATEMENT_ORDER = 32767;
+
+/** Parse the "Statement order" field: a whole number 0–32767, else null. */
+function parseStatementOrder(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const order = Number.parseInt(trimmed, 10);
+  return order <= MAX_STATEMENT_ORDER ? order : null;
+}
+
+const STATEMENT_ORDER_ERROR = `Statement order must be a whole number between 0 and ${MAX_STATEMENT_ORDER}`;
+const TRUST_FUND_HELP = "Money in this department is remitted to the conference and shown under trust funds on the Cash Statement.";
+const STATEMENT_ORDER_HELP = "Lower numbers appear first on the Cash Statement; trust funds always come before local funds.";
 
 interface GroupItem {
   id: string;
@@ -266,6 +286,8 @@ function CategoryManagementPageContent() {
   const [newTracksIdentifier, setNewTracksIdentifier] = useState(false);
   const [newIdentifierLabel, setNewIdentifierLabel] = useState("");
   const [newIdentifierFormat, setNewIdentifierFormat] = useState("");
+  const [newIsTrustFund, setNewIsTrustFund] = useState(false);
+  const [newStatementOrder, setNewStatementOrder] = useState(DEFAULT_STATEMENT_ORDER);
 
   // Edit form state
   const [editName, setEditName] = useState("");
@@ -278,6 +300,10 @@ function CategoryManagementPageContent() {
   const [editTracksIdentifier, setEditTracksIdentifier] = useState(false);
   const [editIdentifierLabel, setEditIdentifierLabel] = useState("");
   const [editIdentifierFormat, setEditIdentifierFormat] = useState("");
+  const [editIsTrustFund, setEditIsTrustFund] = useState(false);
+  const [editStatementOrder, setEditStatementOrder] = useState(DEFAULT_STATEMENT_ORDER);
+
+  const [showStatementPreview, setShowStatementPreview] = useState(false);
 
   const { data, loading, refetch } = useQuery<GetCategoriesData>(GET_ALL_CATEGORIES, {
     variables: { includeInactive: true },
@@ -304,6 +330,7 @@ function CategoryManagementPageContent() {
 
   const [createCategory, { loading: creating }] = useMutation<CreateCategoryData>(CREATE_CATEGORY);
   const [updateCategory, { loading: updating }] = useMutation<UpdateCategoryData>(UPDATE_CATEGORY);
+  const { isAdmin, isTreasurer } = useUserRole();
   const [deleteCategory, { loading: deleting }] = useMutation<DeleteCategoryData>(DELETE_CATEGORY);
 
   const clearMessages = () => {
@@ -339,6 +366,12 @@ function CategoryManagementPageContent() {
       return;
     }
 
+    const statementOrder = parseStatementOrder(newStatementOrder);
+    if (statementOrder === null) {
+      setError(STATEMENT_ORDER_ERROR);
+      return;
+    }
+
     try {
       const { data } = await createCategory({
         variables: {
@@ -352,6 +385,8 @@ function CategoryManagementPageContent() {
           tracksMemberIdentifier: newTracksIdentifier,
           identifierLabel: newTracksIdentifier ? newIdentifierLabel.trim() : "",
           identifierFormat: newTracksIdentifier ? newIdentifierFormat.trim() : "",
+          isTrustFund: newIsTrustFund,
+          statementOrder,
         },
       });
 
@@ -367,13 +402,19 @@ function CategoryManagementPageContent() {
         setNewTracksIdentifier(false);
         setNewIdentifierLabel("");
         setNewIdentifierFormat("");
+        setNewIsTrustFund(false);
+        setNewStatementOrder(DEFAULT_STATEMENT_ORDER);
         setShowCreateForm(false);
         refetch();
       } else {
-        setError(data?.createCategory?.message || "Failed to create department");
+        const message = data?.createCategory?.message || "Failed to create department";
+        setError(message);
+        toast.error(message);
       }
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Error creating department"));
+      const message = getErrorMessage(err, "Error creating department");
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -389,6 +430,8 @@ function CategoryManagementPageContent() {
     setEditTracksIdentifier(category.tracksMemberIdentifier ?? false);
     setEditIdentifierLabel(category.identifierLabel ?? "");
     setEditIdentifierFormat(category.identifierFormat ?? "");
+    setEditIsTrustFund(category.isTrustFund ?? false);
+    setEditStatementOrder(String(category.statementOrder ?? DEFAULT_STATEMENT_ORDER));
     clearMessages();
   };
 
@@ -405,9 +448,18 @@ function CategoryManagementPageContent() {
       return;
     }
 
+    const statementOrder = parseStatementOrder(editStatementOrder);
+    if (statementOrder === null) {
+      setError(STATEMENT_ORDER_ERROR);
+      return;
+    }
+
     try {
+      // Treasurers (without admin) may only change the Cash Statement settings;
+      // the backend refuses any other field from them.
+      const statementOnly = isTreasurer && !isAdmin;
       const { data } = await updateCategory({
-        variables: {
+        variables: statementOnly ? { categoryId, isTrustFund: editIsTrustFund, statementOrder } : {
           categoryId,
           name: editName.trim(),
           code: editCode.trim().toUpperCase(),
@@ -419,6 +471,8 @@ function CategoryManagementPageContent() {
           tracksMemberIdentifier: editTracksIdentifier,
           identifierLabel: editTracksIdentifier ? editIdentifierLabel.trim() : "",
           identifierFormat: editTracksIdentifier ? editIdentifierFormat.trim() : "",
+          isTrustFund: editIsTrustFund,
+          statementOrder,
         },
       });
 
@@ -427,10 +481,14 @@ function CategoryManagementPageContent() {
         setEditingId(null);
         refetch();
       } else {
-        setError(data?.updateCategory?.message || "Failed to update department");
+        const message = data?.updateCategory?.message || "Failed to update department";
+        setError(message);
+        toast.error(message);
       }
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Error updating department"));
+      const message = getErrorMessage(err, "Error updating department");
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -498,6 +556,10 @@ function CategoryManagementPageContent() {
             description="Manage contribution departments (e.g., Tithe, Offering, Building Fund)"
             actions={
               <>
+                <Button variant="outline" onClick={() => setShowStatementPreview(true)}>
+                  <Columns3 className="h-4 w-4 mr-2" />
+                  Statement preview
+                </Button>
                 <Button onClick={() => { setShowCreateForm(!showCreateForm); clearMessages(); }}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Department
@@ -740,6 +802,33 @@ function CategoryManagementPageContent() {
                     </div>
                   )}
                 </div>
+                <div className="grid md:grid-cols-2 gap-4 rounded-md border p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="isTrustFund">Trust fund (remitted to conference)</Label>
+                      <p className="text-xs text-muted-foreground">{TRUST_FUND_HELP}</p>
+                    </div>
+                    <Switch
+                      id="isTrustFund"
+                      checked={newIsTrustFund}
+                      onCheckedChange={setNewIsTrustFund}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="statementOrder">Statement order</Label>
+                    <Input
+                      id="statementOrder"
+                      type="number"
+                      min={0}
+                      max={MAX_STATEMENT_ORDER}
+                      step={1}
+                      inputMode="numeric"
+                      value={newStatementOrder}
+                      onChange={(e) => setNewStatementOrder(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">{STATEMENT_ORDER_HELP}</p>
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <Button type="submit" disabled={creating}>
                     {creating ? "Creating..." : "Create Department"}
@@ -939,6 +1028,35 @@ function CategoryManagementPageContent() {
                             </div>
                           )}
                         </div>
+                        <div className="grid md:grid-cols-2 gap-3 rounded-md border p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <Label htmlFor={`edit-trust-${category.id}`} className="text-xs">
+                                Trust fund (remitted to conference)
+                              </Label>
+                              <p className="text-xs text-muted-foreground">{TRUST_FUND_HELP}</p>
+                            </div>
+                            <Switch
+                              id={`edit-trust-${category.id}`}
+                              checked={editIsTrustFund}
+                              onCheckedChange={setEditIsTrustFund}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor={`edit-order-${category.id}`} className="text-xs">Statement order</Label>
+                            <Input
+                              id={`edit-order-${category.id}`}
+                              type="number"
+                              min={0}
+                              max={MAX_STATEMENT_ORDER}
+                              step={1}
+                              inputMode="numeric"
+                              value={editStatementOrder}
+                              onChange={(e) => setEditStatementOrder(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">{STATEMENT_ORDER_HELP}</p>
+                          </div>
+                        </div>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -983,6 +1101,18 @@ function CategoryManagementPageContent() {
                             {category.routingMode === "AUTO_MEMBER_GROUP" && (category.allowedGroups?.length || 0) > 0 && (
                               <Badge variant="secondary" className="text-xs">
                                 {category.allowedGroups?.length} allowed group{(category.allowedGroups?.length || 0) === 1 ? "" : "s"}
+                              </Badge>
+                            )}
+                            {category.isTrustFund !== undefined && (
+                              category.isTrustFund ? (
+                                <StatusBadge variant="info">Trust</StatusBadge>
+                              ) : (
+                                <StatusBadge variant="neutral">Local</StatusBadge>
+                              )
+                            )}
+                            {category.statementOrder !== undefined && (
+                              <Badge variant="outline" className="text-xs" title="Cash Statement order">
+                                Order {category.statementOrder}
                               </Badge>
                             )}
                             {category.audience === "adult" && (
@@ -1082,6 +1212,10 @@ function CategoryManagementPageContent() {
         open={fundSettingsTarget !== null}
         onOpenChange={(v) => { if (!v) setFundSettingsTarget(null); }}
         onSaved={() => void refetchFundSettings()}
+      />
+      <StatementColumnsPreviewDialog
+        open={showStatementPreview}
+        onOpenChange={setShowStatementPreview}
       />
       <ConfirmDialog />
     </AdminLayout>

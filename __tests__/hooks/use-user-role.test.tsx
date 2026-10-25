@@ -27,6 +27,10 @@ const GET_CURRENT_USER_ROLE = gql`
       isGroupAdmin
       isContentAdmin
       canSendBulkMessage
+      isRecorder
+      canVoidReceipts
+      isAdmin
+      isTreasurer
       adminCategoryIds
       adminGroupNames
       adminCategories {
@@ -60,6 +64,10 @@ const staffRoleMock = {
         isGroupAdmin: false,
         isContentAdmin: false,
         canSendBulkMessage: true,
+        isRecorder: false,
+        canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -79,6 +87,10 @@ const contentAdminMock = {
         isGroupAdmin: false,
         isContentAdmin: true,
         canSendBulkMessage: false,
+        isRecorder: false,
+        canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -98,6 +110,10 @@ const categoryAdminMock = {
         isGroupAdmin: false,
         isContentAdmin: false,
         canSendBulkMessage: false,
+        isRecorder: false,
+        canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: ['cat-1'],
         adminGroupNames: [],
         adminCategories: [{ id: 'cat-1', name: 'Tithe', code: 'TITHE', description: '' }],
@@ -117,6 +133,10 @@ const unauthMock = {
         isGroupAdmin: false,
         isContentAdmin: false,
         canSendBulkMessage: false,
+        isRecorder: false,
+        canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: [],
         adminCategories: [],
@@ -136,6 +156,10 @@ const groupAdminMock = {
         isGroupAdmin: true,
         isContentAdmin: false,
         canSendBulkMessage: true,
+        isRecorder: false,
+        canVoidReceipts: false,
+        isAdmin: false,
+        isTreasurer: false,
         adminCategoryIds: [],
         adminGroupNames: ['Youth'],
         adminCategories: [],
@@ -143,6 +167,35 @@ const groupAdminMock = {
     },
   },
 }
+
+function roleMock(overrides: Record<string, unknown>) {
+  return {
+    request: { query: GET_CURRENT_USER_ROLE },
+    result: {
+      data: {
+        currentUserRole: {
+          isAuthenticated: true,
+          isStaff: false,
+          isCategoryAdmin: false,
+          isGroupAdmin: false,
+          isContentAdmin: false,
+          canSendBulkMessage: false,
+          isRecorder: false,
+          canVoidReceipts: false,
+          isAdmin: false,
+          isTreasurer: false,
+          adminCategoryIds: [],
+          adminGroupNames: [],
+          adminCategories: [],
+          ...overrides,
+        },
+      },
+    },
+  }
+}
+
+const pureRecorderMock = roleMock({ isRecorder: true })
+const staffRecorderMock = roleMock({ isStaff: true, isRecorder: true, canVoidReceipts: true, canSendBulkMessage: true })
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
@@ -445,6 +498,59 @@ describe('useUserRole', () => {
       })
       await waitFor(() => expect(result.current.loading).toBe(false))
       expect(result.current.adminCategories).toHaveLength(0)
+    })
+  })
+  // ── Recorder (T2.4) ────────────────────────────────────────────────────────
+  describe('recorder', () => {
+    it('pure recorder: isRecorder=true, isPureRecorder=true, canVoidReceipts=false', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([pureRecorderMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.isRecorder).toBe(true)
+      expect(result.current.isPureRecorder).toBe(true)
+      expect(result.current.canVoidReceipts).toBe(false)
+      expect(result.current.canAccessAdmin).toBe(false)
+    })
+
+    it('pure recorder can only access the "record" feature', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([pureRecorderMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.canAccessFeature('record')).toBe(true)
+      for (const f of ['overview', 'contributions', 'members', 'reports', 'expenses', 'messaging', 'content', 'c2b-transactions', 'catch-up-windows'] as const) {
+        expect(result.current.canAccessFeature(f)).toBe(false)
+      }
+    })
+
+    it('staff who also hold recorder are not pure recorders and keep everything', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([staffRecorderMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.isPureRecorder).toBe(false)
+      expect(result.current.canVoidReceipts).toBe(true)
+      expect(result.current.canAccessFeature('record')).toBe(true)
+      expect(result.current.canAccessFeature('reports')).toBe(true)
+    })
+
+    it('staff without the recorder role can still access "record" (RR-9)', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([staffRoleMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.isRecorder).toBe(false)
+      expect(result.current.canAccessFeature('record')).toBe(true)
+    })
+
+    it('non-recorder members cannot access "record"', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([categoryAdminMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.isPureRecorder).toBe(false)
+      expect(result.current.canAccessFeature('record')).toBe(false)
     })
   })
 })

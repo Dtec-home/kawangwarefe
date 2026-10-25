@@ -8,10 +8,11 @@
  * file per article under lib/help-content/articles/ and register it in
  * HELP_ARTICLES; nothing here needs to change when that happens.
  *
- * Role-awareness: a plain member only sees articles tagged 'member'; anyone
- * who can access the admin panel (per useUserRole().canAccessAdmin) also
- * sees articles tagged 'admin'. This mirrors the same admin-detection the
- * rest of the app already uses (see MemberLayout's "Admin Panel" shortcut).
+ * Role-awareness: a plain member only sees articles tagged 'member';
+ * recorders and staff (who can record giving at /record) also see 'recorder'
+ * articles; anyone who can access the admin panel (per
+ * useUserRole().canAccessAdmin) also sees articles tagged 'admin'. See
+ * helpAudiencesFor in lib/help-content.
  */
 
 import { useMemo, useState } from "react";
@@ -20,7 +21,7 @@ import { LifeBuoy, Search, MessageCircle, Mail, ChevronRight } from "lucide-reac
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
 import { useUserRole } from "@/lib/hooks/use-user-role";
-import { HELP_ARTICLES, searchArticles } from "@/lib/help-content";
+import { HELP_ARTICLES, articlesForAudiences, helpAudiencesFor, searchArticles } from "@/lib/help-content";
 import type { HelpArticle } from "@/lib/help-content/types";
 import { HELP_WHATSAPP_URL, HELP_EMAIL_URL, HELP_EMAIL_ADDRESS } from "@/components/help/HelpButton";
 import { Input } from "@/components/ui/input";
@@ -30,18 +31,14 @@ import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
 
 function HelpCenterContent() {
-  const { canAccessAdmin } = useUserRole();
+  const { canAccessAdmin, isRecorder, isStaff } = useUserRole();
   const [query, setQuery] = useState("");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
 
-  const visibleArticles = useMemo(() => {
-    const allowedRoles: HelpArticle["roles"][number][] = canAccessAdmin
-      ? ["member", "admin"]
-      : ["member"];
-    return HELP_ARTICLES.filter((article) =>
-      article.roles.some((role) => allowedRoles.includes(role))
-    );
-  }, [canAccessAdmin]);
+  const visibleArticles = useMemo(
+    () => articlesForAudiences(helpAudiencesFor({ canAccessAdmin, isRecorder, isStaff }), HELP_ARTICLES),
+    [canAccessAdmin, isRecorder, isStaff]
+  );
 
   const filteredArticles = useMemo(
     () => searchArticles(query, visibleArticles),
@@ -134,6 +131,11 @@ function HelpCenterContent() {
                           {article.roles.includes("admin") && (
                             <Badge variant="outline" className="mt-3">
                               Admin
+                            </Badge>
+                          )}
+                          {article.roles.includes("recorder") && (
+                            <Badge variant="outline" className="mt-3">
+                              Recorder
                             </Badge>
                           )}
                         </CardContent>

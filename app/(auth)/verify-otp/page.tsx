@@ -9,6 +9,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
+import { resolvePostLoginRedirect } from "@/lib/auth/post-login-redirect";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,8 @@ function VerifyOtpContent() {
   const searchParams = useSearchParams();
   const phoneNumber = searchParams.get("phone") || "";
   const email = searchParams.get("email") || "";
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
+  // Only an explicit ?redirect= overrides the role-based landing page (T2.4)
+  const explicitRedirect = searchParams.get("redirect");
   const { login } = useAuth();
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -110,13 +112,17 @@ function VerifyOtpContent() {
           toast.success("Email verified! Please link your phone number.");
           sessionStorage.setItem("linking_token", result.linkingToken || "");
           sessionStorage.setItem("gated_email", email);
-          router.push(`/link-phone?redirect=${encodeURIComponent(redirectTo)}`);
+          router.push(
+            explicitRedirect
+              ? `/link-phone?redirect=${encodeURIComponent(explicitRedirect)}`
+              : "/link-phone"
+          );
         } else if (result.isNewMember) {
           toast.success("Identity verified! Complete your registration.");
           router.push("/register");
         } else {
           toast.success("Login successful!");
-          router.push(redirectTo);
+          router.push(await resolvePostLoginRedirect(explicitRedirect));
         }
       } else {
         toast.error(result.message);

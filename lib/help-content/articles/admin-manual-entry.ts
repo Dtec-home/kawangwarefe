@@ -20,14 +20,17 @@ Choose how this contribution was received: Envelope, "Local Evangelism/Loose Mon
 **3. Departments & amounts**
 Under Departments, add one or more lines — each with its own department, optional purpose, and amount (minimum KES 1.00). Use the row controls to add or remove lines; at least one department and amount is required to save.
 
-**4. Receipt Number (optional)**
-A "next auto-assigned number" hint is shown based on the church's receipt book settings. Leave the field blank to use it automatically, or type your own number to override it. (Receipt Book Settings, linked at the bottom of the page, controls the numbering scheme.)
+**4. Old book receipt no. (optional)**
+Every entry gets a system receipt number when you save, in the form YYYYMMDD-NNNN (for example 20260829-0017). It is shown on screen after saving and can be opened and printed. Only fill in this field if a paper receipt book was also used, so the old book number can be matched later.
+
+**Recording date**
+Entries are always recorded for today. If an admin has opened a catch-up window for a past date, a "Recording for" selector appears so you can choose that date instead.
 
 **5. Notes (optional)**
 Free-text notes about the contribution.
 
 **Saving**
-Click Save Contribution. On success you'll see a confirmation and the form resets; click Add Another to log the next contribution right away, or View All Contributions to go back to the list.
+Click Save Contribution. On success you'll see the receipt number and the form resets; click Add Another to log the next contribution right away, or View All Contributions to go back to the list.
 
 If something's missing (no giver identified, no department/amount line, or an invalid amount), an error message explains what to fix before you can save.`,
 };

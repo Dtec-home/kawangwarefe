@@ -26,6 +26,8 @@ const GET_CURRENT_USER_ROLE = gql`
       isGroupAdmin
       isContentAdmin
       canSendBulkMessage
+      isRecorder
+      canVoidReceipts
       adminCategoryIds
       adminGroupNames
       adminCategories {
@@ -55,6 +57,8 @@ function emptyRole() {
     isGroupAdmin: false,
     isContentAdmin: false,
     canSendBulkMessage: false,
+    isRecorder: false,
+    canVoidReceipts: false,
     adminCategoryIds: [] as string[],
     adminGroupNames: [] as string[],
     adminCategories: [] as any[],
@@ -135,6 +139,8 @@ defineFeature(feature, (test) => {
       await fetchRole(ctx, {
         isCategoryAdmin: true,
         canSendBulkMessage: true,
+        isRecorder: false,
+        canVoidReceipts: false,
         adminCategories: [category(dept)],
         adminCategoryIds: [dept.toLowerCase()],
       })
@@ -159,6 +165,8 @@ defineFeature(feature, (test) => {
       await fetchRole(ctx, {
         isGroupAdmin: true,
         canSendBulkMessage: true,
+        isRecorder: false,
+        canVoidReceipts: false,
         adminGroupNames: [group],
       })
     })

@@ -9,6 +9,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@apollo/client/react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { resolvePostLoginRedirect } from "@/lib/auth/post-login-redirect";
 import { REQUEST_OTP } from "@/lib/graphql/auth-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,14 +28,21 @@ function LoginContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Read redirect target from query params (set by middleware)
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const explicitRedirect = searchParams.get("redirect");
+  const redirectTo = explicitRedirect || "/dashboard";
 
-  // Redirect to dashboard if already authenticated
+  // Already authenticated: go to the explicit target, else the role-based
+  // landing page (pure recorders → /record, everyone else → /dashboard)
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      router.replace(redirectTo);
-    }
-  }, [isAuthenticated, authLoading, router, redirectTo]);
+    if (authLoading || !isAuthenticated) return;
+    let cancelled = false;
+    resolvePostLoginRedirect(explicitRedirect).then((target) => {
+      if (!cancelled) router.replace(target);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, authLoading, router, explicitRedirect]);
 
   const [requestOtp] = useMutation<
     { requestOtp: { success: boolean; message: string; otpCode?: string } },
@@ -132,9 +140,9 @@ function LoginContent() {
             <a href="/" className="flex items-center gap-3 font-bold text-lg hover:opacity-80 transition-opacity">
               <div className="relative w-10 h-10">
                 <img
-                  src="/logo.png"
+                  src="/logo-mark.png"
                   alt="SDA Church"
-                  className="object-contain w-full h-full"
+                  className="object-contain w-full h-full dark:invert"
                 />
               </div>
               <span className="hidden sm:inline">SDA Kawangware</span>

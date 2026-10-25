@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "test:e2e:pwa": "playwright test -c playwright.pwa.config.ts",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:full": "bddgen -c playwright.fullstack.config.ts && playwright test -c playwright.fullstack.config.ts"
   },
   "dependencies": {
     "@apollo/client-integration-nextjs": "^0.14.1",
@@ -66,6 +67,7 @@
     "eslint-config-next": "16.0.3",
     "jest-cucumber": "^4.5.0",
     "jsdom": "^28.0.0",
+    "playwright-bdd": "9.2.1",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5",

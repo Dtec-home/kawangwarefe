@@ -12,6 +12,8 @@ export const CREATE_CATEGORY = gql`
     $tracksMemberIdentifier: Boolean
     $identifierLabel: String
     $identifierFormat: String
+    $isTrustFund: Boolean
+    $statementOrder: Int
   ) {
     createCategory(
       name: $name
@@ -24,6 +26,8 @@ export const CREATE_CATEGORY = gql`
       tracksMemberIdentifier: $tracksMemberIdentifier
       identifierLabel: $identifierLabel
       identifierFormat: $identifierFormat
+      isTrustFund: $isTrustFund
+      statementOrder: $statementOrder
     ) {
       success
       message
@@ -39,6 +43,8 @@ export const CREATE_CATEGORY = gql`
         tracksMemberIdentifier
         identifierLabel
         identifierFormat
+        isTrustFund
+        statementOrder
         allowedGroups {
           id
           name
@@ -62,6 +68,8 @@ export const UPDATE_CATEGORY = gql`
     $tracksMemberIdentifier: Boolean
     $identifierLabel: String
     $identifierFormat: String
+    $isTrustFund: Boolean
+    $statementOrder: Int
   ) {
     updateCategory(
       categoryId: $categoryId
@@ -76,6 +84,8 @@ export const UPDATE_CATEGORY = gql`
       tracksMemberIdentifier: $tracksMemberIdentifier
       identifierLabel: $identifierLabel
       identifierFormat: $identifierFormat
+      isTrustFund: $isTrustFund
+      statementOrder: $statementOrder
     ) {
       success
       message
@@ -91,6 +101,8 @@ export const UPDATE_CATEGORY = gql`
         tracksMemberIdentifier
         identifierLabel
         identifierFormat
+        isTrustFund
+        statementOrder
         allowedGroups {
           id
           name
@@ -123,6 +135,8 @@ export const GET_ALL_CATEGORIES = gql`
       tracksMemberIdentifier
       identifierLabel
       identifierFormat
+      isTrustFund
+      statementOrder
       allowedGroups {
         id
         name

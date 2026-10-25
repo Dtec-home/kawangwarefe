@@ -3,8 +3,6 @@ import {
   CREATE_MANUAL_CONTRIBUTION,
   CREATE_MANUAL_MULTI_CONTRIBUTION,
   LOOKUP_MEMBER_BY_PHONE,
-  GET_NEXT_RECEIPT_NUMBER,
-  SET_RECEIPT_SEQUENCE,
 } from '@/lib/graphql/manual-contribution-mutations'
 
 const bodyOf = (doc: any) => doc.loc?.source?.body || ''
@@ -46,18 +44,13 @@ describe('manual-contribution-mutations', () => {
     expect(body).toContain('giverName')
   })
 
-  it('GET_NEXT_RECEIPT_NUMBER previews the next receipt (Ticket 9)', () => {
-    expect(GET_NEXT_RECEIPT_NUMBER.kind).toBe('Document')
-    const body = bodyOf(GET_NEXT_RECEIPT_NUMBER)
-    expect(body).toContain('nextReceiptNumber')
+  it('CREATE_MANUAL_MULTI_CONTRIBUTION returns the system receipt number (T1.8)', () => {
+    expect(bodyOf(CREATE_MANUAL_MULTI_CONTRIBUTION)).toContain('receiptNumber')
   })
 
-  it('SET_RECEIPT_SEQUENCE configures the sequence (Ticket 9)', () => {
-    expect(SET_RECEIPT_SEQUENCE.kind).toBe('Document')
-    const body = bodyOf(SET_RECEIPT_SEQUENCE)
-    expect(body).toContain('setReceiptSequence')
-    expect(body).toContain('$nextNumber: Int')
-    expect(body).toContain('$prefix: String')
-    expect(body).toContain('$padding: Int')
+  it('no longer exports the retired receipt-sequence documents (RC-3)', async () => {
+    const mod: Record<string, unknown> = await import('@/lib/graphql/manual-contribution-mutations')
+    expect(mod.GET_NEXT_RECEIPT_NUMBER).toBeUndefined()
+    expect(mod.SET_RECEIPT_SEQUENCE).toBeUndefined()
   })
 })

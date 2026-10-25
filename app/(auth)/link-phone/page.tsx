@@ -9,6 +9,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@apollo/client/react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { resolvePostLoginRedirect } from "@/lib/auth/post-login-redirect";
 import { CHECK_AND_LINK_PHONE } from "@/lib/graphql/auth-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ function LinkPhoneContent() {
   const [linkingToken, setLinkingToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string>("");
 
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const explicitRedirect = searchParams.get("redirect");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -121,7 +122,12 @@ function LinkPhoneContent() {
           sessionStorage.removeItem("gated_email");
 
           toast.success("Account successfully linked!");
-          router.push(redirectTo);
+          if (explicitRedirect) {
+            router.push(explicitRedirect);
+          } else {
+            // Pure recorders land on /record (T2.4)
+            router.push(await resolvePostLoginRedirect(null));
+          }
         } else {
           toast.error("Failed to complete linking: session details missing");
         }
@@ -153,9 +159,9 @@ function LinkPhoneContent() {
             <a href="/" className="flex items-center gap-3 font-bold text-lg hover:opacity-80 transition-opacity">
               <div className="relative w-10 h-10">
                 <img
-                  src="/logo.png"
+                  src="/logo-mark.png"
                   alt="SDA Church"
-                  className="object-contain w-full h-full"
+                  className="object-contain w-full h-full dark:invert"
                 />
               </div>
               <span className="hidden sm:inline">SDA Kawangware</span>

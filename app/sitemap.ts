@@ -36,6 +36,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${siteUrl}/campaigns`,
+      lastModified: currentDate,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
       url: `${siteUrl}/contribute`,
       lastModified: currentDate,
       changeFrequency: "monthly",

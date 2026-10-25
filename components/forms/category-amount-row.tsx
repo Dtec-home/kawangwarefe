@@ -73,6 +73,8 @@ interface CategoryAmountRowProps {
   canRemove: boolean;
   errors?: { categoryId?: string; amount?: string; purposeId?: string; memberIdentifier?: string };
   phoneNumber?: string;
+  /** Whose money this is: the signed-in giver ("self") or someone else, e.g. a recorder entering a gift ("other") */
+  giver?: "self" | "other";
 }
 
 export function CategoryAmountRow({
@@ -85,6 +87,7 @@ export function CategoryAmountRow({
   canRemove,
   errors,
   phoneNumber,
+  giver = "self",
 }: CategoryAmountRowProps) {
   const requiresPurpose =
     selectedCategory?.routingMode === "REQUIRES_PURPOSE" &&
@@ -292,7 +295,7 @@ export function CategoryAmountRow({
             id={`identifier-${index}`}
             value={currentIdentifier}
             onChange={(e) => onChange(index, "memberIdentifier", e.target.value)}
-            placeholder={`Your ${identifierLabel.toLowerCase()}`}
+            placeholder={giver === "other" ? `Giver\u2019s ${identifierLabel.toLowerCase()}` : `Your ${identifierLabel.toLowerCase()}`}
             className={errors?.memberIdentifier ? "border-destructive" : ""}
           />
           {errors?.memberIdentifier ? (
@@ -300,8 +303,12 @@ export function CategoryAmountRow({
           ) : (
             <p className="text-xs text-muted-foreground">
               {lookedUpIdentifier
-                ? `We found your ${identifierLabel.toLowerCase()} — confirm or correct it. It's tagged on this contribution.`
-                : `Enter your ${identifierLabel.toLowerCase()} for ${selectedCategory?.name}. It will be saved and tagged on this contribution.`}
+                ? giver === "other"
+                  ? `We found their ${identifierLabel.toLowerCase()} — confirm or correct it. It's tagged on this contribution.`
+                  : `We found your ${identifierLabel.toLowerCase()} — confirm or correct it. It's tagged on this contribution.`
+                : giver === "other"
+                  ? `Ask the giver for their ${identifierLabel.toLowerCase()} for ${selectedCategory?.name}. It will be saved and tagged on this contribution.`
+                  : `Enter your ${identifierLabel.toLowerCase()} for ${selectedCategory?.name}. It will be saved and tagged on this contribution.`}
             </p>
           )}
         </div>

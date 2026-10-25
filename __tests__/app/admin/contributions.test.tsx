@@ -32,6 +32,7 @@ vi.mock('@apollo/client/react', () => ({
             transactionDate: '2025-03-20T10:30:00Z',
             notes: null,
             manualReceiptNumber: null,
+            receiptNumber: '20250320-0004',
             member: { id: 'm1', fullName: 'John Kamau', phoneNumber: '254712345678', memberNumber: 'MEM001' },
             category: { id: '1', name: 'Tithe', code: 'TITHE' },
             mpesaTransaction: { id: 't1', mpesaReceiptNumber: 'RCT001ABC', status: 'completed', resultDesc: null },
@@ -153,9 +154,17 @@ describe('ContributionsPage', () => {
     expect(screen.getByText('Clear Filters')).toBeInTheDocument()
   })
 
-  it('renders the Book Receipt # column with existing book numbers', () => {
+  it('renders a Receipt No. column linking to the receipt page (T1.8)', () => {
     render(<ContributionsPage />)
-    expect(screen.getAllByText('Book Receipt #').length).toBeGreaterThan(0)
+    expect(screen.getByText('Receipt No.')).toBeInTheDocument()
+    const links = screen.getAllByRole('link', { name: '20250320-0004' })
+    expect(links.length).toBeGreaterThan(0)
+    links.forEach((link) => expect(link).toHaveAttribute('href', '/receipts/20250320-0004'))
+  })
+
+  it('renders the Old book no. column with existing book numbers', () => {
+    render(<ContributionsPage />)
+    expect(screen.getAllByText('Old book no.').length).toBeGreaterThan(0)
     // Jane's contribution has both an M-Pesa-less row and a book number set
     expect(screen.getAllByText('MB-2001').length).toBeGreaterThan(0)
   })
@@ -166,11 +175,11 @@ describe('ContributionsPage', () => {
     render(<ContributionsPage />)
 
     // Open the dialog for the first row (desktop table edit button)
-    const editButtons = screen.getAllByLabelText(/book receipt number/i)
+    const editButtons = screen.getAllByLabelText(/old book number/i)
     fireEvent.click(editButtons[0])
 
     const dialog = await screen.findByRole('dialog')
-    const input = within(dialog).getByLabelText('Book Receipt #')
+    const input = within(dialog).getByLabelText('Old book no.')
     fireEvent.change(input, { target: { value: 'MB-1003' } })
     fireEvent.click(within(dialog).getByText('Save'))
 

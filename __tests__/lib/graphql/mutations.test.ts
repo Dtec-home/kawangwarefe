@@ -30,4 +30,10 @@ describe('mutations', () => {
     expect(body).toContain('groupId: $groupId')
     expect(body).toContain('routingType: $routingType')
   })
+
+  it('GENERATE_CONTRIBUTION_REPORT declares and passes $timeBucket', () => {
+    const body = GENERATE_CONTRIBUTION_REPORT.loc?.source.body ?? ''
+    expect(body).toContain('$timeBucket: String')
+    expect(body).toContain('timeBucket: $timeBucket')
+  })
 })

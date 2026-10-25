@@ -141,7 +141,13 @@ function makeClient() {
   });
 
   return new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        // publicCampaign(slug) has no id; key it by slug so queries selecting
+        // different fields of one campaign merge instead of overwriting.
+        PublicCampaignType: { keyFields: ["slug"] },
+      },
+    }),
     link:
       typeof window === "undefined"
         ? ApolloLink.from([

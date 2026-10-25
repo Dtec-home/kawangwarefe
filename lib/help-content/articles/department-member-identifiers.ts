@@ -18,7 +18,7 @@ Some departments also validate the format you enter (for example, digits only) �
 
 Because the identifier is per (member, department), the same person can have a different number in different departments, and it's shown alongside the department you're giving to — not as a single, church-wide member number.
 
-Once a payment goes through, your department number for that contribution is shown on the payment confirmation screen, and it also appears on your SMS receipt line for that department.
+Once a payment goes through, your department number for that contribution is shown on the payment confirmation screen and carried on the M-Pesa account reference. It is not printed on the SMS receipt.
 
 **Uniqueness**
 Within a single department, an identifier can only belong to one member at a time — if you try to enter a number that's already assigned to someone else in that department, the contribution is blocked with a message explaining the number is already taken, so you'll need to re-check the number with the department instead.

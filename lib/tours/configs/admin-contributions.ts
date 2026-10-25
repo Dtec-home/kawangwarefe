@@ -3,8 +3,8 @@
  * Route: /admin/contributions
  *
  * Walks a staff/admin user through the contributions list: stats, filters,
- * and the table (including split-contribution grouping and the book
- * receipt number column).
+ * and the table (including split-contribution grouping, the system receipt
+ * number and the old book number column).
  */
 
 import { createTourConfig } from "../tour-configs";
@@ -35,7 +35,7 @@ export const ADMIN_CONTRIBUTIONS_TOUR_CONFIG = createTourConfig([
     element: '[data-tour="contributions-table"]',
     title: "Contribution List",
     description:
-      "A contribution paid across multiple departments in one M-Pesa prompt collapses into a single row — click it to expand the split. The Book Receipt # column lets you attach the church's physical receipt book number for reconciliation; use the pencil icon to add or edit it.",
+      "A contribution paid across multiple departments in one M-Pesa prompt collapses into a single row — click it to expand the split. Receipt No. is the system receipt number — click it to open the receipt. The Old book no. column lets you note a paper receipt book number for reconciliation; use the pencil icon to add or edit it.",
     side: "top",
   },
 ]);

@@ -41,12 +41,19 @@ export function PhoneInput({
           id={name}
           type="tel"
           placeholder={placeholder}
-          maxLength={9}
+          // No maxLength: it would cut a pasted "0711222333" before the 0 is
+          // dropped below; onChange keeps the value to 9 digits instead.
+          inputMode="numeric"
           className={`pl-16 ${error ? "border-destructive" : ""}`}
           {...register(name, {
             onChange: (e) => {
               // Only allow digits
               let value = e.target.value.replace(/\D/g, "");
+
+              // A full number pasted with its country code (+254 / 254…)
+              if (value.startsWith("254") && value.length > 9) {
+                value = value.substring(3);
+              }
 
               // If starts with 0, remove it
               if (value.startsWith("0")) {

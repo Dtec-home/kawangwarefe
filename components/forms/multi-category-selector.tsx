@@ -33,6 +33,10 @@ export interface CategoryAmount {
   amount: string;
   purposeId?: string;
   memberIdentifier?: string;
+  /** Fundraising campaign this line is given towards (manual entry only). */
+  campaignId?: string;
+  /** Campaign champion code the gift came through. */
+  championCode?: string;
 }
 
 interface MultiCategorySelectorProps {
@@ -41,6 +45,8 @@ interface MultiCategorySelectorProps {
   errors?: Array<{ categoryId?: string; amount?: string; purposeId?: string; memberIdentifier?: string }>;
   maxCategories?: number;
   phoneNumber?: string;
+  /** Whose money this is (see CategoryAmountRow) */
+  giver?: "self" | "other";
 }
 
 export function MultiCategorySelector({
@@ -49,6 +55,7 @@ export function MultiCategorySelector({
   errors = [],
   maxCategories = 10,
   phoneNumber,
+  giver = "self",
 }: MultiCategorySelectorProps) {
   const { data, loading } = useQuery<GetCategoriesData>(
     GET_CONTRIBUTION_CATEGORIES
@@ -114,6 +121,7 @@ export function MultiCategorySelector({
             canRemove={contributions.length > 1}
             errors={errors && errors[index] ? errors[index] : undefined}
             phoneNumber={phoneNumber}
+            giver={giver}
           />
         ))}
       </div>

@@ -195,7 +195,7 @@ export default function RegisterPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3 font-bold text-lg">
             <div className="relative w-10 h-10">
-              <img src="/logo.png" alt="SDA Church" className="object-contain w-full h-full" />
+              <img src="/logo-mark.png" alt="SDA Church" className="object-contain w-full h-full dark:invert" />
             </div>
             <span className="hidden sm:inline">SDA Kawangware</span>
           </div>

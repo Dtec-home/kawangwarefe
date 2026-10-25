@@ -6,6 +6,16 @@
  * `HELP_ARTICLES` array. See index.ts for the registration convention.
  */
 
+/**
+ * Audiences an article can be tagged for.
+ * - `member`: every signed-in user.
+ * - `recorder`: people who record physical giving at /record — the Recorder
+ *   role, and staff (who also get the recorder workspace).
+ * - `admin`: anyone who can open the admin panel (staff, department, group
+ *   and content admins).
+ */
+export type HelpAudience = "member" | "recorder" | "admin";
+
 export interface HelpArticle {
   /** Unique, URL-safe identifier, kebab-case (e.g. "making-a-contribution"). */
   slug: string;
@@ -13,8 +23,8 @@ export interface HelpArticle {
   title: string;
   /** Grouping label used for the Help Center's category cards (e.g. "Giving", "Account"). */
   category: string;
-  /** Which roles can see this article. A plain member only ever sees 'member' articles; an admin sees 'member' + 'admin'. */
-  roles: ("member" | "admin")[];
+  /** Which audiences can see this article. A plain member only ever sees 'member' articles; a recorder also sees 'recorder'; an admin also sees 'admin'. See `helpAudiencesFor`. */
+  roles: HelpAudience[];
   /** Article body — plain text/markdown-ish prose, rendered as-is by the Help Center page. */
   body: string;
   /** Optional in-app route this article is about, e.g. "/contribute" — lets the Help Center link out to the relevant page. */

@@ -14,11 +14,14 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { POST_LOGIN_PATH, safeRedirectPath } from "@/lib/auth/post-login-redirect";
 
 // Routes that require authentication
-const PROTECTED_PATHS = ["/dashboard", "/admin"];
+const PROTECTED_PATHS = ["/dashboard", "/admin", "/record", "/receipts", "/post-login"];
 
-// Routes that authenticated users shouldn't see (redirect to dashboard)
+// Routes that authenticated users shouldn't see. They go to /post-login, which
+// knows the user's roles (the middleware does not): pure recorders land on
+// /record, everyone else on /dashboard (T5.3).
 const AUTH_PATHS = ["/login", "/verify-otp"];
 
 export function middleware(request: NextRequest) {
@@ -34,10 +37,13 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Auth routes — redirect to dashboard if already has session
+  // Auth routes — hand signed-in users to the role-aware landing route
   if (AUTH_PATHS.some((p) => pathname.startsWith(p))) {
     if (hasSession) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      const landing = new URL(POST_LOGIN_PATH, request.url);
+      const redirect = safeRedirectPath(request.nextUrl.searchParams.get("redirect"));
+      if (redirect) landing.searchParams.set("redirect", redirect);
+      return NextResponse.redirect(landing);
     }
   }
 
@@ -45,5 +51,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/login", "/verify-otp"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/record/:path*", "/receipts/:path*", "/post-login", "/login", "/verify-otp"],
 };
