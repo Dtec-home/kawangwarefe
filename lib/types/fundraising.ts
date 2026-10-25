@@ -274,4 +274,6 @@ export interface GivingCampaignOption {
   paybillCode: string;
   categoryId: string;
   categoryName: string;
+  /** Closed: off the public site, but the desk can still record late gifts to it. */
+  isClosed: boolean;
 }

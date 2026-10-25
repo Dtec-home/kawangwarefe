@@ -155,6 +155,7 @@ function givingCampaigns(world: DeskWorld) {
         title: c.title,
         categoryId: departmentId(c.department),
         categoryName: c.department,
+        isClosed: false,
       })),
     },
   }

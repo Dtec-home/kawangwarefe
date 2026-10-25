@@ -295,7 +295,7 @@ defineFeature(feature, (test) => {
         result: {
           data: {
             campaigns: [
-              { __typename: 'GivingCampaignOptionType', id: CAMPAIGN_IDS[title], title, categoryId: dept.id, categoryName: dept.name },
+              { __typename: 'GivingCampaignOptionType', id: CAMPAIGN_IDS[title], title, categoryId: dept.id, categoryName: dept.name, isClosed: false },
             ],
           },
         },

@@ -1,8 +1,9 @@
 Feature: A campaign's own books, from first gift to close-out
   Money given to a campaign and bills charged to it make up the campaign's
-  statement. Closing the campaign stops new gifts; any money left over stays
-  in the department, later Pay Bill payments to its code wait for staff, and
-  late bills can still be charged to it.
+  statement. Closing the campaign takes it off the public site; any money left
+  over stays in the department, late Pay Bill payments to its code are still
+  credited to it, and late bills can still be charged to it. A paused
+  campaign's code takes nothing: payments to it wait for staff.
 
   Background:
     Given the church is set up with its departments and people
@@ -20,20 +21,29 @@ Feature: A campaign's own books, from first gift to close-out
     And the campaign statement downloads as a PDF file
     And no request left the machine
 
-  Scenario: Closing the campaign; a later Pay Bill waits as unmatched; a late bill is still charged
+  Scenario: Closing the campaign; it leaves the public site; a later Pay Bill and a late bill still count
     Given I am signed in as the treasurer
     When the treasurer opens the desk campaign's "Close out" tab
     And the treasurer asks to close the desk campaign
     Then the close-out warning says leftover money stays in "Building Fund"
-    And the close-out warning says later Pay Bill payments to "ROOF" wait in the unmatched list
+    And the close-out warning says later Pay Bill payments to "ROOF" are still credited to it
     When the treasurer confirms closing the desk campaign
     Then the close-out tab shows the campaign as closed
-    And the desk campaign's public page says it is not taking gifts
+    And the desk campaign's public page can no longer be found
     When the member pays 700 by Pay Bill to the desk campaign's code
-    Then the admin Pay Bill list shows the 700 to "ROOF" as unmatched
+    Then the admin Pay Bill list shows both payments to "ROOF" as credited
     When the treasurer records a paid expense of 300 to "Late Roofing Invoice" charged to the desk campaign
     And the treasurer opens the desk campaign's "Statement" tab
-    Then the campaign statement shows money in "KES 5,000.00", money out "KES 300.00" and balance "KES 4,700.00"
+    Then the campaign statement shows money in "KES 5,700.00", money out "KES 300.00" and balance "KES 5,400.00"
+    And no request left the machine
+
+  Scenario: A Pay Bill payment to a paused campaign's code waits as unmatched
+    Given I am signed in as the treasurer
+    And the treasurer has paused the desk campaign
+    When the member pays 700 by Pay Bill to the desk campaign's code
+    Then the admin Pay Bill list shows the 700 to "ROOF" as unmatched
+    When the treasurer opens the desk campaign's "Statement" tab
+    Then the campaign statement shows money in "KES 5,000.00", money out "KES 0.00" and balance "KES 5,000.00"
     And no request left the machine
 
   Scenario: The nightly finance check finds the campaign books consistent

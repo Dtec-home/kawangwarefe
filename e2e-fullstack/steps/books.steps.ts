@@ -111,11 +111,11 @@ Then("the close-out warning says leftover money stays in {string}", async ({ pag
 });
 
 Then(
-  "the close-out warning says later Pay Bill payments to {string} wait in the unmatched list",
+  "the close-out warning says later Pay Bill payments to {string} are still credited to it",
   async ({ page }, code: string) => {
     const dialog = page.getByRole("alertdialog");
-    await expect(dialog).toContainText(`Any later Pay Bill payment to ${code} is no longer credited to it`);
-    await expect(dialog).toContainText("waits in the unmatched Pay Bill list for staff to allocate");
+    await expect(dialog).toContainText("The campaign comes off the public site");
+    await expect(dialog).toContainText(`Late Pay Bill payments to ${code} are still credited to it`);
   },
 );
 
@@ -126,19 +126,19 @@ When("the treasurer confirms closing the desk campaign", async ({ page }) => {
 
 Then("the close-out tab shows the campaign as closed", async ({ page, world }) => {
   const panel = page.getByRole("tabpanel");
-  await expect(panel).toContainText("It no longer takes gifts.");
-  await expect(panel).toContainText(`Pay Bill payments to ${world.values[KEYS.campaignCode]} now wait in the unmatched`);
+  await expect(panel).toContainText("It is no longer public.");
+  await expect(panel).toContainText(`Late Pay Bill payments to ${world.values[KEYS.campaignCode]} are still credited`);
   await expect(page.getByRole("button", { name: "Close campaign" })).toHaveCount(0);
 });
 
-Then("the desk campaign's public page says it is not taking gifts", async ({ browser, world }) => {
+Then("the desk campaign's public page can no longer be found", async ({ browser, world }) => {
   // A visitor who is not signed in.
   const visitor = await browser.newContext({ baseURL: `http://localhost:${process.env.E2E_FRONTEND_PORT ?? 3101}` });
   const page = await visitor.newPage();
   try {
     await page.goto(`/campaigns/${world.values[KEYS.campaignSlug]}`);
-    await expect(page.getByText("This campaign is not taking gifts right now")).toBeVisible();
-    await expect(page.getByRole("heading", { name: world.values[KEYS.campaignTitle] })).toBeVisible();
+    await expect(page.getByText("We couldn't find that campaign")).toBeVisible();
+    await expect(page.getByRole("heading", { name: world.values[KEYS.campaignTitle] })).toHaveCount(0);
   } finally {
     await visitor.close();
   }
@@ -158,6 +158,25 @@ Then(
     await expect(toCode.filter({ hasText: "processed" })).toHaveCount(1);
   },
 );
+
+Then("the admin Pay Bill list shows both payments to {string} as credited", async ({ page, backend }, code: string) => {
+  await dismissTours(backend, page, ["admin_c2b_transactions_v1"]);
+  await page.goto("/admin/c2b-transactions");
+  const toCode = page.locator("tbody tr").filter({ hasText: code });
+  // A closed campaign still receives money: the late payment is credited like the first.
+  await expect(toCode.filter({ hasText: "processed" })).toHaveCount(2);
+  await expect(toCode.filter({ hasText: "unmatched" })).toHaveCount(0);
+});
+
+Given("the treasurer has paused the desk campaign", async ({ backend, world }) => {
+  const token = await tokenOnce(backend, world.values, world.seed!.people.treasurer.phone);
+  const result = await backend.graphql(
+    `mutation($id: ID!) { pauseCampaign(id: $id) { success message } }`,
+    { id: world.values[KEYS.campaignId] },
+    token,
+  );
+  expect(result.data?.pauseCampaign, JSON.stringify(result)).toMatchObject({ success: true });
+});
 
 Given(
   "the treasurer has charged a paid bill of {int} to the desk campaign",

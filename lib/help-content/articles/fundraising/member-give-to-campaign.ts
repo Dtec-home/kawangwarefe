@@ -32,5 +32,5 @@ Your SMS receipt says which campaign your gift went towards ("Towards: ..."). It
 Use the share buttons on the page (WhatsApp, Facebook, X, SMS or Copy link) to invite family and friends.
 
 **Can't give?**
-If the page says "This campaign is not taking gifts right now", the campaign is paused or has finished. You can still give to any church department as usual.`,
+If the page says "This campaign is not taking gifts right now", the campaign is paused. If the campaign can't be found, it has finished. You can still give to any church department as usual.`,
 };

@@ -102,7 +102,8 @@ export interface InitiateCampaignContributionData {
 }
 
 /**
- * Campaigns taking gifts that a manual-entry line can be tagged with.
+ * Campaigns still receiving money (active or closed) that a manual-entry line
+ * can be tagged with.
  * `givingCampaigns` is open to recorders as well as staff (titles and
  * departments only), aliased so the data shape stays `campaigns`.
  */
@@ -113,6 +114,7 @@ export const ACTIVE_CAMPAIGNS_FOR_LINES = gql`
       title
       categoryId
       categoryName
+      isClosed
     }
   }
 `;
@@ -122,6 +124,7 @@ export interface LineCampaignOption {
   title: string;
   categoryId: string;
   categoryName: string;
+  isClosed: boolean;
 }
 
 export interface ActiveCampaignsForLinesData {

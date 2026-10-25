@@ -34,8 +34,8 @@ function CloseoutBody({ campaign, onClosed }: { campaign: CloseoutCampaign; onCl
           {campaign.closedAt
             ? `Closed${campaign.closedByName ? ` by ${campaign.closedByName}` : ""} on ${formatNairobiDateTime(campaign.closedAt)}. `
             : ""}
-          It no longer takes gifts. Pay Bill payments to {campaign.paybillCode} now wait in the unmatched
-          Pay Bill list for staff to allocate.
+          It is no longer public. Late Pay Bill payments to {campaign.paybillCode} are still credited to
+          it.
         </p>
         <FinalStatementSummary campaignId={campaign.id} categoryName={campaign.categoryName} />
       </div>

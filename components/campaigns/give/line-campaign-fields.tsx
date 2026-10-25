@@ -112,6 +112,7 @@ export function LineCampaignFields({ lines, onChange }: LineCampaignFieldsProps)
               {options.map((campaign) => (
                 <SelectItem key={campaign.id} value={campaign.id}>
                   {campaign.title}
+                  {campaign.isClosed ? <span className="text-muted-foreground"> · closed</span> : null}
                 </SelectItem>
               ))}
             </SelectContent>

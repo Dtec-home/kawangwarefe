@@ -20,8 +20,10 @@ import { ACTIVE_CAMPAIGNS_FOR_LINES } from '@/lib/graphql/fundraising/give'
 import { LineCampaignFields, staleCampaignLines } from '@/components/campaigns/give/line-campaign-fields'
 
 const CAMPAIGNS = [
-  { __typename: 'GivingCampaignOptionType', id: '42', title: 'New Church Roof', categoryId: '4', categoryName: 'Building Fund' },
-  { __typename: 'GivingCampaignOptionType', id: '43', title: 'Chairs', categoryId: '4', categoryName: 'Building Fund' },
+  { __typename: 'GivingCampaignOptionType', id: '42', title: 'New Church Roof', categoryId: '4', categoryName: 'Building Fund', isClosed: false },
+  { __typename: 'GivingCampaignOptionType', id: '43', title: 'Chairs', categoryId: '4', categoryName: 'Building Fund', isClosed: false },
+  // Closed: off the public site, but the desk can still record a late gift to it.
+  { __typename: 'GivingCampaignOptionType', id: '44', title: 'Old Hall', categoryId: '4', categoryName: 'Building Fund', isClosed: true },
 ]
 
 const ok: MockedResponse = {
@@ -60,7 +62,7 @@ describe('LineCampaignFields', () => {
     expect(row).toHaveTextContent('Line 2 · Building Fund')
     expect(screen.queryByTestId('line-campaign-0')).not.toBeInTheDocument()
     const options = Array.from(row.querySelectorAll('option')).map((o) => o.textContent)
-    expect(options).toEqual(['No campaign', 'New Church Roof', 'Chairs'])
+    expect(options).toEqual(['No campaign', 'New Church Roof', 'Chairs', 'Old Hall · closed'])
 
     fireEvent.change(row.querySelector('select')!, { target: { value: '43' } })
     expect(onChange).toHaveBeenCalledWith([{ categoryId: '1', amount: '' }, { categoryId: '4', amount: '', campaignId: '43' }])
