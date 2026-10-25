@@ -17,6 +17,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CampaignProgress } from "@/components/campaigns/shared/campaign-progress";
+import { CampaignClosedNotice } from "@/components/campaigns/public/campaign-closed-notice";
 import { CampaignCover } from "@/components/campaigns/public/campaign-cover";
 import { DaysLeft } from "@/components/campaigns/public/days-left";
 import {
@@ -77,6 +78,7 @@ export function ChampionPageView({ slug, code }: { slug: string; code: string })
 function ChampionPageBody({ champion }: { champion: PublicChampionPageChampion }) {
   const { campaign } = champion;
   const accepting = campaign.isAcceptingGifts;
+  const closed = campaign.isClosed;
   return (
     <article className="space-y-8 lg:space-y-10">
       <ChampionHero champion={champion} />
@@ -99,7 +101,7 @@ function ChampionPageBody({ champion }: { champion: PublicChampionPageChampion }
               <h2 id="whole-campaign-heading" className="font-semibold">
                 The whole campaign
               </h2>
-              <DaysLeft daysLeft={campaign.daysLeft} />
+              <DaysLeft daysLeft={closed ? null : campaign.daysLeft} />
             </div>
             {campaign.summary ? <p className="text-sm text-muted-foreground">{campaign.summary}</p> : null}
             <CampaignProgress progress={campaign.progress} className="[&_.text-2xl]:text-lg" />
@@ -110,8 +112,14 @@ function ChampionPageBody({ champion }: { champion: PublicChampionPageChampion }
         </div>
 
         <aside className="space-y-6 lg:sticky lg:top-24" aria-label="Give and share">
-          {accepting ? <ChampionGiveCard champion={champion} /> : <NotTakingGifts slug={campaign.slug} />}
-          <ChampionShareCard champion={champion} />
+          {accepting ? (
+            <ChampionGiveCard champion={champion} />
+          ) : closed ? (
+            <CampaignClosedNotice className="sm:flex-col sm:items-start" />
+          ) : (
+            <NotTakingGifts slug={campaign.slug} />
+          )}
+          {closed ? null : <ChampionShareCard champion={champion} />}
         </aside>
       </div>
     </article>

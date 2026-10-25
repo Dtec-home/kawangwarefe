@@ -32,6 +32,7 @@ export const PUBLIC_CHAMPION_PAGE = gql`
         coverImageUrl
         daysLeft
         isAcceptingGifts
+        isClosed
         categoryId
         purposeId
         campaignId
@@ -58,6 +59,7 @@ export type PublicChampionPageCampaign = Pick<
   | "coverImageUrl"
   | "daysLeft"
   | "isAcceptingGifts"
+  | "isClosed"
   | "categoryId"
   | "purposeId"
   | "campaignId"

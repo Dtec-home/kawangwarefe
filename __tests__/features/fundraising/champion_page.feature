@@ -40,6 +40,15 @@ Feature: A champion's public page
     Then they are told the campaign is not taking gifts
     And there is no M-Pesa prompt form
 
+  Scenario: A closed campaign's champion page shows the final totals
+    Given "Mary Wanjiku" is an active champion "MARY" of "New Church Roof" with "KES 12,500.00" raised from 9 donors
+    And the campaign has closed
+    When a visitor opens the champion page "new-church-roof" "MARY"
+    Then they are told the campaign has closed
+    And they see the champion's total "KES 12,500.00" from "9 donors"
+    And there is no M-Pesa prompt form
+    And they are not asked to share the champion page
+
   Scenario: An unknown or inactive champion link
     Given there is no active champion "NOBODY" for "new-church-roof"
     When a visitor opens the champion page "new-church-roof" "NOBODY"

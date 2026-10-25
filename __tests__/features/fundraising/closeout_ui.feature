@@ -1,7 +1,7 @@
 Feature: Close out a campaign
   When a campaign has done its job, staff close it. A closed campaign comes
-  off the public site; late Pay Bill payments to its code are still credited
-  to it.
+  off the campaigns list and its page shows it as closed; late Pay Bill
+  payments to its code are still credited to it.
   Any money left over stays in the campaign's department; nothing is moved.
   After closing, staff see the final statement.
 
@@ -12,7 +12,7 @@ Feature: Close out a campaign
     Then the campaign status shows "Active"
     When they choose to close the campaign
     Then they are warned "Any money left over stays in Building Fund; nothing is moved."
-    And they are warned the campaign comes off the public site and payments to "ROOF" are still credited to it
+    And they are warned the campaign comes off the campaigns list and payments to "ROOF" are still credited to it
     When they confirm closing the campaign
     Then the campaign is closed
     And they are told "Campaign closed"
@@ -48,7 +48,7 @@ Feature: Close out a campaign
     When they open the close-out tab
     Then the campaign status shows "Closed"
     And they see it was closed on "2026-09-30"
-    And they see it is no longer public but late Pay Bill payments are still credited to it
+    And they see it is off the campaigns list but late Pay Bill payments are still credited to it
     And they cannot close the campaign
     And the final statement shows "KES 80,000.00" in, "KES 80,000.00" out and "KES 0.00" left
     And they see "Stays in Building Fund"

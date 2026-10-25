@@ -126,6 +126,8 @@ export interface PublicCampaign {
   endDate: string | null;
   daysLeft: number | null;
   isAcceptingGifts: boolean;
+  /** Closed: the page still opens, with its final totals and no way to give. */
+  isClosed: boolean;
   allowPledges: boolean;
   allowChampions: boolean;
   categoryId: string;
@@ -274,6 +276,6 @@ export interface GivingCampaignOption {
   paybillCode: string;
   categoryId: string;
   categoryName: string;
-  /** Closed: off the public site, but the desk can still record late gifts to it. */
+  /** Closed: off the campaigns list, but the desk can still record late gifts to it. */
   isClosed: boolean;
 }

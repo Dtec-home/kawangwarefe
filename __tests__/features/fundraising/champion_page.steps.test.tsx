@@ -52,6 +52,7 @@ function champion(name: string, code: string, raised: string, donors: number) {
       coverImageUrl: '',
       daysLeft: 12,
       isAcceptingGifts: true,
+      isClosed: false,
       categoryId: '4',
       purposeId: null,
       campaignId: '42',
@@ -231,6 +232,32 @@ defineFeature(feature, (test) => {
     and('there is no M-Pesa prompt form', () => {
       expect(screen.queryByRole('button', { name: /Send M-Pesa prompt/ })).not.toBeInTheDocument()
       expect(screen.queryByTestId('paybill-account')).not.toBeInTheDocument()
+    })
+  })
+
+  test("A closed campaign's champion page shows the final totals", ({ given, and, when, then }) => {
+    givenChampion(given)
+    and('the campaign has closed', () => {
+      world.champion!.campaign.isAcceptingGifts = false
+      world.champion!.campaign.isClosed = true
+    })
+    openPage(when)
+    then('they are told the campaign has closed', async () => {
+      expect(await screen.findByRole('status')).toHaveTextContent('This campaign has closed')
+      expect(screen.queryByText(/not taking gifts right now/)).not.toBeInTheDocument()
+    })
+    and(/^they see the champion's total "(.*)" from "(.*)"$/, (total, donors) => {
+      const stats = screen.getByTestId('champion-totals')
+      expect(within(stats).getByText(total)).toBeInTheDocument()
+      expect(within(stats).getByText(donors)).toBeInTheDocument()
+    })
+    and('there is no M-Pesa prompt form', () => {
+      expect(screen.queryByRole('button', { name: /Send M-Pesa prompt/ })).not.toBeInTheDocument()
+      expect(screen.queryByTestId('paybill-account')).not.toBeInTheDocument()
+    })
+    and('they are not asked to share the champion page', () => {
+      expect(screen.queryByRole('heading', { name: /^Share / })).not.toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /WhatsApp/ })).not.toBeInTheDocument()
     })
   })
 

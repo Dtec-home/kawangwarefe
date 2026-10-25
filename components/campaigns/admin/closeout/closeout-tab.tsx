@@ -34,8 +34,8 @@ function CloseoutBody({ campaign, onClosed }: { campaign: CloseoutCampaign; onCl
           {campaign.closedAt
             ? `Closed${campaign.closedByName ? ` by ${campaign.closedByName}` : ""} on ${formatNairobiDateTime(campaign.closedAt)}. `
             : ""}
-          It is no longer public. Late Pay Bill payments to {campaign.paybillCode} are still credited to
-          it.
+          It is off the campaigns list and its page shows it as closed. Late Pay Bill payments to{" "}
+          {campaign.paybillCode} are still credited to it.
         </p>
         <FinalStatementSummary campaignId={campaign.id} categoryName={campaign.categoryName} />
       </div>

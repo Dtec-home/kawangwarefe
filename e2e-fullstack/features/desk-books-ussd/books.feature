@@ -1,7 +1,8 @@
 Feature: A campaign's own books, from first gift to close-out
   Money given to a campaign and bills charged to it make up the campaign's
-  statement. Closing the campaign takes it off the public site; any money left
-  over stays in the department, late Pay Bill payments to its code are still
+  statement. Closing the campaign takes it off the campaigns list, and its page
+  shows it as closed with the final total; any money left over stays in the
+  department, late Pay Bill payments to its code are still
   credited to it, and late bills can still be charged to it. A paused
   campaign's code takes nothing: payments to it wait for staff.
 
@@ -21,7 +22,7 @@ Feature: A campaign's own books, from first gift to close-out
     And the campaign statement downloads as a PDF file
     And no request left the machine
 
-  Scenario: Closing the campaign; it leaves the public site; a later Pay Bill and a late bill still count
+  Scenario: Closing the campaign; its page shows it closed; a later Pay Bill and a late bill still count
     Given I am signed in as the treasurer
     When the treasurer opens the desk campaign's "Close out" tab
     And the treasurer asks to close the desk campaign
@@ -29,7 +30,8 @@ Feature: A campaign's own books, from first gift to close-out
     And the close-out warning says later Pay Bill payments to "ROOF" are still credited to it
     When the treasurer confirms closing the desk campaign
     Then the close-out tab shows the campaign as closed
-    And the desk campaign's public page can no longer be found
+    And the desk campaign's public page shows it has closed, with "KES 5,000.00" raised and no way to give
+    And the desk campaign is not on the public campaigns list
     When the member pays 700 by Pay Bill to the desk campaign's code
     Then the admin Pay Bill list shows both payments to "ROOF" as credited
     When the treasurer records a paid expense of 300 to "Late Roofing Invoice" charged to the desk campaign

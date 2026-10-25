@@ -62,6 +62,7 @@ export const PUBLIC_CAMPAIGN_PAGE = gql`
       endDate
       daysLeft
       isAcceptingGifts
+      isClosed
       allowPledges
       allowChampions
       publicUrl
@@ -99,6 +100,7 @@ export type PublicCampaignPageCampaign = Pick<
   | "endDate"
   | "daysLeft"
   | "isAcceptingGifts"
+  | "isClosed"
   | "allowPledges"
   | "allowChampions"
   | "publicUrl"

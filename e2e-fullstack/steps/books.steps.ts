@@ -5,7 +5,7 @@
  */
 
 import { readFileSync } from "node:fs";
-import { Page } from "@playwright/test";
+import { Browser, Page } from "@playwright/test";
 import { Given, Then, When, expect } from "../support/fixtures";
 import type { Backend } from "../support/backend";
 import { KEYS, dismissTours, nairobiToday, pickOption, tokenOnce } from "../support/desk";
@@ -114,7 +114,7 @@ Then(
   "the close-out warning says later Pay Bill payments to {string} are still credited to it",
   async ({ page }, code: string) => {
     const dialog = page.getByRole("alertdialog");
-    await expect(dialog).toContainText("The campaign comes off the public site");
+    await expect(dialog).toContainText("The campaign comes off the campaigns list");
     await expect(dialog).toContainText(`Late Pay Bill payments to ${code} are still credited to it`);
   },
 );
@@ -126,22 +126,43 @@ When("the treasurer confirms closing the desk campaign", async ({ page }) => {
 
 Then("the close-out tab shows the campaign as closed", async ({ page, world }) => {
   const panel = page.getByRole("tabpanel");
-  await expect(panel).toContainText("It is no longer public.");
+  await expect(panel).toContainText("It is off the campaigns list and its page shows it as closed.");
   await expect(panel).toContainText(`Late Pay Bill payments to ${world.values[KEYS.campaignCode]} are still credited`);
   await expect(page.getByRole("button", { name: "Close campaign" })).toHaveCount(0);
 });
 
-Then("the desk campaign's public page can no longer be found", async ({ browser, world }) => {
-  // A visitor who is not signed in.
+/** Runs `visit` as a visitor who is not signed in. */
+async function asVisitor(browser: Browser, visit: (page: Page) => Promise<void>) {
   const visitor = await browser.newContext({ baseURL: `http://localhost:${process.env.E2E_FRONTEND_PORT ?? 3101}` });
-  const page = await visitor.newPage();
   try {
-    await page.goto(`/campaigns/${world.values[KEYS.campaignSlug]}`);
-    await expect(page.getByText("We couldn't find that campaign")).toBeVisible();
-    await expect(page.getByRole("heading", { name: world.values[KEYS.campaignTitle] })).toHaveCount(0);
+    await visit(await visitor.newPage());
   } finally {
     await visitor.close();
   }
+}
+
+Then(
+  "the desk campaign's public page shows it has closed, with {string} raised and no way to give",
+  async ({ browser, world }, raised: string) => {
+    await asVisitor(browser, async (page) => {
+      await page.goto(`/campaigns/${world.values[KEYS.campaignSlug]}`);
+      await expect(page.getByRole("heading", { level: 1, name: world.values[KEYS.campaignTitle] })).toBeVisible();
+      await expect(page.getByRole("status").filter({ hasText: "This campaign has closed" })).toBeVisible();
+      await expect(page.getByText(raised).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /send m-pesa prompt/i })).toHaveCount(0);
+      await expect(page.getByRole("heading", { name: "Share this campaign" })).toHaveCount(0);
+    });
+  },
+);
+
+Then("the desk campaign is not on the public campaigns list", async ({ browser, world }) => {
+  await asVisitor(browser, async (page) => {
+    await page.goto("/campaigns");
+    // Wait for the list (or its empty state) before checking what is missing.
+    const loaded = page.locator('[data-slot="public-campaign-card"]').or(page.getByText(/no campaigns to give to right now/i));
+    await expect(loaded.first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: world.values[KEYS.campaignTitle] })).toHaveCount(0);
+  });
 });
 
 Then(

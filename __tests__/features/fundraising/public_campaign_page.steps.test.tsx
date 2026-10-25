@@ -64,7 +64,7 @@ function card(title: string) {
   }
 }
 
-function pageCampaign(slug: string, title: string, accepting: boolean) {
+function pageCampaign(slug: string, title: string, accepting: boolean, closed = false) {
   return {
     __typename: 'PublicCampaignType',
     slug,
@@ -82,6 +82,7 @@ function pageCampaign(slug: string, title: string, accepting: boolean) {
     endDate: '2026-11-01',
     daysLeft: 12,
     isAcceptingGifts: accepting,
+    isClosed: closed,
     allowPledges: true,
     allowChampions: false,
     publicUrl: `https://church.example/campaigns/${slug}`,
@@ -145,11 +146,11 @@ defineFeature(feature, (test) => {
   afterEach(cleanup)
 
   const givenCampaign = (given: (m: RegExp, fn: (...a: string[]) => void) => void) =>
-    given(/^the campaign "(.*)" "(.*)" is (accepting|not accepting) gifts$/, (slug, title, state) => {
-      const accepting = state === 'accepting'
+    given(/^the campaign "(.*)" "(.*)" (is accepting gifts|is not accepting gifts|has closed)$/, (slug, title, state) => {
+      const accepting = state === 'is accepting gifts'
       world.mocks.push({
         request: { query: PUBLIC_CAMPAIGN_PAGE, variables: { slug } },
-        result: { data: { publicCampaign: pageCampaign(slug, title, accepting) } },
+        result: { data: { publicCampaign: pageCampaign(slug, title, accepting, state === 'has closed') } },
         maxUsageCount: 5,
       })
       world.mocks.push(givingMock(slug, title, accepting))
@@ -310,6 +311,36 @@ defineFeature(feature, (test) => {
       expect(screen.queryByRole('button', { name: /send m-pesa prompt/i })).not.toBeInTheDocument()
       expect(screen.queryByText(/listed by name and amount/i)).not.toBeInTheDocument()
       expect(screen.queryByLabelText(/phone/i)).not.toBeInTheDocument()
+    })
+  })
+
+  test("A closed campaign's link shows its final totals", ({ given, when, then, and }) => {
+    givenCampaign(given)
+    openPage(when)
+    then(/^they see the heading "(.*)"$/, async (title) => {
+      expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+    })
+    and('they are told the campaign has closed and thanked for giving', () => {
+      const notice = screen.getByRole('status')
+      expect(notice).toHaveTextContent('This campaign has closed')
+      expect(notice).toHaveTextContent(/thank you to everyone who gave/i)
+      expect(screen.queryByText(/not taking gifts right now/i)).not.toBeInTheDocument()
+    })
+    and(/^they see "(.*)" raised from "(.*)"$/, (raised, donors) => {
+      expect(screen.getAllByText(raised).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(donors).length).toBeGreaterThan(0)
+    })
+    and('there is no give form', () => {
+      expect(document.querySelector('[data-slot="campaign-give-panel"]')).toBeNull()
+      expect(screen.queryByRole('button', { name: /send m-pesa prompt/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /give now/i })).not.toBeInTheDocument()
+    })
+    and('they are not asked to share the campaign', () => {
+      expect(document.querySelector('[data-slot="campaign-share-card"]')).toBeNull()
+      expect(screen.queryByRole('link', { name: /whatsapp/i })).not.toBeInTheDocument()
+    })
+    and('the page does not count down the days', () => {
+      expect(screen.queryByText(/days? left/i)).not.toBeInTheDocument()
     })
   })
 

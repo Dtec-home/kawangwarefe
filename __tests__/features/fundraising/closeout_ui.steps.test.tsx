@@ -181,9 +181,10 @@ defineFeature(feature, (test) => {
     then(/^they are warned "(.*)"$/, async (text) => {
       expect(within(await screen.findByRole('alertdialog')).getByText(text)).toBeInTheDocument()
     })
-    and(/^they are warned the campaign comes off the public site and payments to "(.*)" are still credited to it$/, (code) => {
+    and(/^they are warned the campaign comes off the campaigns list and payments to "(.*)" are still credited to it$/, (code) => {
       const dialog = screen.getByRole('alertdialog')
-      expect(dialog).toHaveTextContent(/comes off the public site/)
+      expect(dialog).toHaveTextContent(/comes off the campaigns list/)
+      expect(dialog).toHaveTextContent(/its page stays up,\s*marked closed/)
       expect(dialog).toHaveTextContent(new RegExp(`${code}\\s*are still credited to it`))
     })
     confirmClose(when)
@@ -241,8 +242,8 @@ defineFeature(feature, (test) => {
       const expected = formatNairobiDateTime(`${on}T12:00:00+03:00`)
       expect(await screen.findByText(new RegExp(`Closed on ${expected}`))).toBeInTheDocument()
     })
-    and('they see it is no longer public but late Pay Bill payments are still credited to it', async () => {
-      const notice = await screen.findByText(/It is no longer public/)
+    and('they see it is off the campaigns list but late Pay Bill payments are still credited to it', async () => {
+      const notice = await screen.findByText(/It is off the campaigns list and its page shows it as closed/)
       expect(notice).toHaveTextContent(new RegExp(`Late Pay Bill payments to ${world.campaign.paybillCode} are still credited`))
     })
     cannotClose(and)

@@ -16,7 +16,7 @@ Look at the Statement tab first. Make sure gifts have been receipted and expense
 
 **3. Close campaign**
 Tap "Close campaign" and confirm. In one step the system:
-- takes the campaign off the public site and stops new pledges. Its Pay Bill code keeps working: a late Pay Bill payment to the code (or to a champion's code) is still credited to the campaign, and the desk can still record late gifts to it;
+- takes the campaign off the campaigns list and stops new pledges. Its Pay Bill code keeps working: a late Pay Bill payment to the code (or to a champion's code) is still credited to the campaign, and the desk can still record late gifts to it;
 - builds the final statement for the whole campaign;
 - saves the final figures (money in, money out, balance) in the audit log.
 
@@ -25,7 +25,7 @@ Any money left over stays in the campaign's department; nothing is moved. It was
 
 **After closing**
 - The Close out tab shows who closed the campaign and when, with the final Money in, Money out and Left over.
-- The public page and champion pages are no longer shown. Old links say the campaign can't be found.
+- The campaign's page and its champion pages stay up, marked "This campaign has closed", with the final totals and no way to give or share. It is no longer on the campaigns list.
 - Pledges to the campaign can still be paid.
 - You can still post a thank-you update.
 - Late bills, such as a contractor's retention, can still be charged to the closed campaign. They appear on its statement and are paid from the same department.`,

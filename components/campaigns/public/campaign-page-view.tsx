@@ -23,6 +23,7 @@ import {
   type PublicCampaignPageData,
 } from "@/lib/graphql/fundraising/public";
 import { cn } from "@/lib/utils";
+import { CampaignClosedNotice } from "./campaign-closed-notice";
 import { CampaignCover } from "./campaign-cover";
 import { CampaignGallery } from "./campaign-gallery";
 import { CampaignGiveSection } from "./campaign-give-section";
@@ -62,7 +63,7 @@ export function CampaignPageView({ slug }: { slug: string }) {
       <Empty
         icon={SearchX}
         title="We couldn't find that campaign"
-        description="The link may be mistyped, or the campaign is no longer public."
+        description="The link may be mistyped, or the campaign is not public."
         action={
           <Link href="/campaigns" className={buttonVariants({ variant: "outline" })}>
             See all campaigns
@@ -77,11 +78,14 @@ export function CampaignPageView({ slug }: { slug: string }) {
 
 function CampaignPageBody({ campaign }: { campaign: PublicCampaignPageCampaign }) {
   const accepting = campaign.isAcceptingGifts;
+  const closed = campaign.isClosed;
+  // A closed campaign has no deadline left to count down to.
+  const daysLeft = closed ? null : campaign.daysLeft;
   return (
     <article className="space-y-8 lg:space-y-10">
-      <CampaignHero campaign={campaign} />
+      <CampaignHero campaign={campaign} daysLeft={daysLeft} />
 
-      {!accepting ? <NotTakingGifts /> : null}
+      {closed ? <CampaignClosedNotice action={<GiveToChurch />} /> : !accepting ? <NotTakingGifts /> : null}
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
         <div className="space-y-10">
@@ -93,7 +97,7 @@ function CampaignPageBody({ campaign }: { campaign: PublicCampaignPageCampaign }
           >
             <CampaignProgress progress={campaign.progress} />
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <DaysLeft daysLeft={campaign.daysLeft} />
+              <DaysLeft daysLeft={daysLeft} />
               {accepting ? (
                 <a href="#give" className={buttonVariants({ size: "sm" })}>
                   <HeartHandshake className="size-4" aria-hidden="true" />
@@ -113,14 +117,14 @@ function CampaignPageBody({ campaign }: { campaign: PublicCampaignPageCampaign }
           {/* fundraising-hook: pledges (S3-UI-E) and champion leaderboard (S5-UI-I) */}
           <PublicPledgeSlot campaign={campaign} />
           <LeaderboardSlot campaign={campaign} />
-          <CampaignShareCard campaign={campaign} />
+          {closed ? null : <CampaignShareCard campaign={campaign} />}
         </aside>
       </div>
     </article>
   );
 }
 
-function CampaignHero({ campaign }: { campaign: PublicCampaignPageCampaign }) {
+function CampaignHero({ campaign, daysLeft }: { campaign: PublicCampaignPageCampaign; daysLeft: number | null }) {
   return (
     <header className="relative isolate overflow-hidden rounded-3xl bg-muted shadow-sm">
       <div className="aspect-[4/5] sm:aspect-[16/9] lg:aspect-[21/9]">
@@ -137,7 +141,7 @@ function CampaignHero({ campaign }: { campaign: PublicCampaignPageCampaign }) {
         {campaign.summary ? (
           <p className="max-w-2xl text-base text-pretty text-white/85 sm:text-lg">{campaign.summary}</p>
         ) : null}
-        <DaysLeft daysLeft={campaign.daysLeft} className="text-white/85" />
+        <DaysLeft daysLeft={daysLeft} className="text-white/85" />
       </div>
     </header>
   );
@@ -158,10 +162,16 @@ function NotTakingGifts() {
           </p>
         </div>
       </div>
-      <Link href="/contribute" className={buttonVariants({ variant: "outline", size: "sm" })}>
-        Give to the church
-      </Link>
+      <GiveToChurch />
     </div>
+  );
+}
+
+function GiveToChurch() {
+  return (
+    <Link href="/contribute" className={buttonVariants({ variant: "outline", size: "sm" })}>
+      Give to the church
+    </Link>
   );
 }
 

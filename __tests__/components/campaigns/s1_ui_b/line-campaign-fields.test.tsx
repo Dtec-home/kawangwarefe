@@ -22,7 +22,7 @@ import { LineCampaignFields, staleCampaignLines } from '@/components/campaigns/g
 const CAMPAIGNS = [
   { __typename: 'GivingCampaignOptionType', id: '42', title: 'New Church Roof', categoryId: '4', categoryName: 'Building Fund', isClosed: false },
   { __typename: 'GivingCampaignOptionType', id: '43', title: 'Chairs', categoryId: '4', categoryName: 'Building Fund', isClosed: false },
-  // Closed: off the public site, but the desk can still record a late gift to it.
+  // Closed: off the campaigns list, but the desk can still record a late gift to it.
   { __typename: 'GivingCampaignOptionType', id: '44', title: 'Old Hall', categoryId: '4', categoryName: 'Building Fund', isClosed: true },
 ]
 

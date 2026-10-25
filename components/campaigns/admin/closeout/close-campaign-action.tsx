@@ -97,7 +97,8 @@ export function CloseCampaignAction({ campaign, onClosed }: CloseCampaignActionP
                   Any money left over stays in {campaign.categoryName}; nothing is moved.
                 </p>
                 <p>
-                  The campaign comes off the public site and stops taking new pledges. Late Pay Bill payments
+                  The campaign comes off the campaigns list and stops taking new pledges; its page stays up,
+                  marked closed, with the final total. Late Pay Bill payments
                   to <span className="font-mono font-medium text-foreground">{campaign.paybillCode}</span> are
                   still credited to it, and the desk can still record late gifts to it.
                 </p>

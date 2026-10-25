@@ -53,6 +53,16 @@ Feature: Public campaign pages
     Then they see a notice that the campaign is not taking gifts right now
     And there is no give form
 
+  Scenario: A closed campaign's link shows its final totals
+    Given the campaign "new-church-roof" "New Church Roof" has closed
+    When a visitor opens the campaign page "new-church-roof"
+    Then they see the heading "New Church Roof"
+    And they are told the campaign has closed and thanked for giving
+    And they see "KES 24,800.00" raised from "37 donors"
+    And there is no give form
+    And they are not asked to share the campaign
+    And the page does not count down the days
+
   Scenario: An unknown campaign link
     Given there is no public campaign "no-such-thing"
     When a visitor opens the campaign page "no-such-thing"
