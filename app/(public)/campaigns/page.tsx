@@ -4,7 +4,6 @@
  */
 
 import type { Metadata } from "next";
-import { Navigation } from "@/components/landing/navigation";
 import { CampaignListView } from "@/components/campaigns/public/campaign-list-view";
 
 export const metadata: Metadata = {
@@ -22,7 +21,6 @@ export const metadata: Metadata = {
 export default function CampaignsPage() {
   return (
     <div className="min-h-screen">
-      <Navigation />
       <main className="container mx-auto px-4 py-10 sm:py-14">
         <div className="mx-auto max-w-6xl space-y-8">
           <header className="max-w-2xl space-y-2">
