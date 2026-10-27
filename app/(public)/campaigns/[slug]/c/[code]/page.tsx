@@ -5,7 +5,6 @@
  */
 
 import type { Metadata } from "next";
-import { Navigation } from "@/components/landing/navigation";
 import { ChampionPageView } from "@/components/champions/public/champion-page-view";
 import { championMetadata, fetchChampionMeta } from "@/components/champions/public/server/champion-meta";
 
@@ -23,7 +22,6 @@ export default async function ChampionPage({ params }: ChampionPageProps) {
   const { slug, code } = await params;
   return (
     <div className="min-h-screen">
-      <Navigation />
       <main className="container mx-auto px-4 py-6 sm:py-10">
         <div className="mx-auto max-w-6xl">
           <ChampionPageView slug={slug} code={code} />

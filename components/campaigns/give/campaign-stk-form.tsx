@@ -13,7 +13,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@apollo/client/react";
@@ -31,6 +31,9 @@ import {
   type InitiateCampaignContributionVars,
 } from "@/lib/graphql/fundraising/give";
 import { toKenyanMsisdn } from "./phone";
+
+// Quick-amount preset chips for faster entry on mobile.
+const QUICK_AMOUNTS = [100, 200, 500, 1000, 2000, 5000] as const;
 
 const schema = z.object({
   phoneNumber: z.string().refine((v) => toKenyanMsisdn(v) !== null, {
@@ -72,11 +75,20 @@ export function CampaignStkForm({ slug, categoryId, purposeId, campaignId, champ
   const {
     register,
     handleSubmit,
+    setValue,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { phoneNumber: localPhone(user?.phoneNumber), amount: "" },
   });
+
+  const currentAmount = useWatch({ control, name: "amount" });
+  const parsedAmount = Number.parseFloat(currentAmount) || 0;
+
+  const selectPreset = (preset: number) => {
+    setValue("amount", String(preset), { shouldValidate: true });
+  };
 
   const onSubmit = async (values: FormValues) => {
     setServerError(null);
@@ -120,6 +132,27 @@ export function CampaignStkForm({ slug, categoryId, purposeId, campaignId, champ
           className={errors.amount ? "border-destructive" : ""}
           {...register("amount")}
         />
+        {/* Quick-amount preset chips */}
+        <div className="flex flex-wrap gap-1.5">
+          {QUICK_AMOUNTS.map((preset) => {
+            const isActive = parsedAmount === preset;
+            return (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => selectPreset(preset)}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                }`}
+                aria-label={`Set amount to KES ${preset.toLocaleString("en-KE")}`}
+              >
+                {preset.toLocaleString("en-KE")}
+              </button>
+            );
+          })}
+        </div>
         {errors.amount ? <p className="text-xs text-destructive">{errors.amount.message}</p> : null}
       </div>
       {serverError ? (

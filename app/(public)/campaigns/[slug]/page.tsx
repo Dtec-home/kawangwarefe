@@ -4,7 +4,6 @@
  */
 
 import type { Metadata } from "next";
-import { Navigation } from "@/components/landing/navigation";
 import { CampaignPageView } from "@/components/campaigns/public/campaign-page-view";
 import { campaignMetadata, fetchCampaignMeta } from "@/components/campaigns/public/server/campaign-meta";
 
@@ -22,7 +21,6 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   const { slug } = await params;
   return (
     <div className="min-h-screen">
-      <Navigation />
       <main className="container mx-auto px-4 py-6 sm:py-10">
         <div className="mx-auto max-w-6xl">
           <CampaignPageView slug={slug} />

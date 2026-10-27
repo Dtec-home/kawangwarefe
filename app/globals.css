@@ -416,3 +416,10 @@
   }
 }
 
+
+/* ── Chromeless campaign pages ────────────────────────────────────────────
+   When a layout sets data-no-chrome on <body>, hide the site-wide footer
+   and the mobile bottom-nav so shared campaign links are clean. */
+body[data-no-chrome] > footer {
+  display: none !important;
+}
