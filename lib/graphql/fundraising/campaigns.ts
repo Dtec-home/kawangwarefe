@@ -71,6 +71,7 @@ const CAMPAIGN_FIELDS = `
   startDate
   endDate
   paybillCode
+  whatsappGroupId
   status
   isPublic
   allowPledges

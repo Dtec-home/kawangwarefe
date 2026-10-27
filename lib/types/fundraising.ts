@@ -56,6 +56,7 @@ export interface Campaign {
   startDate: string | null;
   endDate: string | null;
   paybillCode: string;
+  whatsappGroupId: string;
   status: CampaignStatus;
   isPublic: boolean;
   allowPledges: boolean;
@@ -78,6 +79,7 @@ export interface CampaignInput {
   categoryId: string;
   targetAmount: string;
   paybillCode: string;
+  whatsappGroupId?: string;
   summary?: string;
   story?: string;
   coverImageUrl?: string;

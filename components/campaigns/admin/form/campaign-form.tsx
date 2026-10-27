@@ -197,6 +197,20 @@ export function CampaignForm({
             )}
           </div>
 
+          <div className="space-y-1 sm:col-span-2">
+            <Label htmlFor="campaign-whatsapp-group">WhatsApp group ID (optional)</Label>
+            <Input
+              id="campaign-whatsapp-group"
+              className="font-mono"
+              placeholder="e.g. 254700000000-123@g.us"
+              {...register("whatsappGroupId")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Paste the group ID from the WhatsApp gateway&apos;s <code>/groups</code> endpoint to enable live updates.
+            </p>
+            <FieldError message={errors.whatsappGroupId?.message} />
+          </div>
+
           <div className="space-y-1">
             <Label htmlFor="campaign-start">Start date</Label>
             <Input id="campaign-start" type="date" {...register("startDate")} />

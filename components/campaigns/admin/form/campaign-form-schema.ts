@@ -69,6 +69,7 @@ export const campaignFormSchema = z
       .string()
       .trim()
       .regex(PAYBILL_CODE_PATTERN, "Use 2 to 10 capital letters or digits, e.g. BUILD"),
+    whatsappGroupId: z.string().trim().max(100),
     startDate: z.string(),
     endDate: z.string(),
     summary: z.string().trim(),
@@ -104,6 +105,7 @@ export const EMPTY_CAMPAIGN_FORM: CampaignFormValues = {
   purposeId: "",
   targetAmount: "",
   paybillCode: "",
+  whatsappGroupId: "",
   startDate: "",
   endDate: "",
   summary: "",
@@ -123,6 +125,7 @@ export function toCampaignInput(values: CampaignFormValues): CampaignInput {
     purposeId: values.purposeId || null,
     targetAmount: values.targetAmount.trim(),
     paybillCode: normalisePaybillCode(values.paybillCode),
+    whatsappGroupId: values.whatsappGroupId.trim(),
     startDate: values.startDate || null,
     endDate: values.endDate || null,
     summary: values.summary.trim(),
@@ -149,6 +152,7 @@ export function campaignToFormValues(campaign: Campaign): CampaignFormValues {
     purposeId: campaign.purposeId ?? "",
     targetAmount: campaign.targetAmount,
     paybillCode: campaign.paybillCode,
+    whatsappGroupId: campaign.whatsappGroupId ?? "",
     startDate: campaign.startDate ?? "",
     endDate: campaign.endDate ?? "",
     summary: campaign.summary,
