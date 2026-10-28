@@ -7,11 +7,14 @@ import type { Metadata } from "next";
 import { CampaignPageView } from "@/components/campaigns/public/campaign-page-view";
 import { campaignMetadata, fetchCampaignMeta } from "@/components/campaigns/public/server/campaign-meta";
 
+// Previews carry live figures (DEPARTMENT_CAMPAIGNS D14): render every request.
+export const dynamic = "force-dynamic";
+
 interface CampaignPageProps {
   params: Promise<{ slug: string }>;
 }
 
-/** Title, description, canonical, Open Graph and X card; falls back if the API is down. */
+/** Title, description, canonical, Open Graph and X card with the versioned image; falls back if the API is down. */
 export async function generateMetadata({ params }: CampaignPageProps): Promise<Metadata> {
   const { slug } = await params;
   return campaignMetadata(slug, await fetchCampaignMeta(slug));

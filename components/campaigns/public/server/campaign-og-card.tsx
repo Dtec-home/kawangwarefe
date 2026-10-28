@@ -13,7 +13,9 @@ const TEAL = "#007a8a";
 const TEAL_LIGHT = "#5fd4e0";
 
 export function CampaignOgCard({ meta }: { meta: CampaignMeta | null }) {
+  // The bar is capped at 100%; the label is the post's figure, one decimal (D14).
   const percent = meta ? Math.max(0, Math.min(100, Math.round(meta.progress.percent))) : 0;
+  const percentLabel = meta ? `${Number(meta.progress.percent).toFixed(1)}%` : "";
   return (
     <div
       style={{
@@ -51,7 +53,7 @@ export function CampaignOgCard({ meta }: { meta: CampaignMeta | null }) {
               <span style={{ fontSize: 52, fontWeight: 700 }}>{wholeKes(meta.progress.raised)}</span>
               <span style={{ fontSize: 30, opacity: 0.8 }}>{`raised of ${wholeKes(meta.progress.target)}`}</span>
             </div>
-            <span style={{ fontSize: 40, fontWeight: 700, color: TEAL_LIGHT }}>{`${percent}%`}</span>
+            <span style={{ fontSize: 40, fontWeight: 700, color: TEAL_LIGHT }}>{percentLabel}</span>
           </div>
           <div style={{ display: "flex", height: 20, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.18)" }}>
             <div style={{ width: `${percent}%`, height: 20, borderRadius: 10, backgroundColor: TEAL_LIGHT }} />

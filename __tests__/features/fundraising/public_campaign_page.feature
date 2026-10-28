@@ -73,7 +73,7 @@ Feature: Public campaign pages
     Given the church API describes the campaign "new-church-roof" "New Church Roof"
     When the link preview for "new-church-roof" is built
     Then the preview title is "New Church Roof"
-    And the preview description says "KES 24,800 raised of KES 100,000"
+    And the preview description says "Raised: KES 24,800 (24.8%) · Target: KES 100,000"
     And the preview points to "/campaigns/new-church-roof"
     And the preview is a large-image card
 

@@ -66,6 +66,7 @@ export const PUBLIC_CAMPAIGN_PAGE = gql`
       allowPledges
       allowChampions
       publicUrl
+      previewVersion
       paymentInstructions {
         paybillNumber
         accountReference

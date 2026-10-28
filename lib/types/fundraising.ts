@@ -158,7 +158,10 @@ export interface PublicCampaign {
   /** Sent with the gift so a department's auto-split never splits campaign money. */
   purposeId: string | null;
   campaignId: string;
+  /** Carries ?v=<previewVersion>, so a shared link's WhatsApp preview is never stale. */
   publicUrl: string;
+  /** Changes whenever what the link preview shows changes (DEPARTMENT_CAMPAIGNS D14). */
+  previewVersion: string;
   paymentInstructions: PaymentInstructions;
   progress: CampaignProgress;
   updates: CampaignUpdate[];
