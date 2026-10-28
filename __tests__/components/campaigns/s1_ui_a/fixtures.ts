@@ -63,6 +63,7 @@ export function campaign(o: Record<string, unknown> = {}) {
     startDate: '2026-11-01',
     endDate: '2026-12-31',
     paybillCode: 'BUILD',
+    whatsappGroupId: '',
     status: 'DRAFT',
     isPublic: true,
     allowPledges: true,
@@ -82,6 +83,11 @@ export function campaign(o: Record<string, unknown> = {}) {
     },
     progress: progress('250000.00', '1000000.00', '100000.00'),
     canApprove: false,
+    countingMode: 'TAGGED',
+    requestedCountingMode: null,
+    countingModeRequestedBy: null,
+    canApproveCountingMode: false,
+    lastLeaderboardPost: null,
     ...o,
   }
 }

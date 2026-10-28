@@ -19,7 +19,10 @@ import { CheckCircle2, Copy, Loader2, Pause, Pencil, Play, Send, ShieldAlert, Ta
 import { toast } from "sonner";
 
 import type { CampaignTabProps } from "@/components/campaigns/admin/types";
+import { CampaignCountingCard } from "@/components/campaigns/admin/counting/campaign-counting-card";
+import { countingModeLabel, lowerFirst } from "@/components/campaigns/admin/counting/counting-mode";
 import { EditCampaign } from "@/components/campaigns/admin/form/edit-campaign";
+import { LeaderboardDeliveryCard } from "@/components/campaigns/admin/leaderboard/leaderboard-delivery-card";
 import { ReturnToDraftDialog } from "@/components/campaigns/admin/form/return-to-draft-dialog";
 import { CampaignStatusBadge } from "@/components/campaigns/admin/list/campaign-status-badge";
 import { CampaignProgress } from "@/components/campaigns/shared/campaign-progress";
@@ -28,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   APPROVE_CAMPAIGN,
   GET_CAMPAIGN,
@@ -200,6 +204,11 @@ export const CampaignOverview: React.FC<CampaignTabProps> = ({ campaignId }) => 
                 <span data-testid="campaign-status">
                   <CampaignStatusBadge status={campaign.status} />
                 </span>
+                {campaign.countingMode === "DEPARTMENT" ? (
+                  <StatusBadge variant="info" data-testid="campaign-department-backed">
+                    Counts {lowerFirst(countingModeLabel("DEPARTMENT", campaign.categoryName))}
+                  </StatusBadge>
+                ) : null}
               </div>
               <p className="text-sm text-muted-foreground">
                 <span className="font-mono">{campaign.paybillCode}</span> · {campaign.categoryName}
@@ -296,6 +305,8 @@ export const CampaignOverview: React.FC<CampaignTabProps> = ({ campaignId }) => 
           </Card>
 
           <div className="space-y-4">
+            <CampaignCountingCard campaign={campaign} onChanged={() => void refetch()} />
+            <LeaderboardDeliveryCard campaign={campaign} />
             <Card>
               <CardHeader>
                 <CardTitle>How to give</CardTitle>

@@ -88,6 +88,7 @@ describe('mapping', () => {
       targetAmount: '1000000',
       paybillCode: 'BUILD',
       whatsappGroupId: '',
+      countingMode: 'TAGGED',
       startDate: null,
       endDate: null,
       summary: 'hi',

@@ -40,6 +40,18 @@ export interface PaymentInstructions {
   text: string;
 }
 
+/** What counts towards a campaign (ADR-0013). */
+export type CampaignCountingMode = "TAGGED" | "DEPARTMENT";
+
+/** The newest automatic WhatsApp group post for a campaign (staff only). */
+export interface LeaderboardPost {
+  status: "queued" | "sent" | "failed" | "skipped" | string;
+  attempts: number;
+  lastError: string;
+  sentAt: string | null;
+  createdAt: string;
+}
+
 export interface Campaign {
   id: string;
   title: string;
@@ -72,6 +84,13 @@ export interface Campaign {
   paymentInstructions: PaymentInstructions;
   progress: CampaignProgress;
   canApprove: boolean;
+  countingMode: CampaignCountingMode;
+  /** A counting change waiting for a second approver. */
+  requestedCountingMode: CampaignCountingMode | null;
+  countingModeRequestedBy: string | null;
+  /** The viewer may approve that change (not the requester, not the creator). */
+  canApproveCountingMode: boolean;
+  lastLeaderboardPost: LeaderboardPost | null;
 }
 
 export interface CampaignInput {
@@ -79,7 +98,10 @@ export interface CampaignInput {
   categoryId: string;
   targetAmount: string;
   paybillCode: string;
-  whatsappGroupId?: string;
+  /** Left out or null = keep the current value; "" clears it. */
+  whatsappGroupId?: string | null;
+  /** Draft and awaiting approval only; left out or null = keep. */
+  countingMode?: CampaignCountingMode | null;
   summary?: string;
   story?: string;
   coverImageUrl?: string;

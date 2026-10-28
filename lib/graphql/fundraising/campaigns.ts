@@ -7,7 +7,13 @@
 
 import { gql } from "@apollo/client";
 
-import type { Campaign, CampaignInput, CampaignResponse, CampaignStatus } from "@/lib/types/fundraising";
+import type {
+  Campaign,
+  CampaignCountingMode,
+  CampaignInput,
+  CampaignResponse,
+  CampaignStatus,
+} from "@/lib/types/fundraising";
 
 const PROGRESS_FIELDS = `
   progress {
@@ -94,6 +100,17 @@ const CAMPAIGN_FIELDS = `
   }
   ${PROGRESS_FIELDS}
   canApprove
+  countingMode
+  requestedCountingMode
+  countingModeRequestedBy
+  canApproveCountingMode
+  lastLeaderboardPost {
+    status
+    attempts
+    lastError
+    sentAt
+    createdAt
+  }
 `;
 
 const CAMPAIGN_RESPONSE_FIELDS = `
@@ -194,6 +211,40 @@ export const RETURN_CAMPAIGN_TO_DRAFT = gql`
 `;
 
 export interface ReturnCampaignToDraftVars {
+  id: string;
+  reason: string;
+}
+
+export const REQUEST_CAMPAIGN_COUNTING_MODE = gql`
+  mutation RequestCampaignCountingMode($id: ID!, $mode: CampaignCountingMode!) {
+    requestCampaignCountingMode(id: $id, mode: $mode) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export interface RequestCampaignCountingModeVars {
+  id: string;
+  mode: CampaignCountingMode;
+}
+
+export const APPROVE_CAMPAIGN_COUNTING_MODE = gql`
+  mutation ApproveCampaignCountingMode($id: ID!) {
+    approveCampaignCountingMode(id: $id) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export const REJECT_CAMPAIGN_COUNTING_MODE = gql`
+  mutation RejectCampaignCountingMode($id: ID!, $reason: String!) {
+    rejectCampaignCountingMode(id: $id, reason: $reason) {
+      ${CAMPAIGN_RESPONSE_FIELDS}
+    }
+  }
+`;
+
+export interface RejectCampaignCountingModeVars {
   id: string;
   reason: string;
 }

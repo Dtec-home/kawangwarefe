@@ -16,6 +16,7 @@ import {
 } from "@/lib/graphql/fundraising/campaigns";
 import type { Campaign, CampaignInput } from "@/lib/types/fundraising";
 
+import { countingIsOnForm } from "../counting/counting-mode";
 import { CampaignForm } from "./campaign-form";
 import { campaignToFormValues } from "./campaign-form-schema";
 
@@ -59,6 +60,7 @@ export function EditCampaign({ campaign, onSaved, onCancel }: EditCampaignProps)
       serverError={serverError}
       onSubmit={save}
       onCancel={onCancel}
+      countingEditable={countingIsOnForm(campaign.status)}
     />
   );
 }
