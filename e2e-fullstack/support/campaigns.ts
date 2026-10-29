@@ -79,7 +79,14 @@ export type CampaignStage = "draft" | "submitted" | "approved";
 export async function campaignThroughApi(
   backend: Backend,
   world: World,
-  opts: { title: string; code: string; department?: string; target?: string; stage: CampaignStage },
+  opts: {
+    title: string;
+    code: string;
+    department?: string;
+    target?: string;
+    stage: CampaignStage;
+    countingMode?: "TAGGED" | "DEPARTMENT";
+  },
 ): Promise<CampaignRef> {
   const treasurer = await tokenOf(backend, world, "treasurer");
   const created = await gqlOk(
@@ -96,6 +103,7 @@ export async function campaignThroughApi(
         isPublic: true,
         allowPledges: true,
         allowChampions: false,
+        countingMode: opts.countingMode ?? "TAGGED",
       },
     },
     treasurer,

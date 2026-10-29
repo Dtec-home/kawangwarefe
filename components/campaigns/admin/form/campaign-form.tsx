@@ -21,7 +21,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { CampaignInput } from "@/lib/types/fundraising";
+import { cn } from "@/lib/utils";
 
+import { COUNTING_MODES, countingModeHint, countingModeLabel } from "../counting/counting-mode";
 import {
   EMPTY_CAMPAIGN_FORM,
   campaignFormSchema,
@@ -52,6 +54,11 @@ export interface CampaignFormProps {
   submitting?: boolean;
   /** The server's message when it refused the last save. */
   serverError?: string | null;
+  /**
+   * Draft and awaiting approval: the counting mode is chosen here. Once
+   * approved it is shown read-only; changing it is a request on the Overview.
+   */
+  countingEditable?: boolean;
   onSubmit: (input: CampaignInput) => void | Promise<void>;
   onCancel?: () => void;
 }
@@ -63,6 +70,7 @@ export function CampaignForm({
   serverError,
   onSubmit,
   onCancel,
+  countingEditable = true,
 }: CampaignFormProps) {
   const {
     control,
@@ -79,8 +87,9 @@ export function CampaignForm({
   const startDate = useWatch({ control, name: "startDate" });
   const purposes = useDepartmentPurposes(categoryId);
   const paybillCode = register("paybillCode");
+  const departmentName = departments.find((d) => d.id === categoryId)?.name;
 
-  const submit = handleSubmit((values) => onSubmit(toCampaignInput(values)));
+  const submit = handleSubmit((values) => onSubmit(toCampaignInput(values, { countingEditable })));
 
   return (
     <form onSubmit={submit} noValidate className="space-y-6">
@@ -197,6 +206,22 @@ export function CampaignForm({
             )}
           </div>
 
+          <div className="space-y-1 sm:col-span-2">
+            <Label htmlFor="campaign-whatsapp-group">WhatsApp group ID (optional)</Label>
+            <Input
+              id="campaign-whatsapp-group"
+              className="font-mono"
+              placeholder="e.g. 120363000000000000@g.us"
+              aria-invalid={errors.whatsappGroupId ? true : undefined}
+              {...register("whatsappGroupId")}
+            />
+            <p className="text-xs text-muted-foreground">
+              The group that gets the live leaderboard after gifts. Paste the id from the WhatsApp gateway&apos;s{" "}
+              <code>/groups</code> list; leave blank for no updates.
+            </p>
+            <FieldError message={errors.whatsappGroupId?.message} />
+          </div>
+
           <div className="space-y-1">
             <Label htmlFor="campaign-start">Start date</Label>
             <Input id="campaign-start" type="date" {...register("startDate")} />
@@ -213,6 +238,53 @@ export function CampaignForm({
             />
             <FieldError message={errors.endDate?.message} />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>What counts towards this campaign</CardTitle>
+          <CardDescription>
+            {countingEditable
+              ? "Choose before the campaign is approved. Changing it later needs a second admin or pastor."
+              : "Set when the campaign was approved. To change it, ask from the Overview; a second admin or pastor must approve."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Controller
+            control={control}
+            name="countingMode"
+            render={({ field }) => (
+              <div role="radiogroup" aria-label="What counts towards this campaign" className="grid gap-3 sm:grid-cols-2">
+                {COUNTING_MODES.map((mode) => {
+                  const checked = field.value === mode;
+                  return (
+                    <label
+                      key={mode}
+                      className={cn(
+                        "flex flex-col gap-1 rounded-lg border p-3 text-sm transition-colors",
+                        "has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50",
+                        checked ? "border-primary bg-primary/10" : "hover:bg-muted",
+                        countingEditable ? "cursor-pointer" : "cursor-not-allowed opacity-70",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="countingMode"
+                        value={mode}
+                        checked={checked}
+                        disabled={!countingEditable}
+                        onChange={() => field.onChange(mode)}
+                        className="sr-only"
+                      />
+                      <span className="font-medium">{countingModeLabel(mode, departmentName)}</span>
+                      <span className="text-xs text-muted-foreground">{countingModeHint(mode, departmentName)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          />
         </CardContent>
       </Card>
 

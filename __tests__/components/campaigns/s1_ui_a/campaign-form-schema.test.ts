@@ -87,6 +87,8 @@ describe('mapping', () => {
       purposeId: null,
       targetAmount: '1000000',
       paybillCode: 'BUILD',
+      whatsappGroupId: '',
+      countingMode: 'TAGGED',
       startDate: null,
       endDate: null,
       summary: 'hi',
@@ -97,6 +99,18 @@ describe('mapping', () => {
       allowPledges: true,
       allowChampions: false,
       reminderPolicy: { frequency: 'monthly', daysBeforeDue: 3, overdueNotices: 1 },
+    })
+
+  })
+
+  it('sends the configured WhatsApp group ID when editing a campaign', () => {
+    expect(
+      toCampaignInput({
+        ...valid,
+        whatsappGroupId: ' 120363278722742692@g.us ',
+      }),
+    ).toMatchObject({
+      whatsappGroupId: '120363278722742692@g.us',
     })
   })
 

@@ -10,7 +10,11 @@ import { z } from "zod";
 
 import type { Campaign, CampaignInput } from "@/lib/types/fundraising";
 
+import { COUNTING_MODES } from "../counting/counting-mode";
+
 export const PAYBILL_CODE_PATTERN = /^[A-Z0-9]{2,10}$/;
+/** The same rule as the backend (CampaignRules): blank, or a group id ending in @g.us. */
+export const WHATSAPP_GROUP_PATTERN = /^[0-9-]+@g\.us$/;
 const AMOUNT_PATTERN = /^\d+(\.\d{1,2})?$/;
 const YOUTUBE_PATTERN = /^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i;
 
@@ -69,6 +73,12 @@ export const campaignFormSchema = z
       .string()
       .trim()
       .regex(PAYBILL_CODE_PATTERN, "Use 2 to 10 capital letters or digits, e.g. BUILD"),
+    whatsappGroupId: z
+      .string()
+      .trim()
+      .max(100)
+      .refine((v) => v === "" || WHATSAPP_GROUP_PATTERN.test(v), "Paste a group id ending in @g.us"),
+    countingMode: z.enum(COUNTING_MODES),
     startDate: z.string(),
     endDate: z.string(),
     summary: z.string().trim(),
@@ -104,6 +114,8 @@ export const EMPTY_CAMPAIGN_FORM: CampaignFormValues = {
   purposeId: "",
   targetAmount: "",
   paybillCode: "",
+  whatsappGroupId: "",
+  countingMode: "TAGGED",
   startDate: "",
   endDate: "",
   summary: "",
@@ -116,13 +128,23 @@ export const EMPTY_CAMPAIGN_FORM: CampaignFormValues = {
   reminderPolicy: DEFAULT_REMINDER_POLICY,
 };
 
-export function toCampaignInput(values: CampaignFormValues): CampaignInput {
+/**
+ * The GraphQL input for the form's values. The counting mode is sent only while
+ * it is set on the form (draft, awaiting approval); afterwards it is left out
+ * and the backend keeps it (changing it then takes a second approver).
+ */
+export function toCampaignInput(
+  values: CampaignFormValues,
+  { countingEditable = true }: { countingEditable?: boolean } = {},
+): CampaignInput {
   return {
     title: values.title.trim(),
     categoryId: values.categoryId,
     purposeId: values.purposeId || null,
     targetAmount: values.targetAmount.trim(),
     paybillCode: normalisePaybillCode(values.paybillCode),
+    whatsappGroupId: values.whatsappGroupId.trim(),
+    countingMode: countingEditable ? values.countingMode : null,
     startDate: values.startDate || null,
     endDate: values.endDate || null,
     summary: values.summary.trim(),
@@ -149,6 +171,8 @@ export function campaignToFormValues(campaign: Campaign): CampaignFormValues {
     purposeId: campaign.purposeId ?? "",
     targetAmount: campaign.targetAmount,
     paybillCode: campaign.paybillCode,
+    whatsappGroupId: campaign.whatsappGroupId ?? "",
+    countingMode: campaign.countingMode ?? "TAGGED",
     startDate: campaign.startDate ?? "",
     endDate: campaign.endDate ?? "",
     summary: campaign.summary,

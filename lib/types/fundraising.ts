@@ -40,6 +40,18 @@ export interface PaymentInstructions {
   text: string;
 }
 
+/** What counts towards a campaign (ADR-0013). */
+export type CampaignCountingMode = "TAGGED" | "DEPARTMENT";
+
+/** The newest automatic WhatsApp group post for a campaign (staff only). */
+export interface LeaderboardPost {
+  status: "queued" | "sent" | "failed" | "skipped" | string;
+  attempts: number;
+  lastError: string;
+  sentAt: string | null;
+  createdAt: string;
+}
+
 export interface Campaign {
   id: string;
   title: string;
@@ -56,6 +68,7 @@ export interface Campaign {
   startDate: string | null;
   endDate: string | null;
   paybillCode: string;
+  whatsappGroupId: string;
   status: CampaignStatus;
   isPublic: boolean;
   allowPledges: boolean;
@@ -71,6 +84,13 @@ export interface Campaign {
   paymentInstructions: PaymentInstructions;
   progress: CampaignProgress;
   canApprove: boolean;
+  countingMode: CampaignCountingMode;
+  /** A counting change waiting for a second approver. */
+  requestedCountingMode: CampaignCountingMode | null;
+  countingModeRequestedBy: string | null;
+  /** The viewer may approve that change (not the requester, not the creator). */
+  canApproveCountingMode: boolean;
+  lastLeaderboardPost: LeaderboardPost | null;
 }
 
 export interface CampaignInput {
@@ -78,6 +98,10 @@ export interface CampaignInput {
   categoryId: string;
   targetAmount: string;
   paybillCode: string;
+  /** Left out or null = keep the current value; "" clears it. */
+  whatsappGroupId?: string | null;
+  /** Draft and awaiting approval only; left out or null = keep. */
+  countingMode?: CampaignCountingMode | null;
   summary?: string;
   story?: string;
   coverImageUrl?: string;
@@ -134,7 +158,10 @@ export interface PublicCampaign {
   /** Sent with the gift so a department's auto-split never splits campaign money. */
   purposeId: string | null;
   campaignId: string;
+  /** Carries ?v=<previewVersion>, so a shared link's WhatsApp preview is never stale. */
   publicUrl: string;
+  /** Changes whenever what the link preview shows changes (DEPARTMENT_CAMPAIGNS D14). */
+  previewVersion: string;
   paymentInstructions: PaymentInstructions;
   progress: CampaignProgress;
   updates: CampaignUpdate[];

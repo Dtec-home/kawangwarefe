@@ -8,7 +8,7 @@
 
 import type { Metadata } from "next";
 import type { CampaignProgress, PublicCampaign, PublicChampion } from "@/lib/types/fundraising";
-import { wholeKes } from "@/components/campaigns/public/server/campaign-meta";
+import { previewFetchHeaders, wholeKes } from "@/components/campaigns/public/server/campaign-meta";
 import { championPath } from "../champion-format";
 
 export type ChampionMeta = Pick<PublicChampion, "championName" | "code" | "raised" | "donorCount" | "personalTarget"> & {
@@ -34,22 +34,23 @@ interface FetchOptions {
   fetchImpl?: typeof fetch;
   endpoint?: string;
   timeoutMs?: number;
-  revalidate?: number;
+  previewToken?: string;
 }
 
 export async function fetchChampionMeta(
   slug: string,
   code: string,
-  { fetchImpl = fetch, endpoint = DEFAULT_ENDPOINT, timeoutMs = 3000, revalidate = 300 }: FetchOptions = {},
+  { fetchImpl = fetch, endpoint = DEFAULT_ENDPOINT, timeoutMs = 3000, previewToken }: FetchOptions = {},
 ): Promise<ChampionMeta | null> {
   try {
     const response = await fetchImpl(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // Fresh figures, past the public rate limit, as campaign previews (D14).
+      headers: previewFetchHeaders(previewToken),
       body: JSON.stringify({ query: QUERY, variables: { slug, code } }),
       signal: AbortSignal.timeout(timeoutMs),
-      next: { revalidate },
-    } as RequestInit);
+      cache: "no-store",
+    });
     if (!response.ok) return null;
     const body = (await response.json()) as { data?: { publicChampion?: ChampionMeta | null }; errors?: unknown[] };
     if (body.errors?.length) return null;
