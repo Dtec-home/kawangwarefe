@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dialog";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { PayerRecordOffer, type PayerRecord } from "@/components/members/payer-record-offer";
+import { MemberPhonesDialog } from "@/components/members/phones/member-phones-dialog";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
@@ -976,6 +977,7 @@ function MembersPageContent() {
                             </Button>
                             <ManageRolesDialog member={member} onSuccess={showSuccess} />
                             <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                            <MemberPhonesDialog member={member} />
                             {trackingCategories.length > 0 && (
                               <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                             )}
@@ -1053,6 +1055,7 @@ function MembersPageContent() {
                                   </Button>
                                   <ManageRolesDialog member={member} onSuccess={showSuccess} />
                                   <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                                  <MemberPhonesDialog member={member} compact />
                                   {trackingCategories.length > 0 && (
                                     <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                                   )}
