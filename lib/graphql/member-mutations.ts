@@ -26,8 +26,20 @@ const MEMBER_FIELDS = gql`
   }
 `;
 
+/** An unidentified Pay Bill payer's record for a number (MP-0). */
+const PAYER_RECORD_FIELDS = gql`
+  fragment PayerRecordFields on PayerRecordType {
+    memberId
+    payerName
+    giftCount
+    giftTotal
+    lastGiftAt
+  }
+`;
+
 export const CREATE_MEMBER = gql`
   ${MEMBER_FIELDS}
+  ${PAYER_RECORD_FIELDS}
   mutation CreateMember(
     $firstName: String!
     $lastName: String!
@@ -46,8 +58,50 @@ export const CREATE_MEMBER = gql`
     ) {
       success
       message
+      code
       member {
         ...MemberFields
+      }
+      payerRecord {
+        ...PayerRecordFields
+      }
+    }
+  }
+`;
+
+/**
+ * Turn an unidentified Pay Bill payer's record into the member being added
+ * (MP-0). Offered when createMember answers code PAYER_RECORD_EXISTS.
+ */
+export const CLAIM_PAYER_RECORD = gql`
+  ${MEMBER_FIELDS}
+  ${PAYER_RECORD_FIELDS}
+  mutation ClaimPayerRecord(
+    $memberId: ID!
+    $phoneNumber: String!
+    $firstName: String!
+    $lastName: String!
+    $email: String
+    $roleNames: [String!]
+    $groupIds: [ID!]
+  ) {
+    claimPayerRecord(
+      memberId: $memberId
+      phoneNumber: $phoneNumber
+      firstName: $firstName
+      lastName: $lastName
+      email: $email
+      roleNames: $roleNames
+      groupIds: $groupIds
+    ) {
+      success
+      message
+      code
+      member {
+        ...MemberFields
+      }
+      payerRecord {
+        ...PayerRecordFields
       }
     }
   }
@@ -71,6 +125,7 @@ export const UPDATE_MEMBER = gql`
     ) {
       success
       message
+      code
       member {
         ...MemberFields
       }
