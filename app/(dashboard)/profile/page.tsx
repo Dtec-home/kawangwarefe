@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { MemberLayout } from "@/components/layouts/member-layout";
+import { MemberPhonesPanel } from "@/components/members/phones/member-phones-panel";
 import {
   Card,
   CardAction,
@@ -435,9 +436,12 @@ function ProfileContent() {
             <Label className="text-sm text-muted-foreground">Name</Label>
             <p className="font-medium">{me.fullName}</p>
           </div>
-          <div>
-            <Label className="text-sm text-muted-foreground">Phone</Label>
-            <p className="font-medium">{me.phoneNumber}</p>
+          <div className="space-y-2" data-tour="profile-phones">
+            <Label className="text-sm text-muted-foreground">Phone numbers</Label>
+            <p className="text-sm text-muted-foreground">
+              Any of your numbers signs you in and credits your giving. Receipts go to the primary.
+            </p>
+            <MemberPhonesPanel memberId={me.id} mode="self" />
           </div>
 
           <Card id="contribution-totals" data-tour="profile-totals" tabIndex={-1}>

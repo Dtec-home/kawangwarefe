@@ -107,6 +107,12 @@ describe('MembersPage', () => {
     expect(screen.getByText('Import')).toBeInTheDocument()
   })
 
+  it("offers each member's phone numbers (MP-2)", () => {
+    render(<MembersPage />)
+    expect(screen.getAllByTitle('Phone numbers').length).toBeGreaterThan(0)
+    expect(screen.getAllByLabelText('Phone numbers of John Doe').length).toBeGreaterThan(0)
+  })
+
   it('offers the recorder role with its description (T2.4)', async () => {
     render(<MembersPage />)
     fireEvent.click(screen.getAllByTitle('Manage Roles')[0])
