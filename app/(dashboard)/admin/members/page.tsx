@@ -47,6 +47,10 @@ import {
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { PayerRecordOffer, type PayerRecord } from "@/components/members/payer-record-offer";
 import { MemberPhonesDialog } from "@/components/members/phones/member-phones-dialog";
+import { MergeWorkspace } from "@/components/members/merge/merge-workspace";
+import { RecentMerges } from "@/components/members/merge/recent-merges";
+import { POSSIBLE_DUPLICATE_MEMBERS } from "@/lib/graphql/member-merge";
+import { useQuery as useApolloQuery } from "@apollo/client/react";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
@@ -70,6 +74,7 @@ import {
   TrendingUp,
   UsersRound,
   Hash,
+  GitMerge,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -680,6 +685,87 @@ function ManageDepartmentIdsDialog({
   );
 }
 
+// ─── Possible Duplicates + Merge ──────────────────────────────────
+
+interface DuplicateItem {
+  reason: string;
+  giftCounts: number[];
+  giftTotals: string[];
+  members: Array<{ id: string; fullName: string; phoneNumber: string | null; memberNumber: string | null; isGuest: boolean }>;
+}
+
+function PossibleDuplicatesSection() {
+  const { data, loading } = useApolloQuery<{ possibleDuplicateMembers: { total: number; hasMore: boolean; items: DuplicateItem[] } }>(
+    POSSIBLE_DUPLICATE_MEMBERS, { variables: { limit: 20, offset: 0 }, fetchPolicy: "cache-and-network" },
+  );
+  const [pair, setPair] = useState<{ survivorId: string; duplicateId: string } | null>(null);
+  const items = data?.possibleDuplicateMembers?.items ?? [];
+
+  if (!loading && items.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <GitMerge className="h-5 w-5 text-warning" />
+          Possible Duplicates
+        </CardTitle>
+        <CardDescription>
+          Members that may be the same person. Review and merge where confirmed.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading && (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+          </div>
+        )}
+        {!loading && items.length > 0 && (
+          <ul className="space-y-3">
+            {items.map((item, i) => {
+              const [a, b] = item.members;
+              return (
+                <li key={i} className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">
+                      {a.fullName}
+                      {a.isGuest && <Badge variant="outline" className="ml-1 text-xs">Guest</Badge>}
+                      {" · "}
+                      {b.fullName}
+                      {b.isGuest && <Badge variant="outline" className="ml-1 text-xs">Guest</Badge>}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.reason}
+                      {" · "}
+                      {item.giftCounts[0] ?? 0} / {item.giftCounts[1] ?? 0} gifts
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setPair({ survivorId: a.id, duplicateId: b.id })}>
+                    <GitMerge className="h-3.5 w-3.5 mr-1" /> Merge
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </CardContent>
+
+      {/* Merge workspace dialog */}
+      <Dialog open={!!pair} onOpenChange={(open) => { if (!open) setPair(null); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Merge duplicate members</DialogTitle>
+            <DialogDescription>
+              Preview what will move, then confirm with the survivor&apos;s full name.
+            </DialogDescription>
+          </DialogHeader>
+          {pair && <MergeWorkspace survivorId={pair.survivorId} duplicateId={pair.duplicateId} />}
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
 // ─── Main Members Page ─────────────────────────────────────────────
 
 function MembersPageContent() {
@@ -1098,6 +1184,23 @@ function MembersPageContent() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Possible duplicates + merge */}
+        <PossibleDuplicatesSection />
+
+        {/* Recent merges with undo */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GitMerge className="h-5 w-5" />
+              Recent Merges
+            </CardTitle>
+            <CardDescription>Merges made by admins, each with an Undo option.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RecentMerges />
           </CardContent>
         </Card>
       </div>
