@@ -60,9 +60,3 @@ export const POSSIBLE_DUPLICATE_MEMBERS = gql`
     }
   }
 `;
-
-export const MEMBER_TOMBSTONE_REDIRECT = gql`
-  query MemberTombstoneRedirect($memberId: ID!) {
-    memberTombstoneRedirect(memberId: $memberId) { id mergedIntoId }
-  }
-`;

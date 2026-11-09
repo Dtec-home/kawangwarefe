@@ -43,6 +43,8 @@ vi.mock('@/lib/auth/auth-context', () => ({
 vi.mock('@/lib/hooks/use-user-role', () => ({
   useUserRole: () => ({
     isStaff: true,
+    isAdmin: true,
+    isTreasurer: false,
     canAccessAdmin: true,
     canAccessFeature: () => true,
     isAuthenticated: true,
@@ -124,6 +126,12 @@ describe('MembersPage', () => {
     render(<MembersPage />)
     expect(screen.getAllByTitle('Phone numbers').length).toBeGreaterThan(0)
     expect(screen.getAllByLabelText('Phone numbers of John Doe').length).toBeGreaterThan(0)
+  })
+
+  it('offers admins and treasurers a link to merge duplicates (F3)', () => {
+    render(<MembersPage />)
+    expect(screen.getByRole('link', { name: /Merge duplicates/ })).toHaveAttribute('href', '/admin/members/merge')
+    expect(screen.queryByText('Possible Duplicates')).not.toBeInTheDocument()
   })
 
   it('offers the recorder role with its description (T2.4)', async () => {
