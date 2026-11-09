@@ -10,6 +10,7 @@
 
 import { useState } from "react";
 import { useQuery, useLazyQuery, useMutation } from "@apollo/client/react";
+import { AUTO_SPLIT, NO_PURPOSE, allocationIsValid, purposeChoice, purposeIdForApi } from "@/lib/c2b/allocation-rules";
 import {
   GET_C2B_TRANSACTIONS,
   GET_C2B_TRANSACTION_STATS,
@@ -84,6 +85,7 @@ interface Category {
   name: string;
   code: string;
   routingMode: string;
+  hasAutoSplit?: boolean;
 }
 
 interface Purpose {
@@ -157,10 +159,7 @@ function AllocationRowItem({
   row, categories, canRemove, onChange, onRemove,
 }: AllocationRowProps) {
   const selectedCat = categories.find((c) => c.id === row.categoryId);
-  const needsPurpose =
-    selectedCat?.routingMode === "REQUIRES_PURPOSE" ||
-    selectedCat?.routingMode === "OPTIONAL_DETAILS";
-  const purposeRequired = selectedCat?.routingMode === "REQUIRES_PURPOSE";
+  const { show: needsPurpose, required: purposeRequired, autoSplit } = purposeChoice(selectedCat);
 
   const [fetchPurposes, { data: purposesData, loading: purposesLoading }] =
     useLazyQuery<{ departmentPurposes: Purpose[] }>(GET_DEPARTMENT_PURPOSES);
@@ -184,7 +183,7 @@ function AllocationRowItem({
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">Department</Label>
         <Select value={row.categoryId} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="h-9">
+          <SelectTrigger className="h-9" aria-label="Department">
             <SelectValue placeholder="Select department…" />
           </SelectTrigger>
           <SelectContent>
@@ -227,13 +226,19 @@ function AllocationRowItem({
           purposesLoading ? (
             <p className="text-xs text-muted-foreground pt-2">Loading…</p>
           ) : purposes.length > 0 ? (
-            <Select value={row.purposeId} onValueChange={(v) => onChange({ purposeId: v })}>
-              <SelectTrigger className="h-9">
+            <Select
+              value={row.purposeId || (autoSplit ? AUTO_SPLIT : purposeRequired ? "" : NO_PURPOSE)}
+              onValueChange={(v) => onChange({ purposeId: v })}
+            >
+              <SelectTrigger className="h-9" aria-label="Purpose">
                 <SelectValue placeholder="Select purpose…" />
               </SelectTrigger>
               <SelectContent>
-                {!purposeRequired && (
-                  <SelectItem value="">— None —</SelectItem>
+                {autoSplit && (
+                  <SelectItem value={AUTO_SPLIT}>Split automatically (as configured)</SelectItem>
+                )}
+                {!purposeRequired && !autoSplit && (
+                  <SelectItem value={NO_PURPOSE}>— None —</SelectItem>
                 )}
                 {purposes.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
@@ -246,7 +251,13 @@ function AllocationRowItem({
           ) : (
             <p className="text-xs text-warning pt-2">No purposes configured.</p>
           )
-        ) : (
+        ) : null}
+        {autoSplit && row.categoryId && (!row.purposeId || row.purposeId === AUTO_SPLIT) ? (
+          <p className="text-xs text-muted-foreground" data-testid="auto-split-hint">
+            The amount is divided across this department&apos;s purposes as configured.
+          </p>
+        ) : null}
+        {needsPurpose && row.categoryId ? null : (
           <p className="text-xs text-muted-foreground pt-2 italic">
             {row.categoryId ? "Not required" : "Select department first"}
           </p>
@@ -323,13 +334,9 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
   const isExact = diff < 0.01;
   const isOver = allocatedTotal - txAmount > 0.005;
 
-  const allRowsValid = allocations.every((a) => {
-    if (!a.categoryId) return false;
-    const cat = categories.find((c) => c.id === a.categoryId);
-    if (cat?.routingMode === "REQUIRES_PURPOSE" && !a.purposeId) return false;
-    if (!a.amount || parseFloat(a.amount) <= 0) return false;
-    return true;
-  });
+  const allRowsValid = allocations.every((a) =>
+    allocationIsValid(a, categories.find((c) => c.id === a.categoryId)),
+  );
 
   const canResolve = isExact && allRowsValid;
 
@@ -355,7 +362,7 @@ function ResolveModal({ transaction, categories, onClose, onResolved }: ResolveM
         allocations: allocations.map((a) => ({
           categoryId: a.categoryId,
           amount: parseFloat(a.amount),
-          purposeId: a.purposeId || undefined,
+          purposeId: purposeIdForApi(a.purposeId),
         })),
       },
     });
