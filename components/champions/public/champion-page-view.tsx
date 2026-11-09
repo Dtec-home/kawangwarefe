@@ -90,6 +90,7 @@ function ChampionPageBody({ champion }: { champion: PublicChampionPageChampion }
             raised={champion.raised}
             donorCount={champion.donorCount}
             personalTarget={champion.personalTarget}
+            ownGiven={champion.ownGiven}
           />
 
           <section

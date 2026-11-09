@@ -17,7 +17,8 @@ import type { Champion } from "@/lib/types/fundraising";
 import { championPaybillText, championWhatsappMessage } from "./champion-display";
 import { CopyTextButton } from "./copy-text-button";
 
-type ShareKitChampion = Pick<Champion, "campaignTitle" | "publicUrl" | "paymentInstructions">;
+type ShareKitChampion = Pick<Champion, "campaignTitle" | "publicUrl" | "paymentInstructions"> &
+  Partial<Pick<Champion, "showOwnGiving" | "ownGiven">>;
 
 export function ChampionShareKit({ champion }: { champion: ShareKitChampion }) {
   const paybill = championPaybillText(champion.paymentInstructions);

@@ -11,7 +11,7 @@ import type { CampaignProgress, PublicCampaign, PublicChampion } from "@/lib/typ
 import { previewFetchHeaders, wholeKes } from "@/components/campaigns/public/server/campaign-meta";
 import { championPath } from "../champion-format";
 
-export type ChampionMeta = Pick<PublicChampion, "championName" | "code" | "raised" | "donorCount" | "personalTarget"> & {
+export type ChampionMeta = Pick<PublicChampion, "championName" | "code" | "raised" | "donorCount" | "personalTarget" | "ownGiven"> & {
   campaign: Pick<PublicCampaign, "slug" | "title" | "summary"> & {
     progress: Pick<CampaignProgress, "target" | "raised" | "percent">;
   };
@@ -24,6 +24,7 @@ const QUERY = `query PublicChampionMeta($slug: String!, $code: String!) {
     raised
     donorCount
     personalTarget
+    ownGiven
     campaign { slug title summary progress { target raised percent } }
   }
 }`;
@@ -67,7 +68,9 @@ export function championMetadata(slug: string, code: string, meta: ChampionMeta 
   const title = meta ? `${meta.championName} for ${meta.campaign.title}` : "Campaign champion";
   const description = meta
     ? [
-        `${meta.championName} has raised ${wholeKes(meta.raised)} for ${meta.campaign.title}.`,
+        `${meta.championName} has raised ${wholeKes(meta.raised)} for ${meta.campaign.title}${
+          meta.ownGiven ? ` and has given ${wholeKes(meta.ownGiven)} personally` : ""
+        }.`,
         meta.campaign.summary?.trim(),
       ]
         .filter(Boolean)

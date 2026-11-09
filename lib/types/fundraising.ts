@@ -258,6 +258,11 @@ export interface Champion {
   donorCount: number;
   publicUrl: string;
   paymentInstructions: PaymentInstructions;
+  /** ADR-0016: the champion's switch (on by default). */
+  showOwnGiving: boolean;
+  /** Their real own total to the campaign, always (for their dashboard). */
+  ownGiven: string;
+  ownGivingNoticePending: boolean;
 }
 
 export interface ChampionResponse extends MutationResult {
@@ -279,6 +284,8 @@ export interface PublicChampion {
   personalTarget: string | null;
   publicUrl: string;
   paymentInstructions: PaymentInstructions;
+  /** ADR-0016: null when the champion hides it or gave nothing (the server omits it). */
+  ownGiven?: string | null;
 }
 
 export interface LeaderboardEntry {
