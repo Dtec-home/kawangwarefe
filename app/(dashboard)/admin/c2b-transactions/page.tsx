@@ -54,6 +54,8 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
+import { FindMpesaPayment } from "@/components/c2b/find-mpesa-payment";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 import { StatusBadge, type StatusVariant } from "@/components/ui/status-badge";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
@@ -529,6 +531,8 @@ export default function C2BTransactionsPage() {
   const staleTransactions = staleData?.staleMpesaTransactions ?? [];
 
   const refetchAll = () => { refetchTx(); refetchStats(); refetchStale(); };
+  const { isAdmin, isTreasurer } = useUserRole();
+  const canRecover = isAdmin || isTreasurer;  // W1: findMpesaPayment is admin/treasurer
   const handleResolved = () => { setPage(0); refetchAll(); };
 
   return (
@@ -541,6 +545,7 @@ export default function C2BTransactionsPage() {
             description="M-Pesa Pay Bill payments — review and resolve unmatched transactions"
             actions={
               <>
+                {canRecover && <FindMpesaPayment onFound={refetchAll} />}
                 <Button variant="outline" onClick={refetchAll}>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Refresh
