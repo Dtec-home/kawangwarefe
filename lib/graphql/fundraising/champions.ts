@@ -34,6 +34,9 @@ const CHAMPION_FIELDS = `
   raised
   donorCount
   publicUrl
+  showOwnGiving
+  ownGiven
+  ownGivingNoticePending
   paymentInstructions {
     paybillNumber
     accountReference
@@ -208,4 +211,28 @@ export interface ApproveChampionData {
 
 export interface DeactivateChampionData {
   deactivateChampion: ChampionResponse;
+}
+
+/** ADR-0016: only the champion shows or hides their own giving. */
+export const SET_CHAMPION_SHOW_OWN_GIVING = gql`
+  mutation SetChampionShowOwnGiving($championId: ID!, $show: Boolean!) {
+    setChampionShowOwnGiving(championId: $championId, show: $show) {
+      success
+      message
+    }
+  }
+`;
+
+export const DISMISS_OWN_GIVING_NOTICE = gql`
+  mutation DismissOwnGivingNotice($championId: ID!) {
+    dismissOwnGivingNotice(championId: $championId) {
+      success
+      message
+    }
+  }
+`;
+
+export interface OwnGivingResult {
+  success: boolean;
+  message: string;
 }

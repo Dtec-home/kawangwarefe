@@ -69,6 +69,9 @@ export interface Campaign {
   endDate: string | null;
   paybillCode: string;
   whatsappGroupId: string;
+  /** ADR-0015: the 23:50 daily total post. */
+  dailyTotalEnabled?: boolean;
+  dailyTotalPostWhenZero?: boolean;
   status: CampaignStatus;
   isPublic: boolean;
   allowPledges: boolean;
@@ -112,6 +115,8 @@ export interface CampaignInput {
   isPublic?: boolean;
   allowPledges?: boolean;
   allowChampions?: boolean;
+  dailyTotalEnabled?: boolean;
+  dailyTotalPostWhenZero?: boolean;
   reminderPolicy?: Partial<ReminderPolicy> | null;
 }
 
@@ -258,6 +263,11 @@ export interface Champion {
   donorCount: number;
   publicUrl: string;
   paymentInstructions: PaymentInstructions;
+  /** ADR-0016: the champion's switch (on by default). */
+  showOwnGiving: boolean;
+  /** Their real own total to the campaign, always (for their dashboard). */
+  ownGiven: string;
+  ownGivingNoticePending: boolean;
 }
 
 export interface ChampionResponse extends MutationResult {
@@ -279,6 +289,8 @@ export interface PublicChampion {
   personalTarget: string | null;
   publicUrl: string;
   paymentInstructions: PaymentInstructions;
+  /** ADR-0016: null when the champion hides it or gave nothing (the server omits it). */
+  ownGiven?: string | null;
 }
 
 export interface LeaderboardEntry {

@@ -11,6 +11,7 @@ import type {
   PaymentInstructions,
 } from "@/lib/types/fundraising";
 import type { StatusVariant } from "@/components/ui/status-badge";
+import { wholeKes } from "@/components/campaigns/public/server/campaign-meta";
 
 export const CHAMPION_STATUS_LABELS: Record<ChampionStatus, string> = {
   PENDING: "Waiting for approval",
@@ -53,12 +54,21 @@ export function championPaybillText(instructions: Pick<PaymentInstructions, "pay
   return `Pay Bill ${instructions.paybillNumber}, Account ${instructions.accountReference}`;
 }
 
-type ShareableChampion = Pick<Champion, "campaignTitle" | "publicUrl" | "paymentInstructions">;
+type ShareableChampion = Pick<Champion, "campaignTitle" | "publicUrl" | "paymentInstructions"> &
+  Partial<Pick<Champion, "showOwnGiving" | "ownGiven">>;
 
-/** A ready-to-send message for friends and family. */
+/** ADR-0016: the champion's own giving is shared only when switched on and above zero. */
+export function ownGivingShown(champion: Partial<Pick<Champion, "showOwnGiving" | "ownGiven">>): boolean {
+  return !!champion.showOwnGiving && Number(champion.ownGiven ?? 0) > 0;
+}
+
+/** A ready-to-send message for friends and family; one builder for both variants. */
 export function championWhatsappMessage(champion: ShareableChampion): string {
+  const opening = ownGivingShown(champion)
+    ? `I've given ${wholeKes(champion.ownGiven!)} to ${champion.campaignTitle}. Join me:`
+    : `I'm raising money for ${champion.campaignTitle} at our church. Please support me!`;
   return [
-    `I'm raising money for ${champion.campaignTitle} at our church. Please support me!`,
+    opening,
     `Give online: ${champion.publicUrl}`,
     `Or by M-Pesa: ${championPaybillText(champion.paymentInstructions)}.`,
     "Thank you and God bless!",

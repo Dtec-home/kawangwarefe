@@ -5,6 +5,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { formatKes } from "@/lib/receipts/format";
+import { wholeKes } from "@/components/campaigns/public/server/campaign-meta";
 import { donorsLabel, firstName, targetPercent } from "./champion-format";
 
 interface ChampionTotalsProps {
@@ -12,9 +13,11 @@ interface ChampionTotalsProps {
   raised: string;
   donorCount: number;
   personalTarget: string | null;
+  /** ADR-0016: present only when the champion shows it and gave something. */
+  ownGiven?: string | null;
 }
 
-export function ChampionTotals({ championName, raised, donorCount, personalTarget }: ChampionTotalsProps) {
+export function ChampionTotals({ championName, raised, donorCount, personalTarget, ownGiven }: ChampionTotalsProps) {
   const percent = targetPercent(raised, personalTarget);
   const bar = percent === null ? 0 : Math.min(Math.max(percent, 0), 100);
   return (
@@ -29,6 +32,12 @@ export function ChampionTotals({ championName, raised, donorCount, personalTarge
           raised by {firstName(championName)} from <span className="font-semibold text-foreground">{donorsLabel(donorCount)}</span>
         </p>
       </div>
+      {ownGiven ? (
+        <p data-testid="champion-own-giving" className="text-sm">
+          {firstName(championName)} has given{" "}
+          <span className="font-semibold tabular-nums">{wholeKes(ownGiven)}</span> to this campaign
+        </p>
+      ) : null}
       {percent !== null && personalTarget ? (
         <div data-testid="champion-target" className="space-y-2">
           <Progress

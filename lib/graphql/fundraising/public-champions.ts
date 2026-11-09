@@ -20,6 +20,7 @@ export const PUBLIC_CHAMPION_PAGE = gql`
       donorCount
       personalTarget
       publicUrl
+      ownGiven
       paymentInstructions {
         paybillNumber
         accountReference

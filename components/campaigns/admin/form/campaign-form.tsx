@@ -46,6 +46,16 @@ const FLAGS = [
   },
   { name: "allowPledges", label: "Allow pledges", hint: "Members and visitors may promise an amount to give later." },
   { name: "allowChampions", label: "Allow champions", hint: "Members may raise money with their own code and link." },
+  {
+    name: "dailyTotalEnabled",
+    label: "Daily total to the WhatsApp group",
+    hint: "Posts today's total to the group at 11:50pm, without names. Needs a WhatsApp group.",
+  },
+  {
+    name: "dailyTotalPostWhenZero",
+    label: "Post the daily total on days with no gifts",
+    hint: "Off: quiet days get no post.",
+  },
 ] as const;
 
 export interface CampaignFormProps {

@@ -86,6 +86,7 @@ export async function campaignThroughApi(
     target?: string;
     stage: CampaignStage;
     countingMode?: "TAGGED" | "DEPARTMENT";
+    whatsappGroupId?: string;
   },
 ): Promise<CampaignRef> {
   const treasurer = await tokenOf(backend, world, "treasurer");
@@ -104,6 +105,7 @@ export async function campaignThroughApi(
         allowPledges: true,
         allowChampions: false,
         countingMode: opts.countingMode ?? "TAGGED",
+        ...(opts.whatsappGroupId ? { whatsappGroupId: opts.whatsappGroupId } : {}),
       },
     },
     treasurer,

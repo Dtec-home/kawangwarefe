@@ -110,7 +110,14 @@ export class Backend {
     return response.json();
   }
 
-  async runJob(job: "pledge-reminders" | "champion-digests" | "finance-integrity") {
+  /** WhatsApp group posts the fake wa-gateway took, oldest first. */
+  async groupPosts() {
+    const response = await this.request.get(this.url("group-posts/"));
+    expect(response.ok()).toBeTruthy();
+    return (await response.json()).posts as { group_id: string; idempotency_key: string; body: string }[];
+  }
+
+  async runJob(job: "pledge-reminders" | "champion-digests" | "finance-integrity" | "daily-totals") {
     const response = await this.request.post(this.url(`run/${job}/`));
     expect(response.ok()).toBeTruthy();
     return response.json();
