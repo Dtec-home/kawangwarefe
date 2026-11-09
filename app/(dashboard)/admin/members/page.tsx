@@ -11,6 +11,7 @@ import { GET_MEMBERS_LIST } from "@/lib/graphql/admin-queries";
 import { GET_GROUPS_LIST } from "@/lib/graphql/group-management";
 import {
   CREATE_MEMBER,
+  CLAIM_PAYER_RECORD,
   UPDATE_MEMBER,
   TOGGLE_MEMBER_STATUS,
   DELETE_MEMBER,
@@ -44,6 +45,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { AdminLayout } from "@/components/layouts/admin-layout";
+import { PayerRecordOffer, type PayerRecord } from "@/components/members/payer-record-offer";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
@@ -127,6 +129,9 @@ interface MutationResult {
   success: boolean;
   message: string;
   member?: Member;
+  /** PAYER_RECORD_EXISTS: the number already gave by Pay Bill (MP-0). */
+  code?: string | null;
+  payerRecord?: PayerRecord | null;
 }
 
 interface MembersData {
@@ -228,37 +233,60 @@ function CreateMemberDialog({
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [payerOffer, setPayerOffer] = useState<PayerRecord | null>(null);
 
   const [createMember, { loading }] = useMutation<MemberMutationData>(CREATE_MEMBER);
+  const [claimPayerRecord, { loading: claiming }] = useMutation<MemberMutationData>(CLAIM_PAYER_RECORD);
 
   const resetForm = () => {
     setForm({ firstName: "", lastName: "", phoneNumber: "", email: "" });
     setSelectedRoles([]);
     setSelectedGroupIds([]);
     setError("");
+    setPayerOffer(null);
+  };
+
+  const formVariables = () => ({
+    ...form,
+    email: form.email || null,
+    roleNames: selectedRoles.length ? selectedRoles : null,
+    groupIds: selectedGroupIds.length ? selectedGroupIds : null,
+  });
+
+  const finish = (res: MutationResult | undefined, fallback: string) => {
+    if (res?.success) {
+      onSuccess(res.message);
+      resetForm();
+      setOpen(false);
+      return;
+    }
+    if (res?.code === "PAYER_RECORD_EXISTS" && res.payerRecord) {
+      setPayerOffer(res.payerRecord);
+      return;
+    }
+    setError(res?.message || fallback);
   };
 
   const handleSubmit = async () => {
     setError("");
     try {
-      const { data } = await createMember({
-        variables: {
-          ...form,
-          email: form.email || null,
-          roleNames: selectedRoles.length ? selectedRoles : null,
-          groupIds: selectedGroupIds.length ? selectedGroupIds : null,
-        },
+      const { data } = await createMember({ variables: formVariables() });
+      finish(data?.createMember, "Failed to create member");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Error creating member");
+    }
+  };
+
+  const handleClaim = async () => {
+    if (!payerOffer) return;
+    setError("");
+    try {
+      const { data } = await claimPayerRecord({
+        variables: { memberId: payerOffer.memberId, ...formVariables() },
       });
-      const res = data?.createMember;
-      if (res?.success) {
-        onSuccess(res.message);
-        resetForm();
-        setOpen(false);
-      } else {
-        setError(res?.message || "Failed to create member");
-      }
-    } catch (err: any) {
-      setError(err.message || "Error creating member");
+      finish(data?.claimPayerRecord, "Failed to use the Pay Bill record");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Error using the Pay Bill record");
     }
   };
 
@@ -283,6 +311,17 @@ function CreateMemberDialog({
           </Alert>
         )}
 
+        {payerOffer ? (
+          <PayerRecordOffer
+            record={payerOffer}
+            phone={form.phoneNumber}
+            memberName={`${form.firstName} ${form.lastName}`.trim()}
+            onUse={handleClaim}
+            onBack={() => { setPayerOffer(null); setError(""); }}
+            saving={claiming}
+          />
+        ) : (
+        <>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -354,6 +393,8 @@ function CreateMemberDialog({
             {loading ? "Creating..." : "Create Member"}
           </Button>
         </DialogFooter>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
