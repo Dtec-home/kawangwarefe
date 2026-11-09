@@ -23,7 +23,7 @@ import {
 } from "@/lib/graphql/member-mutations";
 import { GET_ALL_CATEGORIES } from "@/lib/graphql/category-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dialog";
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { PayerRecordOffer, type PayerRecord } from "@/components/members/payer-record-offer";
+import { MemberPhonesDialog } from "@/components/members/phones/member-phones-dialog";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
@@ -69,8 +70,10 @@ import {
   TrendingUp,
   UsersRound,
   Hash,
+  GitMerge,
 } from "lucide-react";
 import Link from "next/link";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 
 const PAGE_SIZE = 100;
 const ALL_ROLES = ["admin", "treasurer", "pastor", "content_admin", "recorder", "member"] as const;
@@ -679,9 +682,12 @@ function ManageDepartmentIdsDialog({
   );
 }
 
+
 // ─── Main Members Page ─────────────────────────────────────────────
 
 function MembersPageContent() {
+  const { isAdmin, isTreasurer } = useUserRole();
+  const canMerge = isAdmin || isTreasurer;  // F3
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(0);
@@ -794,7 +800,16 @@ function MembersPageContent() {
           <PageHeader
             title="Members"
             description="View and manage church members"
-            actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+            actions={
+              <>
+                {canMerge && (
+                  <Link href="/admin/members/merge" className={buttonVariants({ variant: "outline" })}>
+                    <GitMerge className="h-4 w-4 mr-2" /> Merge duplicates
+                  </Link>
+                )}
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+              </>
+            }
           />
         </div>
 
@@ -976,6 +991,7 @@ function MembersPageContent() {
                             </Button>
                             <ManageRolesDialog member={member} onSuccess={showSuccess} />
                             <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                            <MemberPhonesDialog member={member} />
                             {trackingCategories.length > 0 && (
                               <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                             )}
@@ -1053,6 +1069,7 @@ function MembersPageContent() {
                                   </Button>
                                   <ManageRolesDialog member={member} onSuccess={showSuccess} />
                                   <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                                  <MemberPhonesDialog member={member} compact />
                                   {trackingCategories.length > 0 && (
                                     <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                                   )}
@@ -1097,6 +1114,7 @@ function MembersPageContent() {
             )}
           </CardContent>
         </Card>
+
       </div>
     </AdminLayout>
   );

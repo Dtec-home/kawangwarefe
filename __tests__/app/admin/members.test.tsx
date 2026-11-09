@@ -3,21 +3,34 @@ import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock Apollo with data
 vi.mock('@apollo/client/react', () => ({
-  useQuery: vi.fn().mockImplementation(() => ({
-    data: {
-      membersList: {
-        items: [
-          { id: '1', fullName: 'John Doe', firstName: 'John', lastName: 'Doe', phone: '254712345678', email: 'john@test.com', isActive: true, roles: ['admin'], groups: [{ id: '1', name: 'Youth' }], createdAt: '2024-01-01' },
-          { id: '2', fullName: 'Jane Smith', firstName: 'Jane', lastName: 'Smith', phone: '254798765432', email: null, isActive: false, roles: [], groups: [], createdAt: '2024-02-01' },
-        ],
-        total: 2,
-        hasMore: false,
+  useQuery: vi.fn().mockImplementation((query: any) => {
+    // Route by the first operation name in the query document
+    const op = query?.definitions?.[0]?.name?.value ?? ''
+    if (op === 'PossibleDuplicateMembers') {
+      return { data: { possibleDuplicateMembers: { total: 0, hasMore: false, items: [] } }, loading: false, error: null }
+    }
+    if (op === 'MemberMerges') {
+      return { data: { memberMerges: [] }, loading: false, error: null }
+    }
+    // Default: members list + groups
+    return {
+      data: {
+        membersList: {
+          items: [
+            { id: '1', fullName: 'John Doe', firstName: 'John', lastName: 'Doe', phone: '254712345678', phoneNumber: '254712345678', email: 'john@test.com', isActive: true, roles: ['admin'], groups: [{ id: '1', name: 'Youth' }], createdAt: '2024-01-01', memberNumber: 'M001', departmentIdentifiers: [] },
+            { id: '2', fullName: 'Jane Smith', firstName: 'Jane', lastName: 'Smith', phone: '254798765432', phoneNumber: '254798765432', email: null, isActive: false, roles: [], groups: [], createdAt: '2024-02-01', memberNumber: 'M002', departmentIdentifiers: [] },
+          ],
+          total: 2,
+          hasMore: false,
+        },
+        groupsList: [{ id: '1', name: 'Youth' }, { id: '2', name: 'Choir' }],
+        contributionCategories: [],
       },
-      groupsList: [{ id: '1', name: 'Youth' }, { id: '2', name: 'Choir' }],
-    },
-    loading: false, error: null, refetch: vi.fn(),
-  })),
+      loading: false, error: null, refetch: vi.fn(),
+    }
+  }),
   useMutation: () => [vi.fn().mockResolvedValue({ data: {} }), { loading: false }],
+  useLazyQuery: () => [vi.fn(), { data: undefined, loading: false }],
 }))
 
 // Mock auth
@@ -30,6 +43,8 @@ vi.mock('@/lib/auth/auth-context', () => ({
 vi.mock('@/lib/hooks/use-user-role', () => ({
   useUserRole: () => ({
     isStaff: true,
+    isAdmin: true,
+    isTreasurer: false,
     canAccessAdmin: true,
     canAccessFeature: () => true,
     isAuthenticated: true,
@@ -105,6 +120,18 @@ describe('MembersPage', () => {
   it('shows Import Members link', () => {
     render(<MembersPage />)
     expect(screen.getByText('Import')).toBeInTheDocument()
+  })
+
+  it("offers each member's phone numbers (MP-2)", () => {
+    render(<MembersPage />)
+    expect(screen.getAllByTitle('Phone numbers').length).toBeGreaterThan(0)
+    expect(screen.getAllByLabelText('Phone numbers of John Doe').length).toBeGreaterThan(0)
+  })
+
+  it('offers admins and treasurers a link to merge duplicates (F3)', () => {
+    render(<MembersPage />)
+    expect(screen.getByRole('link', { name: /Merge duplicates/ })).toHaveAttribute('href', '/admin/members/merge')
+    expect(screen.queryByText('Possible Duplicates')).not.toBeInTheDocument()
   })
 
   it('offers the recorder role with its description (T2.4)', async () => {

@@ -136,6 +136,13 @@ describe('ProfilePage', () => {
     })
   })
 
+  it('lets the member add a number with a code sent to it (MP-2)', () => {
+    render(<ProfilePage />)
+    expect(screen.getByText('Phone numbers')).toBeInTheDocument()
+    expect(screen.getByLabelText('New number')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Send code' })).toBeInTheDocument()
+  })
+
   it('shows an Upload photo control when no avatar is set', () => {
     render(<ProfilePage />)
     expect(screen.getByRole('button', { name: /upload photo/i })).toBeInTheDocument()
