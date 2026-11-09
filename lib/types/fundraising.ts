@@ -69,6 +69,9 @@ export interface Campaign {
   endDate: string | null;
   paybillCode: string;
   whatsappGroupId: string;
+  /** ADR-0015: the 23:50 daily total post. */
+  dailyTotalEnabled?: boolean;
+  dailyTotalPostWhenZero?: boolean;
   status: CampaignStatus;
   isPublic: boolean;
   allowPledges: boolean;
@@ -112,6 +115,8 @@ export interface CampaignInput {
   isPublic?: boolean;
   allowPledges?: boolean;
   allowChampions?: boolean;
+  dailyTotalEnabled?: boolean;
+  dailyTotalPostWhenZero?: boolean;
   reminderPolicy?: Partial<ReminderPolicy> | null;
 }
 

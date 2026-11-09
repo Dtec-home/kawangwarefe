@@ -17,6 +17,7 @@ import { Copy, Loader2, RefreshCw, Share2, ShieldAlert, TriangleAlert, Users } f
 import { toast } from "sonner";
 
 import type { CampaignTabProps } from "@/components/campaigns/admin/types";
+import { DailyTotalCard } from "@/components/campaigns/admin/whatsapp-share/daily-total-card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -197,6 +198,8 @@ export const WhatsAppShareTab: React.FC<CampaignTabProps> = ({ campaignId }) => 
           </div>
         </CardContent>
       </Card>
+
+      <DailyTotalCard campaignId={campaignId} />
     </div>
   );
 };
