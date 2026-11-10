@@ -10,9 +10,9 @@ Feature: Giving through a champion
 
   Scenario: Pay Bill with the champion code after a space or a dash
     When the member sends KES 1000 from the M-Pesa menu to Pay Bill account "ROOF JOHN"
-    Then "member" gets a receipt SMS saying "Towards: Roof Repair 2026" and "Your champion John can see your name and amount."
+    Then "member" gets a receipt SMS saying "Towards: Roof Repair 2026" and "Champion John sees your gift."
     When the member sends KES 500 from the M-Pesa menu to Pay Bill account "ROOF-JOHN"
-    Then "member" gets a receipt SMS saying "Towards: Roof Repair 2026" and "Your champion John can see your name and amount."
+    Then "member" gets a receipt SMS saying "Towards: Roof Repair 2026" and "Champion John sees your gift."
     And staff see KES 1500 raised for the Pay Bill campaign
     And staff see KES 1500 raised through champion "JOHN" from 1 donor
     And no request left the machine
@@ -25,7 +25,7 @@ Feature: Giving through a champion
     When they give KES 800 through the champion page from "254711222555"
     Then the M-Pesa prompt on "254711222555" is for account "ROOF JOHN"
     When they approve the champion gift's M-Pesa prompt on their phone
-    Then "254711222555" gets a receipt SMS saying "Towards: Roof Repair 2026" and "Your champion John can see your name and amount."
+    Then "254711222555" gets a receipt SMS saying "Towards: Roof Repair 2026" and "Champion John sees your gift."
     And staff see KES 800 raised for the Pay Bill campaign
     And staff see KES 800 raised through champion "JOHN" from 1 donor
     When a visitor opens champion "JOHN"'s page

@@ -15,6 +15,7 @@ import { Empty } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SmsCounter, fitsOneSms } from "@/components/messaging/SmsCounter";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -121,10 +122,17 @@ export function TemplateManager() {
         <p className="text-xs text-muted-foreground mb-1">
           Tokens: <code>{"{{first_name}}"}</code> <code>{"{{last_name}}"}</code> <code>{"{{full_name}}"}</code>
         </p>
-        <Textarea rows={4} value={body} onChange={e => setBody(e.target.value)} />
+        <Textarea
+          rows={4}
+          value={body}
+          onChange={e => setBody(e.target.value)}
+          aria-label="Body"
+          aria-describedby="tpl-body-count"
+        />
+        <SmsCounter id="tpl-body-count" text={body} />
       </div>
       <div className="flex gap-2">
-        <Button onClick={handleSave} disabled={saving || !name.trim() || !body.trim()}>
+        <Button onClick={handleSave} disabled={saving || !name.trim() || !body.trim() || !fitsOneSms(body)}>
           {saving ? "Saving…" : "Save"}
         </Button>
         <Button

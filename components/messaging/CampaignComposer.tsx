@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AudienceBuilder } from "@/components/messaging/AudienceBuilder";
+import { SmsCounter, fitsOneSms } from "@/components/messaging/SmsCounter";
 import { useAudienceFilter } from "@/lib/hooks/use-audience-filter";
 import {
   GET_MESSAGE_TEMPLATES,
@@ -53,7 +54,9 @@ export function CampaignComposer({ onLaunched }: { onLaunched?: () => void }) {
   }>(LAUNCH_CAMPAIGN);
 
   const canAdvanceStep0 = true; // audience step is always passable (empty = all active members)
-  const canAdvanceStep1 = !!templateId;
+  const selectedBody = templates.find(t => t.id === templateId)?.body ?? "";
+  // A template saved before the one-SMS rule may be too long; the backend refuses it too.
+  const canAdvanceStep1 = !!templateId && fitsOneSms(selectedBody);
 
   const goNext = async () => {
     if (step === 1) {
@@ -166,9 +169,12 @@ export function CampaignComposer({ onLaunched }: { onLaunched?: () => void }) {
             </Select>
           )}
           {templateId && (
-            <div className="rounded-md bg-muted p-3 text-sm font-mono whitespace-pre-wrap text-muted-foreground">
-              {templates.find(t => t.id === templateId)?.body}
-            </div>
+            <>
+              <div className="rounded-md bg-muted p-3 text-sm font-mono whitespace-pre-wrap text-muted-foreground">
+                {selectedBody}
+              </div>
+              <SmsCounter text={selectedBody} />
+            </>
           )}
         </div>
       )}

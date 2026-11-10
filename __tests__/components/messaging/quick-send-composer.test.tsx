@@ -1,7 +1,7 @@
 /**
  * QuickSendComposer tests.
  *
- * Covers the single-screen send flow: message char counter / over-limit guard,
+ * Covers the single-screen send flow: the one-SMS counter / over-limit guard,
  * phone-number parsing + valid/invalid hints, recipient summary, the send-enabled
  * gate, and the launch mutation's onCompleted / onError toast branches.
  */
@@ -38,14 +38,30 @@ beforeEach(() => {
 })
 
 describe('QuickSendComposer', () => {
-  it('tracks the character count and flags over-limit messages', () => {
+  it('counts against one SMS (160) and flags a message over it', () => {
     render(<QuickSendComposer />)
     fireEvent.change(messageBox(), { target: { value: 'hello' } })
-    expect(screen.getByText('5 / 480')).toBeInTheDocument()
+    expect(screen.getByTestId('sms-counter')).toHaveTextContent('5/160 characters (one SMS)')
 
-    const tooLong = 'a'.repeat(481)
-    fireEvent.change(messageBox(), { target: { value: tooLong } })
-    expect(screen.getByText(/Message is too long by 1 character/)).toBeInTheDocument()
+    fireEvent.change(messageBox(), { target: { value: 'a'.repeat(161) } })
+    expect(screen.getByTestId('sms-counter')).toHaveTextContent('161/160 characters, more than one SMS')
+    expect(screen.getByText(/Shorten it by 1 character to send it as one SMS/)).toBeInTheDocument()
+  })
+
+  it('drops the limit to 70 and warns when a non-GSM character is typed', () => {
+    render(<QuickSendComposer />)
+    fireEvent.change(messageBox(), { target: { value: 'God\u2019s house' } })
+    expect(screen.getByTestId('sms-counter')).toHaveTextContent('11/70 characters')
+    expect(screen.getByTestId('sms-counter-non-gsm')).toHaveTextContent('"\u2019" is not a standard SMS character')
+  })
+
+  it('blocks sending above one SMS', () => {
+    render(<QuickSendComposer />)
+    fireEvent.change(phoneBox(), { target: { value: '0712345678' } })
+    fireEvent.change(messageBox(), { target: { value: '\u201c' + 'a'.repeat(70) } })
+    expect(screen.getByRole('button', { name: /Send \(1\)/ })).toBeDisabled()
+    fireEvent.change(messageBox(), { target: { value: 'a'.repeat(160) } })
+    expect(screen.getByRole('button', { name: /Send \(1\)/ })).not.toBeDisabled()
   })
 
   it('counts valid phone numbers and warns when none parse', () => {

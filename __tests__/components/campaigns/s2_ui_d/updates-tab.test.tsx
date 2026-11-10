@@ -57,6 +57,16 @@ describe('validateDraft', () => {
     expect(validateDraft(EMPTY_DRAFT)).toEqual({ title: 'Give the update a title.', body: 'Write the update.' })
   })
 
+  it('with SMS donors on, refuses a title longer than the one-SMS room', () => {
+    const draft = { ...EMPTY_DRAFT, title: 'a'.repeat(58), body: 'B', smsDonors: true }
+    expect(validateDraft(draft, 57)).toHaveProperty('title')
+    expect(validateDraft({ ...draft, title: 'a'.repeat(57) }, 57)).toEqual({})
+    // A non-GSM character limits the SMS to 70, whatever the room.
+    expect(validateDraft({ ...draft, title: '\u2019' + 'a'.repeat(70) })).toHaveProperty('title')
+    // Without the SMS the title is not limited here.
+    expect(validateDraft({ ...draft, smsDonors: false }, 57)).toEqual({})
+  })
+
   it('accepts an empty image and refuses one that is not a web address', () => {
     const draft = { ...EMPTY_DRAFT, title: 'T', body: 'B' }
     expect(validateDraft(draft)).toEqual({})
