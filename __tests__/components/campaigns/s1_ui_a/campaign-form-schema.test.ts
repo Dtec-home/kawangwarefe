@@ -98,6 +98,8 @@ describe('mapping', () => {
       isPublic: true,
       allowPledges: true,
       allowChampions: false,
+      dailyTotalEnabled: true,
+      dailyTotalPostWhenZero: false,
       reminderPolicy: { frequency: 'monthly', daysBeforeDue: 3, overdueNotices: 1 },
     })
 

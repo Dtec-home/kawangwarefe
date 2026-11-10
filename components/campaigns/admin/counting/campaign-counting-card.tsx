@@ -6,6 +6,11 @@
  * campaign is live, a manager asks for the other mode; a second admin or pastor
  * (`canApproveCountingMode`: neither the requester nor the creator) approves or
  * turns it down; the requester may withdraw it. The backend re-checks every rule.
+ *
+ * A closed campaign keeps receiving money and keeps its department's slot, so a
+ * closed department-backed campaign still offers the change back to its own
+ * gifts (the go-live rollback). A closed gifts-only campaign is not offered
+ * department counting: it would take the department's money after closing.
  */
 
 "use client";
@@ -127,6 +132,7 @@ export function CampaignCountingCard({ campaign, onChanged }: CampaignCountingCa
 
   const onForm = countingIsOnForm(campaign.status);
   const closed = campaign.status === "CLOSED";
+  const closedDepartment = closed && campaign.countingMode === "DEPARTMENT";
 
   return (
     <Card data-testid="campaign-counting">
@@ -169,10 +175,18 @@ export function CampaignCountingCard({ campaign, onChanged }: CampaignCountingCa
               )}
             </div>
           </Alert>
-        ) : closed ? null : (
-          <Button variant="outline" size="sm" disabled={busy} onClick={() => setStep("request")}>
-            <ArrowLeftRight className="size-4" /> Ask to count {lowerFirst(countingModeLabel(target, department))}
-          </Button>
+        ) : closed && !closedDepartment ? null : (
+          <>
+            {closedDepartment ? (
+              <p className="text-xs text-muted-foreground" data-testid="closed-department-note">
+                This campaign is closed but still counts every {department || "department"} gift until it is
+                switched back to its own gifts.
+              </p>
+            ) : null}
+            <Button variant="outline" size="sm" disabled={busy} onClick={() => setStep("request")}>
+              <ArrowLeftRight className="size-4" /> Ask to count {lowerFirst(countingModeLabel(target, department))}
+            </Button>
+          </>
         )}
       </CardContent>
 

@@ -31,6 +31,7 @@ import { personalTargetProgress } from "./champion-display";
 import { ChampionDonors } from "./champion-donors";
 import { ChampionShareKit } from "./champion-share-kit";
 import { ChampionStatusBadge } from "./champion-status-badge";
+import { OwnGivingCard } from "./own-giving-card";
 
 export function ChampionDashboardView({ championId }: { championId: string }) {
   const { data, loading, error, refetch } = useQuery<ChampionDashboardData, ChampionDashboardVars>(
@@ -84,6 +85,7 @@ export function ChampionDashboardView({ championId }: { championId: string }) {
           />
           <StatusNotice champion={dashboard.champion} />
           <Tally champion={dashboard.champion} />
+          <OwnGivingCard champion={dashboard.champion} onChanged={() => void refetch()} />
           <div className="grid gap-6 lg:grid-cols-2">
             <ChampionDonors donors={dashboard.donors} />
             {dashboard.champion.status === "ACTIVE" ? <ChampionShareKit champion={dashboard.champion} /> : null}

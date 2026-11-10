@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react'
 // Mutable so individual tests can override what the stale-STK query returns
 // without disturbing the other three queries this page fires.
 let mockStaleMpesaTransactions: any[] = []
+let mockIsAdmin = true
 
 // Mock Apollo. Distinguish the stale-STK-transactions query from the other
 // three queries this page fires by inspecting the GraphQL operation body
@@ -85,10 +86,16 @@ vi.mock('@/lib/auth/auth-context', () => ({
   AuthProvider: ({ children }: any) => children,
 }))
 
+vi.mock('@/components/c2b/find-mpesa-payment', () => ({
+  FindMpesaPayment: () => <button>Find payment by M-Pesa code</button>,
+}))
+
 // Mock user role hook
 vi.mock('@/lib/hooks/use-user-role', () => ({
   useUserRole: () => ({
     isStaff: true,
+    isAdmin: mockIsAdmin,
+    isTreasurer: false,
     canAccessAdmin: true,
     canAccessFeature: () => true,
     isAuthenticated: true,
@@ -178,5 +185,18 @@ describe('C2BTransactionsPage', () => {
     expect(screen.queryByText('Nothing needs review')).not.toBeInTheDocument()
     expect(screen.getByText('254711000111')).toBeInTheDocument()
     expect(screen.getByText('ws_CO_STALE001')).toBeInTheDocument()
+  })
+
+  it('offers admins and treasurers a lookup by M-Pesa code (W1)', () => {
+    mockIsAdmin = true
+    render(<C2BTransactionsPage />)
+    expect(screen.getByRole('button', { name: 'Find payment by M-Pesa code' })).toBeInTheDocument()
+  })
+
+  it('does not offer the lookup to other staff', () => {
+    mockIsAdmin = false
+    render(<C2BTransactionsPage />)
+    expect(screen.queryByRole('button', { name: 'Find payment by M-Pesa code' })).not.toBeInTheDocument()
+    mockIsAdmin = true
   })
 })

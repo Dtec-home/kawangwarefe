@@ -88,6 +88,8 @@ export const campaignFormSchema = z
     isPublic: z.boolean(),
     allowPledges: z.boolean(),
     allowChampions: z.boolean(),
+    dailyTotalEnabled: z.boolean(),
+    dailyTotalPostWhenZero: z.boolean(),
     reminderPolicy: z.object({
       frequency: z.enum(REMINDER_FREQUENCIES),
       daysBeforeDue: wholeNumber("days before the due date", 60),
@@ -125,6 +127,8 @@ export const EMPTY_CAMPAIGN_FORM: CampaignFormValues = {
   isPublic: true,
   allowPledges: true,
   allowChampions: false,
+  dailyTotalEnabled: true,
+  dailyTotalPostWhenZero: false,
   reminderPolicy: DEFAULT_REMINDER_POLICY,
 };
 
@@ -154,6 +158,8 @@ export function toCampaignInput(
     isPublic: values.isPublic,
     allowPledges: values.allowPledges,
     allowChampions: values.allowChampions,
+    dailyTotalEnabled: values.dailyTotalEnabled,
+    dailyTotalPostWhenZero: values.dailyTotalPostWhenZero,
     reminderPolicy: { ...values.reminderPolicy },
   };
 }
@@ -185,6 +191,8 @@ export function campaignToFormValues(campaign: Campaign): CampaignFormValues {
     isPublic: campaign.isPublic,
     allowPledges: campaign.allowPledges,
     allowChampions: campaign.allowChampions,
+    dailyTotalEnabled: campaign.dailyTotalEnabled ?? true,
+    dailyTotalPostWhenZero: campaign.dailyTotalPostWhenZero ?? false,
     reminderPolicy: {
       frequency: oneOf(REMINDER_FREQUENCIES, policy.frequency, DEFAULT_REMINDER_POLICY.frequency),
       daysBeforeDue: policy.daysBeforeDue,

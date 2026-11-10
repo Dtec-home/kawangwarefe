@@ -11,7 +11,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@apollo/client/react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { useUserRole, type AdminFeature } from "@/lib/hooks/use-user-role";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 import { usePendingVoidRequestCount } from "@/lib/hooks/use-pending-void-request-count";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -42,9 +42,13 @@ import {
   Coins,
   Target,
   HandCoins,
+  GitMerge,
+  History,
+  Upload,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminBottomNav } from "@/components/layouts/admin-bottom-nav";
+import { SidebarNav, visibleNavGroups, type NavGroup } from "@/components/layouts/sidebar-nav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadge, type RoleTone } from "@/components/ui/status-badge";
 import { toast } from "sonner";
@@ -53,19 +57,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-type FeatureType = AdminFeature;
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  feature: FeatureType;
-}
-
-interface NavGroup {
-  label?: string;
-  items: NavItem[];
-}
 
 interface MeAvatarData {
   me: { id: string; avatarUrl: string | null } | null;
@@ -99,7 +91,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         { name: "Overview",      href: "/admin",               icon: LayoutDashboard, feature: "overview" },
         { name: "Contributions", href: "/admin/contributions", icon: DollarSign,      feature: "contributions" },
-        { name: "Members",       href: "/admin/members",       icon: Users,           feature: "members" },
+        {
+          name: "Members", href: "/admin/members", icon: Users, feature: "members",
+          // F3 UX: merging lives with members (admins and treasurers only).
+          children: [
+            { name: "All members",      href: "/admin/members",        icon: Users,    feature: "members" },
+            { name: "Merge duplicates", href: "/admin/members/merge",  icon: GitMerge, feature: "member-merge" },
+            { name: "Recent merges",    href: "/admin/members/merges", icon: History,  feature: "member-merge" },
+            { name: "Import",           href: "/admin/members/import", icon: Upload,   feature: "members" },
+          ],
+        },
         { name: "Record giving", href: "/record",              icon: NotebookPen,     feature: "record" },
       ],
     },
@@ -141,9 +142,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   // Filter each group's items by role; drop groups with no accessible items
-  const navGroups = allNavGroups
-    .map(g => ({ ...g, items: g.items.filter(i => canAccessFeature(i.feature)) }))
-    .filter(g => g.items.length > 0);
+  const navGroups = visibleNavGroups(allNavGroups, canAccessFeature);
 
   // Determine role badge — tokenised tones for theme-aware contrast (F2.4)
   const getRoleBadge = (): { text: string; tone: RoleTone } | null => {
@@ -243,57 +242,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
-                {navGroups.map((group, gi) => (
-                  <div key={gi} className="space-y-0.5">
-                    {/* F2.3 — subtle separator between groups */}
-                    {gi > 0 && (
-                      <div className="h-px bg-sidebar-border mx-2 mb-3" />
-                    )}
-                    {group.label && (
-                      <p className="px-2 mb-1.5 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 select-none">
-                        {group.label}
-                      </p>
-                    )}
-                    {group.items.map((item) => {
-                      const isActive = pathname === item.href;
-                      const Icon = item.icon;
-                      return (
-                        <Button
-                          key={item.name}
-                          variant="ghost"
-                          className={`w-full justify-start h-9 px-3 relative transition-all rounded-lg ${
-                            isActive
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold hover:bg-sidebar-accent"
-                              : "text-sidebar-foreground/75 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
-                          }`}
-                          onClick={() => {
-                            router.push(item.href);
-                            setSidebarOpen(false);
-                          }}
-                        >
-                          {/* F2.5 — left accent bar for active item */}
-                          {isActive && (
-                            <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-sidebar-primary rounded-r-full" />
-                          )}
-                          <Icon className={`h-4 w-4 mr-2.5 flex-shrink-0 ${
-                            isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/50"
-                          }`} />
-                          <span className="text-sm">{item.name}</span>
-                          {item.feature === "receipts" && pendingVoidRequests > 0 && (
-                            <span
-                              className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-xs font-semibold leading-none text-white"
-                              aria-label={`${pendingVoidRequests} pending void requests`}
-                            >
-                              {pendingVoidRequests}
-                            </span>
-                          )}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+              <SidebarNav
+                groups={navGroups}
+                pathname={pathname}
+                onNavigate={(href) => {
+                  router.push(href);
+                  setSidebarOpen(false);
+                }}
+                renderBadge={(item) =>
+                  item.feature === "receipts" && pendingVoidRequests > 0 ? (
+                    <span
+                      className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-xs font-semibold leading-none text-white"
+                      aria-label={`${pendingVoidRequests} pending void requests`}
+                    >
+                      {pendingVoidRequests}
+                    </span>
+                  ) : null
+                }
+              />
             )}
           </nav>
 

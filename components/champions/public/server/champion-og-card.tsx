@@ -63,6 +63,11 @@ export function ChampionOgCard({ meta }: { meta: ChampionMeta | null }) {
               <span style={{ fontSize: 40, fontWeight: 700, color: TEAL_LIGHT }}>{`${percent}%`}</span>
             ) : null}
           </div>
+          {meta.ownGiven ? (
+            <span style={{ display: "flex", fontSize: 30, opacity: 0.9 }}>
+              {`and has given ${wholeKes(meta.ownGiven)} personally`}
+            </span>
+          ) : null}
           {percent !== null ? (
             <div style={{ display: "flex", height: 20, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.18)" }}>
               <div style={{ width: `${percent}%`, height: 20, borderRadius: 10, backgroundColor: TEAL_LIGHT }} />

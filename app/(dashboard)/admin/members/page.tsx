@@ -11,6 +11,7 @@ import { GET_MEMBERS_LIST } from "@/lib/graphql/admin-queries";
 import { GET_GROUPS_LIST } from "@/lib/graphql/group-management";
 import {
   CREATE_MEMBER,
+  CLAIM_PAYER_RECORD,
   UPDATE_MEMBER,
   TOGGLE_MEMBER_STATUS,
   DELETE_MEMBER,
@@ -22,7 +23,7 @@ import {
 } from "@/lib/graphql/member-mutations";
 import { GET_ALL_CATEGORIES } from "@/lib/graphql/category-mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
@@ -44,6 +45,9 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { AdminLayout } from "@/components/layouts/admin-layout";
+import { PayerRecordOffer, type PayerRecord } from "@/components/members/payer-record-offer";
+import { MemberPhonesDialog } from "@/components/members/phones/member-phones-dialog";
+import { MemberRowMenu } from "@/components/members/member-row-menu";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
@@ -55,7 +59,6 @@ import {
   UserX,
   Upload,
   Pencil,
-  Trash2,
   Save,
   X,
   CheckCircle,
@@ -67,8 +70,10 @@ import {
   TrendingUp,
   UsersRound,
   Hash,
+  GitMerge,
 } from "lucide-react";
 import Link from "next/link";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 
 const PAGE_SIZE = 100;
 const ALL_ROLES = ["admin", "treasurer", "pastor", "content_admin", "recorder", "member"] as const;
@@ -127,6 +132,9 @@ interface MutationResult {
   success: boolean;
   message: string;
   member?: Member;
+  /** PAYER_RECORD_EXISTS: the number already gave by Pay Bill (MP-0). */
+  code?: string | null;
+  payerRecord?: PayerRecord | null;
 }
 
 interface MembersData {
@@ -228,37 +236,60 @@ function CreateMemberDialog({
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [payerOffer, setPayerOffer] = useState<PayerRecord | null>(null);
 
   const [createMember, { loading }] = useMutation<MemberMutationData>(CREATE_MEMBER);
+  const [claimPayerRecord, { loading: claiming }] = useMutation<MemberMutationData>(CLAIM_PAYER_RECORD);
 
   const resetForm = () => {
     setForm({ firstName: "", lastName: "", phoneNumber: "", email: "" });
     setSelectedRoles([]);
     setSelectedGroupIds([]);
     setError("");
+    setPayerOffer(null);
+  };
+
+  const formVariables = () => ({
+    ...form,
+    email: form.email || null,
+    roleNames: selectedRoles.length ? selectedRoles : null,
+    groupIds: selectedGroupIds.length ? selectedGroupIds : null,
+  });
+
+  const finish = (res: MutationResult | undefined, fallback: string) => {
+    if (res?.success) {
+      onSuccess(res.message);
+      resetForm();
+      setOpen(false);
+      return;
+    }
+    if (res?.code === "PAYER_RECORD_EXISTS" && res.payerRecord) {
+      setPayerOffer(res.payerRecord);
+      return;
+    }
+    setError(res?.message || fallback);
   };
 
   const handleSubmit = async () => {
     setError("");
     try {
-      const { data } = await createMember({
-        variables: {
-          ...form,
-          email: form.email || null,
-          roleNames: selectedRoles.length ? selectedRoles : null,
-          groupIds: selectedGroupIds.length ? selectedGroupIds : null,
-        },
+      const { data } = await createMember({ variables: formVariables() });
+      finish(data?.createMember, "Failed to create member");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Error creating member");
+    }
+  };
+
+  const handleClaim = async () => {
+    if (!payerOffer) return;
+    setError("");
+    try {
+      const { data } = await claimPayerRecord({
+        variables: { memberId: payerOffer.memberId, ...formVariables() },
       });
-      const res = data?.createMember;
-      if (res?.success) {
-        onSuccess(res.message);
-        resetForm();
-        setOpen(false);
-      } else {
-        setError(res?.message || "Failed to create member");
-      }
-    } catch (err: any) {
-      setError(err.message || "Error creating member");
+      finish(data?.claimPayerRecord, "Failed to use the Pay Bill record");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Error using the Pay Bill record");
     }
   };
 
@@ -283,6 +314,17 @@ function CreateMemberDialog({
           </Alert>
         )}
 
+        {payerOffer ? (
+          <PayerRecordOffer
+            record={payerOffer}
+            phone={form.phoneNumber}
+            memberName={`${form.firstName} ${form.lastName}`.trim()}
+            onUse={handleClaim}
+            onBack={() => { setPayerOffer(null); setError(""); }}
+            saving={claiming}
+          />
+        ) : (
+        <>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
@@ -354,6 +396,8 @@ function CreateMemberDialog({
             {loading ? "Creating..." : "Create Member"}
           </Button>
         </DialogFooter>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -638,9 +682,12 @@ function ManageDepartmentIdsDialog({
   );
 }
 
+
 // ─── Main Members Page ─────────────────────────────────────────────
 
 function MembersPageContent() {
+  const { isAdmin, isTreasurer } = useUserRole();
+  const canMerge = isAdmin || isTreasurer;  // F3
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(0);
@@ -753,7 +800,16 @@ function MembersPageContent() {
           <PageHeader
             title="Members"
             description="View and manage church members"
-            actions={<ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />}
+            actions={
+              <>
+                {canMerge && (
+                  <Link href="/admin/members/merge" className={buttonVariants({ variant: "outline" })}>
+                    <GitMerge className="h-4 w-4 mr-2" /> Merge duplicates
+                  </Link>
+                )}
+                <ReplayTourButton onClick={() => startTour()} disabled={!isTourReady} />
+              </>
+            }
           />
         </div>
 
@@ -935,15 +991,12 @@ function MembersPageContent() {
                             </Button>
                             <ManageRolesDialog member={member} onSuccess={showSuccess} />
                             <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                            <MemberPhonesDialog member={member} />
                             {trackingCategories.length > 0 && (
                               <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                             )}
-                            <Button size="sm" variant="outline" onClick={() => handleToggleStatus(member)}>
-                              {member.isActive ? <UserX className="h-4 w-4 text-warning" /> : <UserCheck className="h-4 w-4 text-success" />}
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleDelete(member)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <MemberRowMenu member={member} canMerge={canMerge} variant="outline"
+                              onToggleStatus={handleToggleStatus} onDelete={handleDelete} />
                           </div>
                         </>
                       )}
@@ -1012,20 +1065,17 @@ function MembersPageContent() {
                                   </Button>
                                   <ManageRolesDialog member={member} onSuccess={showSuccess} />
                                   <ManageGroupsDialog member={member} allGroups={allGroups} onSuccess={showSuccess} />
+                                  <MemberPhonesDialog member={member} compact />
                                   {trackingCategories.length > 0 && (
                                     <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                                   )}
-                                  <Button size="sm" variant="ghost" onClick={() => handleToggleStatus(member)} title={member.isActive ? "Deactivate" : "Activate"}>
-                                    {member.isActive ? <UserX className="h-3 w-3 text-warning" /> : <UserCheck className="h-3 w-3 text-success" />}
-                                  </Button>
-                                  <Button size="sm" variant="ghost" onClick={() => handleDelete(member)} title="Delete">
-                                    <Trash2 className="h-3 w-3 text-destructive" />
-                                  </Button>
                                   <Link href={`/admin/reports?mode=progress&member=${member.id}`} title="View contribution progress">
                                     <Button size="sm" variant="ghost" asChild>
                                       <span><TrendingUp className="h-3 w-3 text-info" /></span>
                                     </Button>
                                   </Link>
+                                  <MemberRowMenu member={member} canMerge={canMerge}
+                                    onToggleStatus={handleToggleStatus} onDelete={handleDelete} />
                                 </div>
                               </td>
                             </>
@@ -1056,6 +1106,7 @@ function MembersPageContent() {
             )}
           </CardContent>
         </Card>
+
       </div>
     </AdminLayout>
   );

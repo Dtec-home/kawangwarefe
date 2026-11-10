@@ -27,6 +27,7 @@ import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
 import { ADMIN_CONTRIBUTIONS_TOUR_CONFIG } from "@/lib/tours/configs/admin-contributions";
 import { StatusBadge, statusToVariant } from "@/components/ui/status-badge";
+import { channelLabel } from "@/lib/contributions/channel";
 import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight, Pencil, Receipt } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -35,6 +36,8 @@ interface Contribution {
   id: string;
   amount: string;
   status: string;
+  /** paybill | web | app | ussd | desk | stk (W4) */
+  channel?: string | null;
   transactionDate: string | null;
   notes: string | null;
   manualReceiptNumber?: string | null;
@@ -730,6 +733,7 @@ export default function ContributionsPage() {
                             <StatusBadge variant={statusToVariant(rep.status)}>
                               {rep.status}
                             </StatusBadge>
+                            <span className="text-xs text-muted-foreground">{channelLabel(rep.channel)}</span>
                             {group.isSplit && (
                               isExpanded
                                 ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -843,6 +847,7 @@ export default function ContributionsPage() {
                       <th className="text-left p-3 font-medium">Group</th>
                       <th className="text-right p-3 font-medium">Amount</th>
                       <th className="text-center p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">Channel</th>
                       <th className="text-left p-3 font-medium">M-Pesa code</th>
                       <th className="text-left p-3 font-medium">Old book no.</th>
                     </tr>
@@ -932,6 +937,9 @@ export default function ContributionsPage() {
                               <StatusBadge variant={statusToVariant(rep.status)}>
                                 {rep.status}
                               </StatusBadge>
+                            </td>
+                            <td className="p-3 text-sm whitespace-nowrap" data-testid="contribution-channel">
+                              {channelLabel(rep.channel)}
                             </td>
                             <td className="p-3 text-sm font-mono">
                               <div className="flex items-center gap-1">

@@ -29,6 +29,7 @@ vi.mock('@apollo/client/react', () => ({
             id: 'c1',
             amount: '5000.00',
             status: 'completed',
+            channel: 'paybill',
             transactionDate: '2025-03-20T10:30:00Z',
             notes: null,
             manualReceiptNumber: null,
@@ -118,6 +119,12 @@ vi.mock('react-hot-toast', () => ({
 import ContributionsPage from '@/app/(dashboard)/admin/contributions/page'
 
 describe('ContributionsPage', () => {
+  it('shows the channel each contribution came through (W4)', () => {
+    render(<ContributionsPage />)
+    expect(screen.getByText('Channel')).toBeInTheDocument()
+    expect(screen.getAllByText('Pay Bill').length).toBeGreaterThan(0)
+  })
+
   it('renders the heading', () => {
     render(<ContributionsPage />)
     expect(screen.getByText('Contributions')).toBeInTheDocument()

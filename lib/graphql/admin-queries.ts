@@ -18,6 +18,7 @@ export const GET_ALL_CONTRIBUTIONS = gql`
         id
         amount
         status
+        channel
         transactionDate
         notes
         manualReceiptNumber

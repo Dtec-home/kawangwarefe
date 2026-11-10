@@ -376,7 +376,8 @@ Then("the champion dashboard lists these donors:", async ({ page }, table: { has
 
 Then("the champion's share kit links to their page {string}", async ({ page, world }, suffix: string) => {
   await expect(page.getByTestId("champion-link")).toHaveText(
-    new RegExp(`/campaigns/${campaign(world).slug}${suffix.replace(/[/]/g, "\\/")}$`),
+    // ADR-0016: the link carries a preview version so WhatsApp refreshes its preview.
+    new RegExp(`/campaigns/${campaign(world).slug}${suffix.replace(/[/]/g, "\\/")}(\\?v=[0-9a-f]{8})?$`),
   );
 });
 
