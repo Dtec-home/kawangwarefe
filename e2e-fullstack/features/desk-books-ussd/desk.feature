@@ -24,7 +24,9 @@ Feature: Recording campaign gifts at the desk
     Then the desk shows a receipt for "KES 1,500.00" from "Grace Njeri"
     And the new giver receives a receipt SMS addressed to "Grace"
     When the treasurer reviews the desk campaign's contributor list
-    Then the contributor list shows "Grace Njeri" with "KES 1,500.00" and no "Guest Member"
+    # Grace gave through John's code, so the WhatsApp list credits John (ADR-0016 amendment, 10 Nov 2026);
+    # her own name is on the receipt above.
+    Then the contributor list shows "John Kamau – 1,500" with "KES 1,500.00" and no "Guest Member"
     And the desk campaign's champion "JOHN" is credited with "KES 1,500.00" from 1 donor
     And no request left the machine
 
