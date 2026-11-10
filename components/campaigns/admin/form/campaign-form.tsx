@@ -49,7 +49,7 @@ const FLAGS = [
   {
     name: "dailyTotalEnabled",
     label: "Daily total to the WhatsApp group",
-    hint: "Posts today's total to the group at 11:50pm, without names. Needs a WhatsApp group.",
+    hint: "Posts today's total and who gave to the group at 11:50pm. Needs a WhatsApp group.",
   },
   {
     name: "dailyTotalPostWhenZero",

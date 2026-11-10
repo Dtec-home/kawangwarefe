@@ -10,11 +10,21 @@ Given(
   },
 );
 
-Then("the daily total preview says {string} without naming anyone", async ({ page }, text: string) => {
-  const preview = page.getByTestId("daily-total-preview");
-  await expect(preview).toContainText(text, { timeout: 20_000 });
-  for (const name of ["Mary", "Wanjiku", "John", "Kamau"]) await expect(preview).not.toContainText(name);
+Then("the daily total preview says {string}", async ({ page }, text: string) => {
+  await expect(page.getByTestId("daily-total-preview")).toContainText(text, { timeout: 20_000 });
 });
+
+Then(
+  "the daily total preview lists {string} then {string} under {string}",
+  async ({ page }, first: string, second: string, heading: string) => {
+    const preview = page.getByTestId("daily-total-preview");
+    await expect(preview).toContainText(heading, { timeout: 20_000 });
+    const text = (await preview.textContent()) ?? "";
+    const after = text.slice(text.indexOf(heading));
+    expect(after).toContain(`1. ${first}`);
+    expect(after).toContain(`2. ${second}`);
+  },
+);
 
 When("I post the daily total to the group now", async ({ page }) => {
   const button = page.getByTestId("daily-total-card").getByRole("button", { name: "Post to group now" });

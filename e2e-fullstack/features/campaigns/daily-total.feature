@@ -1,5 +1,5 @@
 Feature: The daily campaign total on WhatsApp
-  ADR-0015: staff share or post the day's total by hand (no names), the
+  ADR-0015: staff share or post the day's total and who gave by hand, the
   23:50 job posts it once to the campaign's group, and the card says how the
   last automatic post went.
 
@@ -12,7 +12,8 @@ Feature: The daily campaign total on WhatsApp
   Scenario: A treasurer posts the daily total, and the evening job posts it once
     Given I am signed in as the treasurer
     When I open the "Share list" tab of the campaign "Shamba Land"
-    Then the daily total preview says "KES 2,500 from 2 givers" without naming anyone
+    Then the daily total preview says "KES 2,500 from 2 givers"
+    And the daily total preview lists "John Kamau – 2,000" then "Mary Wanjiku – 500" under "Given today"
     When I post the daily total to the group now
     Then I am told "Posted to the WhatsApp group."
     And the WhatsApp group "120363000000000001@g.us" has 1 post saying "KES 2,500 from 2 givers"
