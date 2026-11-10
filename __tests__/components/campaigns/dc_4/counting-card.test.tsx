@@ -138,9 +138,47 @@ describe('CampaignCountingCard', () => {
     expect(screen.getByRole('button', { name: 'Ask to count gifts to this campaign only' })).toBeInTheDocument()
   })
 
-  it('offers no change on a closed campaign', () => {
+  it('offers no department counting on a closed gifts-only campaign', () => {
     renderCard({ status: 'CLOSED' })
     expect(screen.queryByRole('button', { name: /Ask to count/ })).not.toBeInTheDocument()
+  })
+
+  it('offers switching a closed department-backed campaign back to gifts-only', async () => {
+    const { onChanged } = renderCard({ status: 'CLOSED', countingMode: 'DEPARTMENT' }, [
+      {
+        request: { query: REQUEST_CAMPAIGN_COUNTING_MODE, variables: { id: '9', mode: 'TAGGED' } },
+        result: response('requestCampaignCountingMode', true, 'Change sent for approval.', {
+          status: 'CLOSED', countingMode: 'DEPARTMENT', requestedCountingMode: 'TAGGED',
+        }),
+      },
+    ])
+    expect(screen.getByTestId('closed-department-note')).toHaveTextContent(
+      'closed but still counts every Land Purchase gift',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Ask to count gifts to this campaign only' }))
+    const dialog = await screen.findByRole('alertdialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send for approval' }))
+    await waitFor(() => expect(toastMock.success).toHaveBeenCalledWith('Change sent for approval.'))
+    expect(onChanged).toHaveBeenCalled()
+  })
+
+  it('lets a second approver approve the change on a closed department-backed campaign', async () => {
+    const { onChanged } = renderCard(
+      { status: 'CLOSED', countingMode: 'DEPARTMENT', requestedCountingMode: 'TAGGED', canApproveCountingMode: true },
+      [
+        {
+          request: { query: APPROVE_CAMPAIGN_COUNTING_MODE, variables: { id: '9' } },
+          result: response('approveCampaignCountingMode', true, 'Change approved.', {
+            status: 'CLOSED', countingMode: 'TAGGED',
+          }),
+        },
+      ],
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Approve change' }))
+    const dialog = await screen.findByRole('alertdialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Approve change' }))
+    await waitFor(() => expect(toastMock.success).toHaveBeenCalledWith('Change approved.'))
+    expect(onChanged).toHaveBeenCalled()
   })
 })
 
