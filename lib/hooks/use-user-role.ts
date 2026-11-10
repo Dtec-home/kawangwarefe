@@ -65,6 +65,7 @@ interface UserRoleInfo {
 /** Every feature key understood by `canAccessFeature`. */
 export type AdminFeature =
   | "members"
+  | "member-merge"
   | "reports"
   | "category-admins"
   | "categories"
@@ -147,6 +148,10 @@ export function useUserRole() {
     // Helper: check if user can access a specific admin feature
     canAccessFeature: (feature: AdminFeature) => {
       if (!roleInfo) return false;
+
+      // F3: merging two people's records is for an admin or a treasurer only
+      // (the backend refuses everyone else; a pastor is staff but may not).
+      if (feature === "member-merge") return !!(roleInfo.isAdmin || roleInfo.isTreasurer);
 
       // Full staff can access everything (incl. expenses — treasurer/admin are
       // staff, and the recorder workspace — RR-9)

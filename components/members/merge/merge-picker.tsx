@@ -43,10 +43,11 @@ function Person({ title, lookup }: { title: string; lookup: Lookup }) {
   );
 }
 
-export function MergePicker() {
+/** `initialKeepPhone`: opened from a member's row menu ("Merge…"), that member is kept. */
+export function MergePicker({ initialKeepPhone = "" }: { initialKeepPhone?: string }) {
   const router = useRouter();
   const client = useApolloClient();
-  const [keepPhone, setKeepPhone] = useState("");
+  const [keepPhone, setKeepPhone] = useState(initialKeepPhone);
   const [dupPhone, setDupPhone] = useState("");
   const [keep, setKeep] = useState<Lookup>(null);
   const [dup, setDup] = useState<Lookup>(null);

@@ -554,3 +554,28 @@ describe('useUserRole', () => {
     })
   })
 })
+
+// F3: merging members is for an admin or a treasurer, not every staff role.
+describe('canAccessFeature("member-merge")', () => {
+  const withRole = (overrides: Record<string, boolean>) => ({
+    request: { query: GET_CURRENT_USER_ROLE },
+    result: {
+      data: {
+        currentUserRole: { ...staffRoleMock.result.data.currentUserRole, ...overrides },
+      },
+    },
+  })
+
+  it.each([
+    ['admin', { isAdmin: true }, true],
+    ['treasurer', { isTreasurer: true }, true],
+    ['pastor (staff, neither admin nor treasurer)', {}, false],
+    ['recorder', { isStaff: false, isRecorder: true }, false],
+  ])('%s → %s', async (_label, overrides, allowed) => {
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: makeWrapper([withRole(overrides)]),
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.canAccessFeature('member-merge')).toBe(allowed)
+  })
+})

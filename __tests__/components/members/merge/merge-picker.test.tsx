@@ -58,4 +58,11 @@ describe('MergePicker (F3)', () => {
     expect(await screen.findByText('Both numbers belong to the same person')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Preview merge' })).not.toBeInTheDocument())
   })
+
+  it('starts with the number of the member chosen from the members list', () => {
+    render(<MockedProvider mocks={[]}><MergePicker initialKeepPhone="254711000001" /></MockedProvider>)
+
+    expect(screen.getByLabelText('Number of the record to keep')).toHaveValue('254711000001')
+    expect(screen.getByLabelText('Number of the duplicate')).toHaveValue('')
+  })
 })

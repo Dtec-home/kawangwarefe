@@ -47,7 +47,7 @@ function MergeContent() {
           <CardTitle>Choose the two records</CardTitle>
           <CardDescription>Enter a phone number of each. A Pay Bill payer known only by their number can be found the same way.</CardDescription>
         </CardHeader>
-        <CardContent><MergePicker /></CardContent>
+        <CardContent><MergePicker initialKeepPhone={params.get("keep") ?? ""} /></CardContent>
       </Card>
       <Card>
         <CardHeader>

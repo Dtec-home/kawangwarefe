@@ -47,6 +47,7 @@ import {
 import { AdminLayout } from "@/components/layouts/admin-layout";
 import { PayerRecordOffer, type PayerRecord } from "@/components/members/payer-record-offer";
 import { MemberPhonesDialog } from "@/components/members/phones/member-phones-dialog";
+import { MemberRowMenu } from "@/components/members/member-row-menu";
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
 import { useTour } from "@/hooks/use-tour";
@@ -58,7 +59,6 @@ import {
   UserX,
   Upload,
   Pencil,
-  Trash2,
   Save,
   X,
   CheckCircle,
@@ -995,12 +995,8 @@ function MembersPageContent() {
                             {trackingCategories.length > 0 && (
                               <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                             )}
-                            <Button size="sm" variant="outline" onClick={() => handleToggleStatus(member)}>
-                              {member.isActive ? <UserX className="h-4 w-4 text-warning" /> : <UserCheck className="h-4 w-4 text-success" />}
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleDelete(member)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <MemberRowMenu member={member} canMerge={canMerge} variant="outline"
+                              onToggleStatus={handleToggleStatus} onDelete={handleDelete} />
                           </div>
                         </>
                       )}
@@ -1073,17 +1069,13 @@ function MembersPageContent() {
                                   {trackingCategories.length > 0 && (
                                     <ManageDepartmentIdsDialog member={member} trackingCategories={trackingCategories} onSuccess={showSuccess} />
                                   )}
-                                  <Button size="sm" variant="ghost" onClick={() => handleToggleStatus(member)} title={member.isActive ? "Deactivate" : "Activate"}>
-                                    {member.isActive ? <UserX className="h-3 w-3 text-warning" /> : <UserCheck className="h-3 w-3 text-success" />}
-                                  </Button>
-                                  <Button size="sm" variant="ghost" onClick={() => handleDelete(member)} title="Delete">
-                                    <Trash2 className="h-3 w-3 text-destructive" />
-                                  </Button>
                                   <Link href={`/admin/reports?mode=progress&member=${member.id}`} title="View contribution progress">
                                     <Button size="sm" variant="ghost" asChild>
                                       <span><TrendingUp className="h-3 w-3 text-info" /></span>
                                     </Button>
                                   </Link>
+                                  <MemberRowMenu member={member} canMerge={canMerge}
+                                    onToggleStatus={handleToggleStatus} onDelete={handleDelete} />
                                 </div>
                               </td>
                             </>
