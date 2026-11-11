@@ -1,6 +1,6 @@
 @web
 Feature: Sharing the daily total by hand
-  ADR-0015 D5: staff preview the day's total (no names), share or copy it,
+  ADR-0015 D5: staff preview the day's total and who gave, share or copy it,
   or post it to the group now; a second post within 10 minutes is refused.
 
   Scenario: A treasurer posts the daily total to the group

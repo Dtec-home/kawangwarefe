@@ -1,6 +1,7 @@
 /**
  * DailyTotalCard (ADR-0015 D5): the day's total for the church group, by
- * hand. Totals only, never names. Share opens wa.me; Copy puts the text on
+ * hand, with who gave that day (money through a champion's code under the
+ * champion) and who was recorded for earlier days. Share opens wa.me; Copy puts the text on
  * the clipboard; "Post to group now" sends it through the gateway (once per
  * 10 minutes). It also says how the last automatic 11:50pm post went.
  */
@@ -123,7 +124,7 @@ export function DailyTotalCard({ campaignId }: { campaignId: string }) {
         <div className="space-y-1">
           <CardTitle>Daily total</CardTitle>
           <CardDescription>
-            The day&apos;s total for the church group, without names. It is also posted automatically at 11:50pm on
+            The day&apos;s total for the church group, with who gave that day. It is also posted automatically at 11:50pm on
             days with gifts.
           </CardDescription>
         </div>
