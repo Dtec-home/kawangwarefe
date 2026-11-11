@@ -35,6 +35,24 @@ export interface CampaignUpdatesVars {
   campaignId: string;
 }
 
+/** The longest update title that fits the one-SMS "SMS donors" text (KES 0.8 budget). */
+export const GET_UPDATE_SMS_TITLE_MAX = gql`
+  query GetUpdateSmsTitleMax($id: ID!) {
+    campaign(id: $id) {
+      id
+      updateSmsTitleMax
+    }
+  }
+`;
+
+export interface UpdateSmsTitleMaxData {
+  campaign: { id: string; updateSmsTitleMax: number } | null;
+}
+
+export interface UpdateSmsTitleMaxVars {
+  id: string;
+}
+
 export const POST_CAMPAIGN_UPDATE = gql`
   mutation PostCampaignUpdate(
     $campaignId: ID!

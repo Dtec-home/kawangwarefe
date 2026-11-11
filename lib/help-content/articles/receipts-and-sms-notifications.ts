@@ -17,17 +17,11 @@ Receipt numbers look like 20260829-0017: the date of the gift, then a counter th
 - Failed or still-pending M-Pesa payments never get a receipt — only a completed payment does.
 
 **What the SMS contains**
-It reads roughly like:
+It is one SMS (160 characters) and reads roughly like:
 \`\`\`
-Receipt: 20260829-0017
-M-Pesa: QJK3X4ABCD
-Tithe: KES 1,000
-Combined Offering - LCB: KES 500
-Total: KES 1,500
-29/08/26 10:30
-Thank you [First name]!
+Thank you [First name]! KES 1,500 for Tithe KES 1,000, Combined Offering - LCB KES 500. Receipt 20260829-0017, 29/08/26 10:30. SDA CHURCH KAWANGWARE
 \`\`\`
-The M-Pesa line appears only for M-Pesa and Pay Bill payments. There is one line per department (with the purpose, if any), so a payment split across departments or purposes shows each part and the total. Very long receipts show the first few lines and "+N more".
+It names each department (with the purpose, if any) and its amount, so a payment split across departments or purposes shows each part. The M-Pesa code is not repeated: you already have it in the M-Pesa message. When the text would be longer than one SMS, the church name and the date are left out first, then department names are shortened or summed up as "+N more".
 
 **Corrections**
 Receipts are never edited. If a gift was recorded wrongly, the treasurer voids the receipt (it keeps its number but no longer counts) and the gift is recorded again with a new receipt.

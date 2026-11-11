@@ -25,7 +25,10 @@ import {
 } from "../support/campaigns";
 
 const SLOW = { timeout: 30_000 };
-const WHATSAPP_NOTICE = "Contributors to this campaign are listed by name and amount in the church WhatsApp group.";
+// The receipt SMS is one segment, so the notice comes in a long or short form
+// ("...listed in the church WhatsApp group." / "...go on church WhatsApp.");
+// both name the church WhatsApp.
+const WHATSAPP_NOTICE = "church WhatsApp";
 const FOUR_EYES_MESSAGE = "Only an admin or pastor who did not create the campaign may approve it.";
 
 function statusBadge(page: Page) {

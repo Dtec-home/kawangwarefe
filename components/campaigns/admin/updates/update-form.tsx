@@ -9,7 +9,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { useMutation } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,10 +19,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SmsCounter, fitsOneSms } from "@/components/messaging/SmsCounter";
 import {
+  GET_UPDATE_SMS_TITLE_MAX,
   POST_CAMPAIGN_UPDATE,
   type PostCampaignUpdateData,
   type PostCampaignUpdateVars,
+  type UpdateSmsTitleMaxData,
+  type UpdateSmsTitleMaxVars,
 } from "@/lib/graphql/fundraising/updates";
 
 const POST_FAILED = "Could not post the update";
@@ -38,10 +42,17 @@ export const EMPTY_DRAFT: UpdateDraft = { title: "", body: "", imageUrl: "", sms
 
 type DraftErrors = Partial<Record<"title" | "body" | "imageUrl", string>>;
 
-/** Field errors for a draft; empty when it can be posted. */
-export function validateDraft(draft: UpdateDraft): DraftErrors {
+/**
+ * Field errors for a draft; empty when it can be posted. With "SMS donors" on,
+ * the title goes into a one-SMS text with the campaign link, so it must fit
+ * ``smsTitleMax`` characters (from the backend) and one SMS.
+ */
+export function validateDraft(draft: UpdateDraft, smsTitleMax?: number): DraftErrors {
   const errors: DraftErrors = {};
   if (!draft.title.trim()) errors.title = "Give the update a title.";
+  else if (draft.smsDonors && !fitsOneSms(draft.title.trim(), smsTitleMax)) {
+    errors.title = "To SMS donors, shorten the title so the SMS fits one message (see the count below).";
+  }
   if (!draft.body.trim()) errors.body = "Write the update.";
   const image = draft.imageUrl.trim();
   if (image && !/^https?:\/\/\S+$/i.test(image)) errors.imageUrl = "Use a full web address starting with https://";
@@ -60,13 +71,18 @@ export function UpdateForm({ campaignId, onPosted }: UpdateFormProps) {
   const [postUpdate, { loading }] = useMutation<PostCampaignUpdateData, PostCampaignUpdateVars>(
     POST_CAMPAIGN_UPDATE
   );
+  const { data: limitData } = useQuery<UpdateSmsTitleMaxData, UpdateSmsTitleMaxVars>(GET_UPDATE_SMS_TITLE_MAX, {
+    variables: { id: campaignId },
+    skip: !draft.smsDonors || !campaignId,
+  });
+  const smsTitleMax = limitData?.campaign?.updateSmsTitleMax;
 
   const set = <K extends keyof UpdateDraft>(key: K, value: UpdateDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const found = validateDraft(draft);
+    const found = validateDraft(draft, smsTitleMax);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     try {
@@ -111,6 +127,14 @@ export function UpdateForm({ campaignId, onPosted }: UpdateFormProps) {
               aria-invalid={errors.title ? true : undefined}
             />
             {errors.title ? <p className="text-sm text-destructive">{errors.title}</p> : null}
+            {draft.smsDonors ? (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  The SMS is the title with the campaign name and link, in one message.
+                </p>
+                <SmsCounter text={draft.title.trim()} limit={smsTitleMax} />
+              </div>
+            ) : null}
           </div>
 
           <div className="space-y-2">

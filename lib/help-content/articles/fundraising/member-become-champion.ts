@@ -28,7 +28,7 @@ Once you are approved, your page has a share kit:
 You see the name and amount of everyone who gave through your code. Only you and church staff can see this list. Givers are told on your page and on their SMS receipt that you can see their name and amount. Please keep it private.
 
 **SMS updates**
-When new gifts come through your code, you get a short SMS with the number of gifts and the totals (never names), at most every few hours and only between 8am and 8pm. It links to your champion page.
+When new gifts come through your code, you get a short SMS with the number of gifts and the totals (never names), at most every few hours and only between 8am and 8pm. To see who gave, open your champion page in the app.
 
 **What your page shows about your own giving**
 Your public page, its WhatsApp preview and your ready-made message show the total you have given to the campaign yourself, for example "Jane has given KES 5,000 to this campaign". This encourages others. It counts every gift you made to the campaign, from any of your numbers. Only the total is shown, never the individual gifts, and nothing is shown until you give.

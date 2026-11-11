@@ -22,6 +22,10 @@ export const ADMIN_MESSAGING_ARTICLE: HelpArticle = {
 
 A member with no phone number on file (and no guardian phone number, for dependents) is automatically skipped rather than failing — you'll see that count called out both in the New Campaign preview and, per-recipient, on the campaign's results page.
 
+**Every message is one SMS**
+
+Each message must fit one SMS: 160 plain characters (KES 0.8 per person). The counter under the message shows how many you have used, for example "118/160". Name tokens count at their longest: {{first_name}} as 12 characters, {{last_name}} as 15 and {{full_name}} as 25, and longer names are shortened to that. Characters such as curly quotes (’ “ ”), long dashes (–), emoji and accented letters (é) are not plain SMS characters: one of them cuts the limit to 70, so the counter warns you and names the character. Type a plain ' " or - instead. A message over one SMS cannot be sent or saved.
+
 **There's a daily send limit**
 
 Both Quick Send and New Campaign are subject to a daily recipient cap. Scoped senders (department or group admins) have a lower cap than full staff. If a send would exceed the cap, it's rejected up front with a message telling you how many recipients you have left for the day — nothing partially sends in that case.

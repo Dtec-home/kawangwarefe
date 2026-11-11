@@ -100,6 +100,26 @@ describe('TemplateManager', () => {
     expect(save).not.toBeDisabled()
   })
 
+  it('counts the body against one SMS and blocks Save above it', () => {
+    render(<TemplateManager />)
+    fireEvent.click(screen.getByText('New Template'))
+    fireEvent.change(nameInput(), { target: { value: 'Long' } })
+    const save = screen.getByText('Save')
+
+    // {{first_name}} counts as 12: 'Hi ' + 12 + ' ' + 144 = 160 fits.
+    fireEvent.change(bodyInput(), { target: { value: 'Hi {{first_name}} ' + 'a'.repeat(144) } })
+    expect(screen.getByTestId('sms-counter')).toHaveTextContent('160/160 characters (one SMS)')
+    expect(save).not.toBeDisabled()
+
+    fireEvent.change(bodyInput(), { target: { value: 'Hi {{first_name}} ' + 'a'.repeat(145) } })
+    expect(screen.getByTestId('sms-counter')).toHaveTextContent('161/160')
+    expect(save).toBeDisabled()
+
+    fireEvent.change(bodyInput(), { target: { value: 'Sabbath \u2013 ' + 'a'.repeat(70) } })
+    expect(screen.getByTestId('sms-counter-non-gsm')).toBeInTheDocument()
+    expect(save).toBeDisabled()
+  })
+
   it('toasts an error when create fails', async () => {
     createTpl.mockResolvedValue({
       data: { createMessageTemplate: { success: false, message: 'Name taken', template: null } },

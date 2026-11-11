@@ -1,7 +1,8 @@
 Feature: The champion digest SMS
   A champion gets a short SMS when people give through their code: totals
-  only, never donor names, with a link to their dashboard. At most one
-  digest every few hours, so a busy day is a handful of messages.
+  only, never donor names, and no link (one SMS segment, KES 0.8; the names
+  are on their dashboard in the app). At most one digest every few hours, so
+  a busy day is a handful of messages.
 
   The receipt of a gift made in the daytime sends the digest straight away;
   the hourly job catches what came at night. Either way exactly one digest
@@ -16,7 +17,7 @@ Feature: The champion digest SMS
     When the member sends KES 1000 from the M-Pesa menu to Pay Bill account "ROOF JOHN"
     And the hourly champion digest job runs
     Then the member2 has received 1 champion digest SMS
-    And the member2's champion digest reads "Roof Repair 2026: 1 new gift (KES 1,000) came through your code JOHN. Total through you: KES 1,000 from 1 donor. See who gave: <dashboard>"
+    And the member2's champion digest reads "Roof Repair 2026: 1 new gift (KES 1,000) came through your code JOHN. Total through you: KES 1,000 from 1 donor."
 
     When a visitor on "254711300001" named "Peterson" sends KES 600 from the M-Pesa menu to Pay Bill account "ROOF-JOHN"
     And staff see KES 1600 raised through champion "JOHN" from 2 donors

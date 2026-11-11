@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SmsCounter, fitsOneSms } from "@/components/messaging/SmsCounter";
 import { MEMBER_SEARCH, LAUNCH_QUICK_CAMPAIGN } from "@/lib/graphql/messaging-mutations";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -39,7 +40,6 @@ interface LaunchResult {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const MAX_CHARS = 480;
 const PHONE_RE = /^(\+?254|0)[17][0-9]{8}$/;
 
 function parsePhones(raw: string): string[] {
@@ -145,7 +145,7 @@ export function QuickSendComposer({ onSent }: QuickSendComposerProps) {
 
   const extraPhones = parsePhones(phonesRaw);
   const totalRecipients = selectedMembers.length + extraPhones.length;
-  const charsLeft = MAX_CHARS - body.length;
+  const fits = fitsOneSms(body);
 
   const [launch, { loading }] = useMutation<LaunchResult>(LAUNCH_QUICK_CAMPAIGN, {
     onCompleted: (data) => {
@@ -176,29 +176,23 @@ export function QuickSendComposer({ onSent }: QuickSendComposerProps) {
     });
   };
 
-  const canSend = body.trim().length > 0 && totalRecipients > 0 && charsLeft >= 0;
+  const canSend = body.trim().length > 0 && totalRecipients > 0 && fits;
 
   return (
     <div className="space-y-5 max-w-2xl">
       {/* Message body */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="qs-body">Message</Label>
-          <span className={`text-xs ${charsLeft < 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-            {body.length} / {MAX_CHARS}
-          </span>
-        </div>
+        <Label htmlFor="qs-body">Message</Label>
         <Textarea
           id="qs-body"
-          placeholder="Type your message here…"
+          placeholder="Type your message here..."
           rows={4}
           value={body}
           onChange={e => setBody(e.target.value)}
+          aria-describedby="qs-body-count"
           className="resize-none"
         />
-        {charsLeft < 0 && (
-          <p className="text-xs text-destructive">Message is too long by {Math.abs(charsLeft)} character{Math.abs(charsLeft) !== 1 ? "s" : ""}.</p>
-        )}
+        <SmsCounter id="qs-body-count" text={body} />
       </div>
 
       {/* Recipients */}

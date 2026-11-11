@@ -419,7 +419,7 @@ Then(
     await backend.expectSms(
       person.phone,
       [
-        "a friendly reminder",
+        // One SMS segment (KES 0.8): the wording is short, no "friendly reminder".
         `is due on ${smsDate(world.values[`due:${name}`])}`,
         `Balance: ${balance}`,
         `Pay Bill ${world.seed!.paybill}, Account ${code}`,
@@ -436,8 +436,8 @@ Then(
     await backend.expectSms(
       person.phone,
       [
-        "is now overdue",
-        `(it was due on ${smsDate(world.values[`due:${name}`])})`,
+        "is overdue",
+        `(due ${smsDate(world.values[`due:${name}`])})`,
         `Balance: ${balance}`,
         `Pay Bill ${world.seed!.paybill}, Account ${code}`,
       ],

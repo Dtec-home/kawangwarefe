@@ -26,7 +26,7 @@ Give cash or an envelope at the desk and ask the recorder to put it towards the 
 Dial the church USSD code and choose 4. Campaigns & Pledges, then 1. Give to a campaign. Pick the campaign, enter the amount (and a champion code if you have one), confirm, then enter your M-Pesa PIN.
 
 **Your receipt**
-Your SMS receipt says which campaign your gift went towards ("Towards: ..."). It also reminds you that contributors to the campaign are listed by name and amount in the church WhatsApp group. If you gave through a champion, it tells you that the champion can see your name and amount.
+Your SMS receipt says which campaign your gift went towards ("Towards: ..."). It also reminds you that contributors to the campaign are listed by name and amount in the church WhatsApp group. If you gave through a champion, it tells you that the champion can see your gift. The receipt is one SMS, so these notes are shortened when space is tight.
 
 **Share the campaign**
 Use the share buttons on the page (WhatsApp, Facebook, X, SMS or Copy link) to invite family and friends.

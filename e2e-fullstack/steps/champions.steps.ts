@@ -423,11 +423,9 @@ Then(
 
 Then(
   "the {word}'s champion digest reads {string}",
-  async ({ backend, world, baseURL }, role: string, text: string) => {
-    // <dashboard> is the champion's dashboard on the site the backend links to (this app).
-    const code = text.match(/your code (\w+)/)?.[1] ?? "";
-    const expected = text.replace("<dashboard>", `${baseURL}/champion/${world.values[`champion:${code}`]}`);
-    await expect.poll(async () => (await digestsTo(backend, world, role)).map((m) => m.body)).toEqual([expected]);
+  async ({ backend, world }, role: string, text: string) => {
+    // One SMS segment: totals only, no dashboard link.
+    await expect.poll(async () => (await digestsTo(backend, world, role)).map((m) => m.body)).toEqual([text]);
   },
 );
 
