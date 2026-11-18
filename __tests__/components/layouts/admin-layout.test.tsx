@@ -66,6 +66,12 @@ describe('AdminLayout', () => {
     expect(screen.getByText('Receipts')).toBeInTheDocument()
   })
 
+  it('links to Department Reports (DR-6, UI test contract: link "Department Reports")', () => {
+    render(<AdminLayout><div>C</div></AdminLayout>)
+    const link = screen.getByRole('link', { name: 'Department Reports' })
+    expect(link).toHaveAttribute('href', '/admin/department-reports')
+  })
+
   it('shows user info', () => {
     render(<AdminLayout><div>C</div></AdminLayout>)
     expect(screen.getByText('Test User')).toBeInTheDocument()

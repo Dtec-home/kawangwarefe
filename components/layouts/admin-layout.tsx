@@ -45,6 +45,7 @@ import {
   GitMerge,
   History,
   Upload,
+  ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminBottomNav } from "@/components/layouts/admin-bottom-nav";
@@ -128,6 +129,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: "Departments",    href: "/admin/categories",     icon: FolderOpen, feature: "categories" },
         { name: "Groups",         href: "/admin/groups",         icon: UserRound,  feature: "groups" },
         { name: "Dept. Admins",   href: "/admin/category-admins", icon: Shield,   feature: "category-admins" },
+        // DR-6: yearly department reports — department leaders and staff.
+        // A real link (UI test contract: link "Department Reports").
+        { name: "Department Reports", href: "/admin/department-reports", icon: ClipboardList, feature: "department-reports", asLink: true },
       ],
     },
     {

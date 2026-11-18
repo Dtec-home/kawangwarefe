@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen, CalendarClock, ReceiptText, Coins } from "lucide-react";
+import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen, CalendarClock, ReceiptText, Coins, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { usePendingVoidRequestCount } from "@/lib/hooks/use-pending-void-request-count";
@@ -27,6 +27,7 @@ const moreAdminLinks: NavItem[] = [
   { href: "/admin/categories", label: "Departments", icon: FolderOpen },
   { href: "/admin/groups", label: "Groups", icon: UserRound },
   { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
+  { href: "/admin/department-reports", label: "Department Reports", icon: ClipboardList },
   { href: "/admin/c2b-transactions", label: "C2B / Pay Bill", icon: Smartphone },
   { href: "/admin/catch-up-windows", label: "Catch-up windows", icon: CalendarClock },
   { href: "/admin/collection-sessions", label: "Collection sessions", icon: Coins },
@@ -64,6 +65,7 @@ export function AdminBottomNav() {
     "/admin/catch-up-windows": "catch-up-windows",
     "/admin/collection-sessions": "collection-sessions",
     "/admin/receipts": "receipts",
+    "/admin/department-reports": "department-reports",
   };
 
   // A pure recorder has a single destination — show it in the bar itself

@@ -273,6 +273,14 @@ describe('useUserRole', () => {
       expect(result.current.canAccessFeature('contributions')).toBe(true)
     })
 
+    it('canAccessFeature("department-reports") returns true (DR-6)', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([staffRoleMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.canAccessFeature('department-reports')).toBe(true)
+    })
+
     it('canAccessFeature("c2b-transactions") returns true', async () => {
       const { result } = renderHook(() => useUserRole(), {
         wrapper: makeWrapper([staffRoleMock]),
@@ -355,6 +363,14 @@ describe('useUserRole', () => {
       await waitFor(() => expect(result.current.loading).toBe(false))
       expect(result.current.canAccessFeature('c2b-transactions')).toBe(false)
     })
+
+    it('canAccessFeature("department-reports") returns false (DR-6)', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([contentAdminMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.canAccessFeature('department-reports')).toBe(false)
+    })
   })
 
   // ── Category Admin ─────────────────────────────────────────────────────────
@@ -405,6 +421,14 @@ describe('useUserRole', () => {
       })
       await waitFor(() => expect(result.current.loading).toBe(false))
       expect(result.current.canAccessFeature('content')).toBe(false)
+    })
+
+    it('canAccessFeature("department-reports") returns true — leaders write their report (DR-6)', async () => {
+      const { result } = renderHook(() => useUserRole(), {
+        wrapper: makeWrapper([categoryAdminMock]),
+      })
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.canAccessFeature('department-reports')).toBe(true)
     })
 
     it('populates adminCategories list', async () => {
@@ -519,7 +543,7 @@ describe('useUserRole', () => {
       })
       await waitFor(() => expect(result.current.loading).toBe(false))
       expect(result.current.canAccessFeature('record')).toBe(true)
-      for (const f of ['overview', 'contributions', 'members', 'reports', 'expenses', 'messaging', 'content', 'c2b-transactions', 'catch-up-windows'] as const) {
+      for (const f of ['overview', 'contributions', 'members', 'reports', 'expenses', 'messaging', 'content', 'c2b-transactions', 'catch-up-windows', 'department-reports'] as const) {
         expect(result.current.canAccessFeature(f)).toBe(false)
       }
     })
