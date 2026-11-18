@@ -24,6 +24,7 @@ export const GET_CURRENT_USER_ROLE = gql`
       isAdmin
       isTreasurer
       adminCategoryIds
+      ledDepartmentIds
       adminGroupNames
       adminCategories {
         id
@@ -62,10 +63,7 @@ interface UserRoleInfo {
   adminCategories: Category[];
   /**
    * Departments the user leads (CategoryAdmin ∪ DepartmentAdminScope, D1).
-   * TODO(DR-4): add `ledDepartmentIds` to GET_CURRENT_USER_ROLE once the
-   * backend exposes `currentUserRole.ledDepartmentIds`; until then it is never
-   * queried, so it is always undefined and leaders are recognised through
-   * `isCategoryAdmin` only.
+   * Optional only so older mocks without the field still type-check.
    */
   ledDepartmentIds?: string[];
 }
@@ -153,7 +151,6 @@ export function useUserRole() {
     adminCategoryIds: roleInfo?.adminCategoryIds ?? [],
     adminGroupNames: roleInfo?.adminGroupNames ?? [],
     adminCategories: roleInfo?.adminCategories ?? [],
-    // TODO(DR-4): populated once GET_CURRENT_USER_ROLE selects it.
     ledDepartmentIds: roleInfo?.ledDepartmentIds ?? [],
 
     // Helper: check if user can access a specific admin feature

@@ -32,6 +32,7 @@ const GET_CURRENT_USER_ROLE = gql`
       isAdmin
       isTreasurer
       adminCategoryIds
+      ledDepartmentIds
       adminGroupNames
       adminCategories {
         id
@@ -69,6 +70,7 @@ const staffRoleMock = {
         isAdmin: false,
         isTreasurer: false,
         adminCategoryIds: [],
+        ledDepartmentIds: [],
         adminGroupNames: [],
         adminCategories: [],
       },
@@ -92,6 +94,7 @@ const contentAdminMock = {
         isAdmin: false,
         isTreasurer: false,
         adminCategoryIds: [],
+        ledDepartmentIds: [],
         adminGroupNames: [],
         adminCategories: [],
       },
@@ -115,6 +118,7 @@ const categoryAdminMock = {
         isAdmin: false,
         isTreasurer: false,
         adminCategoryIds: ['cat-1'],
+        ledDepartmentIds: ['cat-1'],
         adminGroupNames: [],
         adminCategories: [{ id: 'cat-1', name: 'Tithe', code: 'TITHE', description: '' }],
       },
@@ -138,6 +142,7 @@ const unauthMock = {
         isAdmin: false,
         isTreasurer: false,
         adminCategoryIds: [],
+        ledDepartmentIds: [],
         adminGroupNames: [],
         adminCategories: [],
       },
@@ -161,6 +166,7 @@ const groupAdminMock = {
         isAdmin: false,
         isTreasurer: false,
         adminCategoryIds: [],
+        ledDepartmentIds: [],
         adminGroupNames: ['Youth'],
         adminCategories: [],
       },
@@ -185,6 +191,7 @@ function roleMock(overrides: Record<string, unknown>) {
           isAdmin: false,
           isTreasurer: false,
           adminCategoryIds: [],
+          ledDepartmentIds: [],
           adminGroupNames: [],
           adminCategories: [],
           ...overrides,

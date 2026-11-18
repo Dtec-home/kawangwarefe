@@ -17,7 +17,7 @@ import { PageHeader } from "@/components/ui/page-header";
 
 export default function DepartmentReportsPage() {
   return (
-    <AdminProtectedRoute requiredAccess="category-admin">
+    <AdminProtectedRoute requiredAccess="department-reports">
       <AdminLayout>
         <div className="space-y-6">
           <PageHeader

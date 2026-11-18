@@ -21,7 +21,14 @@ interface AdminProtectedRouteProps {
    * A pure recorder (recorder, not staff) who lacks access to a route is sent
    * to `/record` instead of `/dashboard`.
    */
-  requiredAccess?: "staff" | "category-admin" | "content-admin" | "any-admin" | "messaging" | "recorder";
+  requiredAccess?:
+    | "staff"
+    | "category-admin"
+    | "content-admin"
+    | "any-admin"
+    | "messaging"
+    | "recorder"
+    | "department-reports";
 }
 
 export function AdminProtectedRoute({
@@ -30,7 +37,7 @@ export function AdminProtectedRoute({
 }: AdminProtectedRouteProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, isRecorder, isPureRecorder, loading: roleLoading, roleInfo } = useUserRole();
+  const { isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, isRecorder, isPureRecorder, ledDepartmentIds, loading: roleLoading, roleInfo } = useUserRole();
 
   // Treat as loading if: auth is loading, role query is loading, OR
   // role query returned loading:false but hasn't delivered data yet
@@ -52,10 +59,13 @@ export function AdminProtectedRoute({
         return canAccessAdmin || canAccessContent || canSendBulkMessage;
       case "recorder":
         return isStaff || isRecorder;
+      case "department-reports":
+        // Staff, or anyone who leads a department under either assignment (D1).
+        return isStaff || isCategoryAdmin || (ledDepartmentIds?.length ?? 0) > 0;
       default:
         return false;
     }
-  }, [requiredAccess, isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, isRecorder]);
+  }, [requiredAccess, isStaff, isCategoryAdmin, canAccessContent, canAccessAdmin, canSendBulkMessage, isRecorder, ledDepartmentIds]);
 
   // Redirect when not authenticated or not authorized
   useEffect(() => {

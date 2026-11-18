@@ -22,7 +22,7 @@ import DepartmentReportsPage from "@/app/(dashboard)/admin/department-reports/pa
 describe("Department reports page (placeholder)", () => {
   it("is limited to department leaders and staff", () => {
     render(<DepartmentReportsPage />);
-    expect(guard).toHaveBeenCalledWith("category-admin");
+    expect(guard).toHaveBeenCalledWith("department-reports");
   });
 
   it("shows the page header and a coming-soon empty state", () => {

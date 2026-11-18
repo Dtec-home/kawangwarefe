@@ -42,6 +42,7 @@ function role(overrides: Record<string, unknown>) {
     isAdmin: false,
     isTreasurer: false,
     adminCategoryIds: [],
+    ledDepartmentIds: [],
     adminGroupNames: [],
     adminCategories: [],
     ...overrides,

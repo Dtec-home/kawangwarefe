@@ -104,4 +104,32 @@ describe('AdminProtectedRoute', () => {
       expect(mockPush).toHaveBeenCalledWith('/dashboard')
     })
   })
+
+  describe('department reports (DR-4, D1)', () => {
+    const base = {
+      isStaff: false, isCategoryAdmin: false, canAccessContent: false, canAccessAdmin: false,
+      canSendBulkMessage: false, isRecorder: false, isPureRecorder: false, ledDepartmentIds: [] as string[],
+      loading: false, roleInfo: { isAuthenticated: true },
+    }
+    const page = <AdminProtectedRoute requiredAccess="department-reports"><div>Reports page</div></AdminProtectedRoute>
+
+    it.each([
+      ['staff', { isStaff: true }],
+      ['a category admin', { isCategoryAdmin: true }],
+      ['a leader known only through a department-admin scope', { ledDepartmentIds: ['7'] }],
+    ])('lets %s in', (_who, overrides) => {
+      vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true, isLoading: false } as unknown as AuthValue)
+      vi.mocked(useUserRole).mockReturnValue({ ...base, ...overrides } as unknown as RoleValue)
+      render(page)
+      expect(screen.getByText('Reports page')).toBeInTheDocument()
+    })
+
+    it('keeps a pure recorder out', () => {
+      vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true, isLoading: false } as unknown as AuthValue)
+      vi.mocked(useUserRole).mockReturnValue({ ...base, isRecorder: true, isPureRecorder: true } as unknown as RoleValue)
+      render(page)
+      expect(screen.queryByText('Reports page')).not.toBeInTheDocument()
+      expect(mockPush).toHaveBeenCalledWith('/record')
+    })
+  })
 })

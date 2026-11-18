@@ -184,7 +184,8 @@ export interface ReportError {
   __typename: "ReportError";
   code: ReportErrorCode | (string & {});
   message: string;
-  missing: MissingSection[] | null;
+  /** Empty unless `code` is "incomplete". */
+  missing: MissingSection[];
 }
 
 /** `union DepartmentReportResult = DepartmentReport | ReportError` */
