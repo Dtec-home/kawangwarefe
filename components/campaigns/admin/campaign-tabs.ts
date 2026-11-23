@@ -11,6 +11,7 @@ import { StatementTab } from "@/components/campaigns/admin/statement/statement-t
 import { UpdatesTab } from "@/components/campaigns/admin/updates/updates-tab";
 import { WhatsAppShareTab } from "@/components/campaigns/admin/whatsapp-share/whatsapp-share-tab";
 import { CampaignPledgesTab } from "@/components/pledges/admin/campaign-pledges-tab";
+import { CampaignWhatsAppPostsTab } from "@/components/whatsapp-posts/campaign-post-settings-tab";
 
 export const CAMPAIGN_TABS = [
   { value: "overview", label: "Overview", Component: CampaignOverview },
@@ -20,4 +21,6 @@ export const CAMPAIGN_TABS = [
   { value: "statement", label: "Statement", Component: StatementTab },
   { value: "closeout", label: "Close out", Component: CloseoutTab },
   { value: "champions", label: "Champions", Component: ChampionsTab },
+  // WA-3: when the totals post goes to the group and what it says.
+  { value: "whatsapp-posts", label: "WhatsApp posts", Component: CampaignWhatsAppPostsTab },
 ] as const;

@@ -72,6 +72,8 @@ export interface Campaign {
   /** ADR-0015: the 23:50 daily total post. */
   dailyTotalEnabled?: boolean;
   dailyTotalPostWhenZero?: boolean;
+  /** WA-2: tag identified givers (who allow it) in group posts. */
+  whatsappMentionsEnabled?: boolean;
   status: CampaignStatus;
   isPublic: boolean;
   allowPledges: boolean;
@@ -117,6 +119,8 @@ export interface CampaignInput {
   allowChampions?: boolean;
   dailyTotalEnabled?: boolean;
   dailyTotalPostWhenZero?: boolean;
+  /** WA-2: left out (null) = keep. */
+  whatsappMentionsEnabled?: boolean | null;
   reminderPolicy?: Partial<ReminderPolicy> | null;
 }
 

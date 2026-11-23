@@ -32,6 +32,7 @@ import {
   Smartphone,
   Newspaper,
   MessageSquare,
+  MessageCircle,
   Heart,
   Receipt,
   UsersRound,
@@ -46,6 +47,7 @@ import {
   History,
   Upload,
   ClipboardList,
+  ArrowLeftRight,
 } from "lucide-react";
 import { useState } from "react";
 import { AdminBottomNav } from "@/components/layouts/admin-bottom-nav";
@@ -68,7 +70,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, isPureRecorder, canVoidReceipts, canAccessFeature, adminCategories, loading: roleLoading } = useUserRole();
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, isPureRecorder, canVoidReceipts, canAccessFeature, adminCategories, isAdmin, loading: roleLoading } = useUserRole();
   // T2.6 — pending receipt void requests (treasurer/admin only)
   const pendingVoidRequests = usePendingVoidRequestCount({ enabled: !!canVoidReceipts });
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -111,6 +113,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: "Reports",      href: "/admin/reports",          icon: FileText,  feature: "reports" },
         { name: "Receipts",     href: "/admin/receipts",         icon: ReceiptText, feature: "receipts" },
         { name: "Expenses",     href: "/admin/expenses",         icon: Receipt,   feature: "expenses" },
+        { name: "Fund transfers", href: "/admin/transfers",      icon: ArrowLeftRight, feature: "expenses" },
         { name: "C2B / M-Pesa", href: "/admin/c2b-transactions", icon: Smartphone, feature: "c2b-transactions" },
         { name: "Catch-up windows", href: "/admin/catch-up-windows", icon: CalendarClock, feature: "catch-up-windows" },
         { name: "Collection sessions", href: "/admin/collection-sessions", icon: Coins, feature: "collection-sessions" },
@@ -140,6 +143,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: "Church Content", href: "/admin/content",   icon: Newspaper,    feature: "content" },
         { name: "Leaders",        href: "/admin/leaders",   icon: UsersRound,    feature: "leaders" },
         { name: "Messaging",      href: "/admin/messaging", icon: MessageSquare, feature: "messaging" },
+        // WA-3: the church WhatsApp totals posts — admins only (not treasurers or pastors).
+        ...(isAdmin ? [{ name: "WhatsApp posts", href: "/admin/whatsapp-posts", icon: MessageCircle, feature: "messaging" as const }] : []),
         { name: "Prayers",        href: "/admin/prayers",   icon: Heart,         feature: "prayers" },
       ],
     },

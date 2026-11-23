@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { injectSession, clearSession } from "./helpers/auth";
 import { fakeDepartmentReports } from "./helpers/department-reports-staff";
+import { fakeWhatsAppPosts } from "./helpers/whatsapp-posts";
+import { fakeFundTransfers } from "./helpers/fund-transfers";
 
 /**
  * Role-based access tests.
@@ -130,6 +132,44 @@ test.describe("Department reports staff pages -- members and recorders kept out 
       });
     }
   }
+});
+
+test.describe("Fund transfers -- members and recorders kept out (FT-2)", () => {
+  for (const persona of ["member", "recorder"] as const) {
+    test(`${persona} cannot reach /admin/transfers`, async ({ page }) => {
+      test.setTimeout(60_000);
+      const state = await fakeFundTransfers(page, { persona });
+      await page.goto("/admin/transfers", { waitUntil: "networkidle" });
+      await page.waitForURL(persona === "recorder" ? /\/record/ : /\/dashboard/, { timeout: 20_000 }).catch(() => {});
+      if (page.url().includes("/admin/transfers")) await expect(page.getByText("Loading...")).toHaveCount(0);
+      expect(await page.getByRole("heading", { name: "Fund transfers" }).count()).toBe(0);
+      expect(await page.getByTestId("fund-transfer-row").count()).toBe(0);
+      expect(state.calls.some((c) => c.op === "GetFundTransfers")).toBe(false);
+    });
+  }
+});
+
+test.describe("WhatsApp posts settings -- admins only (WA-3)", () => {
+  for (const persona of ["member", "recorder"] as const) {
+    test(`${persona} cannot reach /admin/whatsapp-posts`, async ({ page }) => {
+      test.setTimeout(60_000);
+      await fakeWhatsAppPosts(page, { persona });
+      await page.goto("/admin/whatsapp-posts", { waitUntil: "networkidle" });
+      // AdminProtectedRoute sends members to /dashboard and pure recorders to /record.
+      await page.waitForURL(persona === "recorder" ? /\/record/ : /\/dashboard/, { timeout: 20_000 }).catch(() => {});
+      if (page.url().includes("/admin/whatsapp-posts")) await expect(page.getByText("Loading...")).toHaveCount(0);
+      expect(await page.getByTestId("schedule-summary").count()).toBe(0);
+      expect(await page.getByRole("list", { name: "Post layout" }).count()).toBe(0);
+    });
+  }
+
+  test("a treasurer (staff, not admin) sees no settings", async ({ page }) => {
+    test.setTimeout(60_000);
+    await fakeWhatsAppPosts(page, { persona: "treasurer" });
+    await page.goto("/admin/whatsapp-posts", { waitUntil: "networkidle" });
+    await expect(page.getByText("Only admins change the WhatsApp posts")).toBeVisible({ timeout: 20_000 });
+    expect(await page.getByTestId("schedule-summary").count()).toBe(0);
+  });
 });
 
 test.describe("Session Expiry", () => {
