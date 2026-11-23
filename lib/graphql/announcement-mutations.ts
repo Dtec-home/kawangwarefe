@@ -8,6 +8,7 @@ export const CREATE_ANNOUNCEMENT = gql`
     $expiryDate: String
     $isActive: Boolean
     $priority: Int
+    $postToWhatsapp: Boolean
   ) {
     createAnnouncement(
       title: $title
@@ -16,6 +17,7 @@ export const CREATE_ANNOUNCEMENT = gql`
       expiryDate: $expiryDate
       isActive: $isActive
       priority: $priority
+      postToWhatsapp: $postToWhatsapp
     ) {
       success
       message
@@ -27,6 +29,8 @@ export const CREATE_ANNOUNCEMENT = gql`
         expiryDate
         isActive
         priority
+        postToWhatsapp
+        whatsappStatus
         createdAt
         updatedAt
       }
@@ -43,6 +47,7 @@ export const UPDATE_ANNOUNCEMENT = gql`
     $expiryDate: String
     $isActive: Boolean
     $priority: Int
+    $postToWhatsapp: Boolean
   ) {
     updateAnnouncement(
       announcementId: $announcementId
@@ -52,6 +57,7 @@ export const UPDATE_ANNOUNCEMENT = gql`
       expiryDate: $expiryDate
       isActive: $isActive
       priority: $priority
+      postToWhatsapp: $postToWhatsapp
     ) {
       success
       message
@@ -63,6 +69,8 @@ export const UPDATE_ANNOUNCEMENT = gql`
         expiryDate
         isActive
         priority
+        postToWhatsapp
+        whatsappStatus
         createdAt
         updatedAt
       }
@@ -121,6 +129,16 @@ export const TOGGLE_ANNOUNCEMENT_ACTIVE = gql`
         title
         isActive
       }
+    }
+  }
+`;
+
+/** AN-1: queue one more posting to the church WhatsApp group (content managers). */
+export const REPOST_ANNOUNCEMENT_TO_WHATSAPP = gql`
+  mutation RepostAnnouncementToWhatsapp($id: ID!) {
+    repostAnnouncementToWhatsapp(id: $id) {
+      success
+      message
     }
   }
 `;

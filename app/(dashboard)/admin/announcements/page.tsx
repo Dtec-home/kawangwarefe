@@ -13,7 +13,9 @@ import {
   DELETE_ANNOUNCEMENT,
   TOGGLE_ANNOUNCEMENT_ACTIVE,
   REORDER_ANNOUNCEMENTS,
+  REPOST_ANNOUNCEMENT_TO_WHATSAPP,
 } from "@/lib/graphql/announcement-mutations";
+import { AnnouncementWhatsAppStatus } from "@/components/admin/announcement-whatsapp-status";
 import { SortableList } from "@/components/ui/sortable-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,6 +69,7 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -98,6 +101,9 @@ interface Announcement {
   isActive: boolean;
   priority: number;
   displayOrder?: number;
+  postToWhatsapp?: boolean;
+  whatsappStatus?: string;
+  whatsappPostedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -166,6 +172,7 @@ function AnnouncementsManagementPageContent() {
   const [newPublishDate, setNewPublishDate] = useState("");
   const [newExpiryDate, setNewExpiryDate] = useState("");
   const [newIsActive, setNewIsActive] = useState(true);
+  const [newPostToWhatsapp, setNewPostToWhatsapp] = useState(true);
   const [newPriority, setNewPriority] = useState(0);
 
   // Edit form state
@@ -174,6 +181,7 @@ function AnnouncementsManagementPageContent() {
   const [editPublishDate, setEditPublishDate] = useState("");
   const [editExpiryDate, setEditExpiryDate] = useState("");
   const [editIsActive, setEditIsActive] = useState(false);
+  const [editPostToWhatsapp, setEditPostToWhatsapp] = useState(true);
   const [editPriority, setEditPriority] = useState(0);
 
   const { data, loading, refetch } = useQuery<PaginatedAdminAnnouncementsResult>(
@@ -202,6 +210,9 @@ function AnnouncementsManagementPageContent() {
   const [updateAnnouncement, { loading: updating }] = useMutation<{ updateAnnouncement: AnnouncementMutationResponse }>(UPDATE_ANNOUNCEMENT);
   const [deleteAnnouncement, { loading: deleting }] = useMutation<{ deleteAnnouncement: AnnouncementMutationResponse }>(DELETE_ANNOUNCEMENT);
   const [toggleActive] = useMutation<{ toggleAnnouncementActive: AnnouncementMutationResponse }>(TOGGLE_ANNOUNCEMENT_ACTIVE);
+  const [repostToWhatsapp] = useMutation<{ repostAnnouncementToWhatsapp: { success: boolean; message: string } }>(
+    REPOST_ANNOUNCEMENT_TO_WHATSAPP,
+  );
   const [reorderAnnouncements] = useMutation<{ reorderAnnouncements: { success: boolean; message: string } }>(REORDER_ANNOUNCEMENTS);
 
   const announcements: Announcement[] = data?.adminAnnouncements?.items ?? [];
@@ -244,6 +255,7 @@ function AnnouncementsManagementPageContent() {
     setNewPublishDate("");
     setNewExpiryDate("");
     setNewIsActive(true);
+    setNewPostToWhatsapp(true);
     setNewPriority(0);
   };
 
@@ -265,6 +277,7 @@ function AnnouncementsManagementPageContent() {
           expiryDate: toBackendDateTime(newExpiryDate),
           isActive: newIsActive,
           priority: newPriority,
+          postToWhatsapp: newPostToWhatsapp,
         },
       });
 
@@ -288,6 +301,7 @@ function AnnouncementsManagementPageContent() {
     setEditPublishDate(announcement.publishDate ? announcement.publishDate.slice(0, 16) : "");
     setEditExpiryDate(announcement.expiryDate ? announcement.expiryDate.slice(0, 16) : "");
     setEditIsActive(announcement.isActive);
+    setEditPostToWhatsapp(announcement.postToWhatsapp ?? true);
     setEditPriority(announcement.priority);
     setShowEditDialog(true);
     clearMessages();
@@ -307,6 +321,7 @@ function AnnouncementsManagementPageContent() {
           expiryDate: editExpiryDate ? toBackendDateTime(editExpiryDate) : "",
           isActive: editIsActive,
           priority: editPriority,
+          postToWhatsapp: editPostToWhatsapp,
         },
       });
 
@@ -319,6 +334,22 @@ function AnnouncementsManagementPageContent() {
       }
     } catch (err: any) {
       setError(err.message || "Error updating announcement");
+    }
+  };
+
+  const handleRepostToWhatsapp = async (announcementId: string) => {
+    clearMessages();
+    try {
+      const { data } = await repostToWhatsapp({ variables: { id: announcementId } });
+      const result = data?.repostAnnouncementToWhatsapp;
+      if (result?.success) {
+        setSuccess(result.message);
+        refetchAll();
+      } else {
+        setError(result?.message || "Could not queue the WhatsApp post");
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not queue the WhatsApp post");
     }
   };
 
@@ -750,6 +781,7 @@ function AnnouncementsManagementPageContent() {
                                     Expired
                                   </StatusBadge>
                                 )}
+                                <AnnouncementWhatsAppStatus announcement={announcement} />
                                 {announcement.priority > 0 && (
                                   <StatusBadge variant="destructive">
                                     Priority {announcement.priority}
@@ -875,6 +907,12 @@ function AnnouncementsManagementPageContent() {
                               <CheckCircle className="h-4 w-4 mr-2" />
                               {announcement.isActive ? "Deactivate" : "Activate"}
                             </DropdownMenuItem>
+                            {announcement.postToWhatsapp ? (
+                              <DropdownMenuItem onClick={() => handleRepostToWhatsapp(announcement.id)}>
+                                <MessageCircle className="h-4 w-4 mr-2" />
+                                Post to WhatsApp again
+                              </DropdownMenuItem>
+                            ) : null}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleDelete(announcement.id, announcement.title)}
@@ -1021,6 +1059,15 @@ function AnnouncementsManagementPageContent() {
                 <Label htmlFor="active">Announcement is active</Label>
               </div>
 
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="postToWhatsapp"
+                  checked={newPostToWhatsapp}
+                  onCheckedChange={(checked) => setNewPostToWhatsapp(checked as boolean)}
+                />
+                <Label htmlFor="postToWhatsapp">Post to the church WhatsApp group when it is published</Label>
+              </div>
+
               <DialogFooter>
                 <Button
                   type="button"
@@ -1112,6 +1159,17 @@ function AnnouncementsManagementPageContent() {
                   onCheckedChange={(checked) => setEditIsActive(checked as boolean)}
                 />
                 <Label htmlFor="editActive">Announcement is active</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="editPostToWhatsapp"
+                  checked={editPostToWhatsapp}
+                  onCheckedChange={(checked) => setEditPostToWhatsapp(checked as boolean)}
+                />
+                <Label htmlFor="editPostToWhatsapp">
+                  Post to the church WhatsApp group (editing never re-posts; use &quot;Post to WhatsApp again&quot;)
+                </Label>
               </div>
             </div>
             <DialogFooter>

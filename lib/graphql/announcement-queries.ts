@@ -40,6 +40,9 @@ export const GET_ADMIN_ANNOUNCEMENTS = gql`
         isActive
         priority
         displayOrder
+        postToWhatsapp
+        whatsappStatus
+        whatsappPostedAt
         createdAt
         updatedAt
       }
