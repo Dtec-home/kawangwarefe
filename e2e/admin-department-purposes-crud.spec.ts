@@ -32,6 +32,7 @@ test.describe("Department Purpose CRUD", () => {
                 isGroupAdmin: false,
                 isContentAdmin: false,
                 adminCategoryIds: [],
+                ledDepartmentIds: [],
                 adminGroupNames: [],
                 adminCategories: [],
               },
