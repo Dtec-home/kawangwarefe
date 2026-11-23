@@ -27,6 +27,8 @@ import { ADMIN_UNLOCKING_CERTIFIED_STATEMENT_ARTICLE } from "./articles/admin-un
 import { ADMIN_YOUTUBE_ARTICLE } from "./articles/admin-youtube";
 import { ANNOUNCEMENTS_PAGE_ARTICLE } from "./articles/announcements-page";
 import { DEPARTMENT_MEMBER_IDENTIFIERS_ARTICLE } from "./articles/department-member-identifiers";
+import { DEPARTMENT_REPORTS_REVIEW_ARTICLE } from "./articles/department-reports-review";
+import { DEPARTMENT_REPORTS_WRITING_ARTICLE } from "./articles/department-reports-writing";
 import { DEVOTIONALS_PAGE_ARTICLE } from "./articles/devotionals-page";
 import { EVENTS_PAGE_ARTICLE } from "./articles/events-page";
 import { GIVING_TO_MULTIPLE_DEPARTMENTS_ARTICLE } from "./articles/giving-to-multiple-departments";
@@ -80,6 +82,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
   ADMIN_YOUTUBE_ARTICLE,
   ANNOUNCEMENTS_PAGE_ARTICLE,
   DEPARTMENT_MEMBER_IDENTIFIERS_ARTICLE,
+  DEPARTMENT_REPORTS_REVIEW_ARTICLE,
+  DEPARTMENT_REPORTS_WRITING_ARTICLE,
   DEVOTIONALS_PAGE_ARTICLE,
   EVENTS_PAGE_ARTICLE,
   GIVING_TO_MULTIPLE_DEPARTMENTS_ARTICLE,

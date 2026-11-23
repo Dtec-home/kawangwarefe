@@ -44,7 +44,13 @@ export type ReportErrorCode =
   | "too_few_items"
   | "incomplete"
   | "comment_required"
-  | "invalid_transition";
+  | "invalid_transition"
+  | "not_found"
+  | "period_closed"
+  | "invalid_section"
+  | "invalid_link"
+  | "invalid_item"
+  | "reason_required";
 
 // ── Object types ─────────────────────────────────────────────────────────
 
@@ -173,6 +179,7 @@ export interface TrackerReport {
 
 export interface TrackerRow {
   department: ReportDepartment;
+  period: ReportingPeriod;
   report: TrackerReport | null;
   status: TrackerStatus;
   overdue: boolean;

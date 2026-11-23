@@ -1,6 +1,5 @@
-@fixme
 Feature: The pastor reviews department reports and downloads the AGM book
-  Plan: DEPARTMENT_REPORTS/01_SPRINT_PLAN.md (US-8..US-12). Tagged @fixme until DR-10.
+  Plan: DEPARTMENT_REPORTS/01_SPRINT_PLAN.md (US-8..US-12).
 
   Background:
     Given the church is set up with its departments and people

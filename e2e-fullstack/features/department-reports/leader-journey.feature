@@ -1,8 +1,7 @@
-@fixme
 Feature: A department leader writes and submits the yearly report
   The Building Fund leader writes the report in the standard template; the money
   table comes from the books. Plan: DEPARTMENT_REPORTS/01_SPRINT_PLAN.md
-  (US-1..US-7). Tagged @fixme until DR-10 builds the journey.
+  (US-1..US-7).
 
   Background:
     Given the church is set up with its departments and people

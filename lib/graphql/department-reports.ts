@@ -145,6 +145,9 @@ export const TRACKER_ROW_FIELDS = gql`
       name
       code
     }
+    period {
+      ...ReportingPeriodFields
+    }
     report {
       id
       status
@@ -159,6 +162,7 @@ export const TRACKER_ROW_FIELDS = gql`
     progress
     leaderNames
   }
+  ${REPORTING_PERIOD_FIELDS}
 `;
 
 export const REPORT_ERROR_FIELDS = gql`

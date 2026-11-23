@@ -4,6 +4,7 @@
  * DEPARTMENT_REPORTS/02_CONTRACTS.md § UI test contract.
  */
 
+import { Page } from "@playwright/test";
 import { Given, Then, When, expect } from "../support/fixtures";
 import { switchUserInBrowser } from "../support/campaigns";
 import { dismissTours } from "../support/desk";
@@ -18,6 +19,13 @@ import {
 } from "../support/department-reports";
 
 const TOURS = ["admin_department_reports_v1"];
+
+/** Open a report from its tracker row and wait for the report page (the tracker has an "Approved" filter chip). */
+async function openFromTracker(page: Page, department: string) {
+  await trackerRow(page, department).getByRole("link", { name: "Open" }).click();
+  await expect(page).toHaveURL(/\/admin\/department-reports\/\d+$/);
+  await expect(page.getByTestId("dept-report-status")).toBeVisible();
+}
 
 // ── Given ────────────────────────────────────────────────────────────────
 Given(
@@ -133,8 +141,8 @@ Then("the tracker shows {string} as {string}", async ({ page }, department: stri
 When(
   "I open the {string} report and send it back with {string} on {string}",
   async ({ page }, department: string, comment: string, section: string) => {
-    await trackerRow(page, department).getByRole("link", { name: "Open" }).click();
-    await page.getByRole("button", { name: "Send back" }).click();
+    await openFromTracker(page, department);
+    await page.getByRole("button", { name: "Send back", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Send back to the leader" });
     await dialog.getByLabel("Section").selectOption({ label: section });
     await dialog.getByLabel("What needs to change?").fill(comment);
@@ -162,8 +170,8 @@ When(
 );
 
 When("I open the {string} report and approve it", async ({ page }, department: string) => {
-  await trackerRow(page, department).getByRole("link", { name: "Open" }).click();
-  await page.getByRole("button", { name: "Approve" }).click();
+  await openFromTracker(page, department);
+  await page.getByRole("button", { name: "Approve", exact: true }).click();
   await page.getByRole("dialog", { name: "Approve report?" }).getByRole("button", { name: "Approve" }).click();
   await expect(page.getByTestId("dept-report-status")).toHaveText("Approved");
   await page.goBack();
@@ -172,7 +180,7 @@ When("I open the {string} report and approve it", async ({ page }, department: s
 Then(
   "I can download the {string} report as PDF and Word",
   async ({ page }, department: string) => {
-    await trackerRow(page, department).getByRole("link", { name: "Open" }).click();
+    await openFromTracker(page, department);
     for (const [label, ext] of [["Download PDF", "pdf"], ["Download Word", "docx"]] as const) {
       const [download] = await Promise.all([
         page.waitForEvent("download"),

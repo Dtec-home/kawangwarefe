@@ -1,18 +1,16 @@
 /**
- * /admin/department-reports — yearly department reports (DEPARTMENT_REPORTS).
+ * /admin/department-reports — "My reports" (DEPARTMENT_REPORTS US-2, DR-7).
  *
- * DR-6 placeholder: DR-7 replaces it with "My reports" for leaders. Guarded
- * like the other department-leader pages (category admins and staff).
+ * One card per department the leader leads, for the open reporting period.
+ * Guarded like the other department-leader pages (leaders and staff); staff
+ * also get links to the tracker and the reporting periods (DR-8).
  */
 
 "use client";
 
-import { ClipboardList } from "lucide-react";
-
 import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
+import { MyReports } from "@/components/department-reports/editor/my-reports";
 import { AdminLayout } from "@/components/layouts/admin-layout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Empty } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default function DepartmentReportsPage() {
@@ -22,17 +20,9 @@ export default function DepartmentReportsPage() {
         <div className="space-y-6">
           <PageHeader
             title="Department Reports"
-            description="Each department's yearly report: introduction, leaders, objectives, achievements and the money from the books."
+            description="Your department's yearly report: write it section by section, preview it and hand it in."
           />
-          <Card>
-            <CardContent>
-              <Empty
-                icon={ClipboardList}
-                title="Department reports are coming soon"
-                description="You'll write and hand in your department's yearly report here."
-              />
-            </CardContent>
-          </Card>
+          <MyReports />
         </div>
       </AdminLayout>
     </AdminProtectedRoute>

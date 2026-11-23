@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { injectSession, clearSession } from "./helpers/auth";
+import { fakeDepartmentReports } from "./helpers/department-reports-staff";
 
 /**
  * Role-based access tests.
@@ -109,6 +110,26 @@ test.describe("Category Admin Role -- Limited Access", () => {
     const hasCatAdminsHeading = await page.getByRole("heading", { name: /category admins/i }).count();
     expect(hasCatAdminsHeading).toBe(0);
   });
+});
+
+test.describe("Department reports staff pages -- members and recorders kept out (DR-8)", () => {
+  const pages = ["/admin/department-reports/periods", "/admin/department-reports/period/1"];
+  for (const persona of ["member", "recorder"] as const) {
+    for (const path of pages) {
+      test(`${persona} cannot reach ${path}`, async ({ page }) => {
+        test.setTimeout(60_000);
+        await fakeDepartmentReports(page, { persona });
+        await page.goto(path, { waitUntil: "networkidle" });
+        // AdminProtectedRoute sends members to /dashboard and pure recorders to /record;
+        // it renders null while that redirect is pending (the target may still be compiling).
+        await page.waitForURL(persona === "recorder" ? /\/record/ : /\/dashboard/, { timeout: 20_000 }).catch(() => {});
+        // Still here? Then the guard must have decided (no spinner) and show none of the page.
+        if (page.url().includes(path)) await expect(page.getByText("Loading...")).toHaveCount(0);
+        expect(await page.getByRole("heading", { name: /Reporting periods|Department reports/ }).count()).toBe(0);
+        expect(await page.getByTestId("dept-report-tracker-row").count()).toBe(0);
+      });
+    }
+  }
 });
 
 test.describe("Session Expiry", () => {

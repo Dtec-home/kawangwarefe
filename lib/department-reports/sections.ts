@@ -21,6 +21,8 @@ import type {
 
 /** `ReportItem.text` limit (02_CONTRACTS.md § Models). */
 export const ITEM_MAX_CHARS = 500;
+/** Per money-line note (backend `LINE_NOTE_MAX_CHARS`). */
+export const LINE_NOTE_MAX_CHARS = 300;
 
 /** List sections → the `kind` their items are saved under. */
 export const ITEM_KIND_BY_SECTION = {
@@ -104,12 +106,12 @@ export const SECTION_HINTS: Record<SectionKey, SectionHint> = {
  */
 export const DEFAULT_SECTION_SPECS: readonly ReportSectionSpec[] = [
   { key: "introduction", number: 1, title: "Introduction / Departmental Mission", kind: "text", required: true, minItems: 0, maxItems: 0, maxChars: 1500 },
-  { key: "leaders", number: 2, title: "Leaders", kind: "leaders", required: true, minItems: 1, maxItems: 0, maxChars: 0 },
-  { key: "objectives", number: 3, title: "Objectives", kind: "list", required: true, minItems: 1, maxItems: 15, maxChars: 0 },
-  { key: "achievements", number: 4, title: "Achievements", kind: "list", required: true, minItems: 1, maxItems: 20, maxChars: 0 },
-  { key: "challenges", number: 5, title: "Challenges", kind: "list", required: false, minItems: 0, maxItems: 15, maxChars: 0 },
-  { key: "recommendations", number: 6, title: "Recommendations", kind: "list", required: false, minItems: 0, maxItems: 15, maxChars: 0 },
-  { key: "financial", number: 7, title: "Financial Statement", kind: "financial", required: true, minItems: 0, maxItems: 0, maxChars: 0 },
+  { key: "leaders", number: 2, title: "Leaders", kind: "leaders", required: true, minItems: 1, maxItems: 30, maxChars: 0 },
+  { key: "objectives", number: 3, title: "Objectives", kind: "list", required: true, minItems: 1, maxItems: 15, maxChars: 500 },
+  { key: "achievements", number: 4, title: "Achievements", kind: "list", required: true, minItems: 1, maxItems: 20, maxChars: 500 },
+  { key: "challenges", number: 5, title: "Challenges", kind: "list", required: false, minItems: 0, maxItems: 15, maxChars: 500 },
+  { key: "recommendations", number: 6, title: "Recommendations", kind: "list", required: false, minItems: 0, maxItems: 15, maxChars: 500 },
+  { key: "financial", number: 7, title: "Financial Statement", kind: "financial", required: true, minItems: 0, maxItems: 0, maxChars: 1000 },
   { key: "conclusion", number: 8, title: "Conclusion", kind: "text", required: true, minItems: 0, maxItems: 0, maxChars: 1000 },
 ];
 
@@ -170,7 +172,7 @@ function financialSchema(spec: ReportSectionSpec): z.ZodType<FinancialNotesValue
       z.object({
         direction: z.enum(["in", "out"]),
         label: z.string(),
-        note: z.string().max(ITEM_MAX_CHARS, `Keep it under ${ITEM_MAX_CHARS} characters`),
+        note: z.string().max(LINE_NOTE_MAX_CHARS, `Keep it under ${LINE_NOTE_MAX_CHARS} characters`),
       }),
     ),
   });
