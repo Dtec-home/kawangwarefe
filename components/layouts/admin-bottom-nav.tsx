@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen, CalendarClock, ReceiptText, Coins } from "lucide-react";
+import { LayoutDashboard, DollarSign, Users, FileText, MoreHorizontal, FolderOpen, UserRound, Shield, Smartphone, Newspaper, MessageSquare, Heart, X, NotebookPen, CalendarClock, ReceiptText, Coins, ClipboardList, ArrowLeftRight, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 import { usePendingVoidRequestCount } from "@/lib/hooks/use-pending-void-request-count";
@@ -24,21 +24,24 @@ const recordLink: NavItem = { href: "/record", label: "Record giving", icon: Not
 const moreAdminLinks: NavItem[] = [
   recordLink,
   { href: "/admin/receipts", label: "Receipts", icon: ReceiptText },
+  { href: "/admin/transfers", label: "Fund transfers", icon: ArrowLeftRight },
   { href: "/admin/categories", label: "Departments", icon: FolderOpen },
   { href: "/admin/groups", label: "Groups", icon: UserRound },
   { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
+  { href: "/admin/department-reports", label: "Department Reports", icon: ClipboardList },
   { href: "/admin/c2b-transactions", label: "C2B / Pay Bill", icon: Smartphone },
   { href: "/admin/catch-up-windows", label: "Catch-up windows", icon: CalendarClock },
   { href: "/admin/collection-sessions", label: "Collection sessions", icon: Coins },
   { href: "/admin/content", label: "Content", icon: Newspaper },
   { href: "/admin/messaging", label: "Messaging", icon: MessageSquare },
+  { href: "/admin/whatsapp-posts", label: "WhatsApp posts", icon: MessageCircle },
   { href: "/admin/prayers", label: "Prayers", icon: Heart },
 ];
 
 export function AdminBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { canAccessFeature, isPureRecorder, canVoidReceipts } = useUserRole();
+  const { canAccessFeature, isPureRecorder, canVoidReceipts, isAdmin } = useUserRole();
   // T2.6 — pending receipt void requests (treasurer/admin only)
   const pendingVoidRequests = usePendingVoidRequestCount({ enabled: !!canVoidReceipts && !isPureRecorder });
   const [moreOpen, setMoreOpen] = useState(false);
@@ -64,6 +67,8 @@ export function AdminBottomNav() {
     "/admin/catch-up-windows": "catch-up-windows",
     "/admin/collection-sessions": "collection-sessions",
     "/admin/receipts": "receipts",
+    "/admin/transfers": "expenses",
+    "/admin/department-reports": "department-reports",
   };
 
   // A pure recorder has a single destination — show it in the bar itself
@@ -73,7 +78,9 @@ export function AdminBottomNav() {
 
   const visibleMore = isPureRecorder
     ? []
-    : moreAdminLinks.filter((link) => canAccessFeature(featureMap[link.href] as never));
+    : moreAdminLinks.filter((link) =>
+        // WA-3: WhatsApp posts are for admins only (not treasurers or pastors).
+        link.href === "/admin/whatsapp-posts" ? isAdmin : canAccessFeature(featureMap[link.href] as never));
 
   return (
     <>

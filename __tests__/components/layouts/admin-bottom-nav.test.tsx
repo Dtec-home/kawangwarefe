@@ -48,4 +48,9 @@ describe('AdminBottomNav', () => {
     fireEvent.click(screen.getByText('More'))
     expect(screen.getByLabelText('3 pending void requests')).toHaveTextContent('3')
   })
+  it('lists Department Reports under More (DR-6)', () => {
+    render(<AdminBottomNav />)
+    fireEvent.click(screen.getByText('More'))
+    expect(screen.getByText('Department Reports')).toBeInTheDocument()
+  })
 })

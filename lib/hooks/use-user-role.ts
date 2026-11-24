@@ -24,6 +24,7 @@ export const GET_CURRENT_USER_ROLE = gql`
       isAdmin
       isTreasurer
       adminCategoryIds
+      ledDepartmentIds
       adminGroupNames
       adminCategories {
         id
@@ -60,6 +61,11 @@ interface UserRoleInfo {
   adminCategoryIds: string[];
   adminGroupNames: string[];
   adminCategories: Category[];
+  /**
+   * Departments the user leads (CategoryAdmin ∪ DepartmentAdminScope, D1).
+   * Optional only so older mocks without the field still type-check.
+   */
+  ledDepartmentIds?: string[];
 }
 
 /** Every feature key understood by `canAccessFeature`. */
@@ -83,7 +89,8 @@ export type AdminFeature =
   | "collection-sessions"
   | "receipts"
   | "campaigns"
-  | "pledges";
+  | "pledges"
+  | "department-reports";
 
 interface UserRoleData {
   currentUserRole: UserRoleInfo;
@@ -144,6 +151,7 @@ export function useUserRole() {
     adminCategoryIds: roleInfo?.adminCategoryIds ?? [],
     adminGroupNames: roleInfo?.adminGroupNames ?? [],
     adminCategories: roleInfo?.adminCategories ?? [],
+    ledDepartmentIds: roleInfo?.ledDepartmentIds ?? [],
 
     // Helper: check if user can access a specific admin feature
     canAccessFeature: (feature: AdminFeature) => {
@@ -156,6 +164,12 @@ export function useUserRole() {
       // Full staff can access everything (incl. expenses — treasurer/admin are
       // staff, and the recorder workspace — RR-9)
       if (roleInfo.isStaff) return true;
+
+      // Yearly department reports (DR-6): staff (above) and department
+      // leaders. The server decides what each one may do with a report.
+      if (feature === "department-reports") {
+        return !!roleInfo.isCategoryAdmin || (roleInfo.ledDepartmentIds?.length ?? 0) > 0;
+      }
 
       // Recorder workspace: recorders only. A pure recorder gets nothing else
       // from this role — every other feature below requires a separate role.

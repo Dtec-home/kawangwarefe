@@ -40,6 +40,7 @@ function roleResponse(persona: Persona) {
     isRecorder: !treasurer,
     canVoidReceipts: treasurer,
     adminCategoryIds: [],
+    ledDepartmentIds: [],
     adminCategories: [],
     adminGroupNames: [],
   };

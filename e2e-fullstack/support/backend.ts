@@ -26,6 +26,14 @@ export interface Sms {
   body: string;
 }
 
+export interface GroupPost {
+  group_id: string;
+  idempotency_key: string;
+  body: string;
+  mentions: string[];
+  mention_names: Record<string, string>;
+}
+
 export class Backend {
   constructor(private readonly request: APIRequestContext) {}
 
@@ -110,15 +118,23 @@ export class Backend {
     return response.json();
   }
 
-  /** WhatsApp group posts the fake wa-gateway took, oldest first. */
+  /**
+   * WhatsApp group posts the fake wa-gateway took, oldest first. `body` is the
+   * text as delivered; `mentions` the numbers tagged (every seeded person is in
+   * every group), `mention_names` the names the backend supplied.
+   */
   async groupPosts() {
     const response = await this.request.get(this.url("group-posts/"));
     expect(response.ok()).toBeTruthy();
-    return (await response.json()).posts as { group_id: string; idempotency_key: string; body: string }[];
+    return (await response.json()).posts as GroupPost[];
   }
 
-  async runJob(job: "pledge-reminders" | "champion-digests" | "finance-integrity" | "daily-totals") {
-    const response = await this.request.post(this.url(`run/${job}/`));
+  /** Run a scheduled job now; `scheduled-totals` takes `{ at: "HH:MM" }` (Nairobi, today; default 23:50). */
+  async runJob(
+    job: "pledge-reminders" | "champion-digests" | "finance-integrity" | "daily-totals" | "scheduled-totals" | "announcements",
+    data: Record<string, unknown> = {},
+  ) {
+    const response = await this.request.post(this.url(`run/${job}/`), { data });
     expect(response.ok()).toBeTruthy();
     return response.json();
   }

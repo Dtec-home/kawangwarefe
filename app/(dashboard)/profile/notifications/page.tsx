@@ -37,6 +37,7 @@ import {
 import { useTour } from "@/hooks/use-tour";
 import { PROFILE_NOTIFICATIONS_TOUR_CONFIG } from "@/lib/tours/configs/profile-notifications";
 import { ReplayTourButton } from "@/components/help/ReplayTourButton";
+import { WhatsAppTaggingCard } from "@/components/whatsapp-posts/whatsapp-tagging-card";
 
 function NotificationPreferencesContent() {
   const { preferences, save } = useNotificationPreferences();
@@ -123,6 +124,9 @@ function NotificationPreferencesContent() {
           </form>
         </CardContent>
       </Card>
+
+      {/* WA-2 (US-21): tagging in WhatsApp group thank-yous, saved on the server. */}
+      <WhatsAppTaggingCard />
     </div>
   );
 }

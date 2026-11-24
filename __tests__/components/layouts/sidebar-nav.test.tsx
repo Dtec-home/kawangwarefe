@@ -70,4 +70,28 @@ describe("SidebarNav", () => {
     expect(screen.queryByRole("button", { name: /Merge duplicates/ })).toBeNull();
     expect(screen.getByRole("button", { name: /All members/ })).toHaveAttribute("aria-current", "page");
   });
+
+  it("renders an item marked asLink as a real link that still navigates through onNavigate (DR-6)", () => {
+    const onNavigate = vi.fn();
+    const linkGroups: NavGroup[] = [
+      { items: [{ name: "Department Reports", href: "/admin/department-reports", icon: DollarSign, feature: "department-reports", asLink: true }] },
+    ];
+    render(<SidebarNav groups={linkGroups} pathname="/admin/department-reports" onNavigate={onNavigate} />);
+
+    const link = screen.getByRole("link", { name: "Department Reports" });
+    expect(link).toHaveAttribute("href", "/admin/department-reports");
+    expect(link).toHaveAttribute("aria-current", "page");
+    fireEvent.click(link);
+    expect(onNavigate).toHaveBeenCalledWith("/admin/department-reports");
+  });
+
+  it("lets a modified click on a link through (open in a new tab)", () => {
+    const onNavigate = vi.fn();
+    const linkGroups: NavGroup[] = [
+      { items: [{ name: "Department Reports", href: "/admin/department-reports", icon: DollarSign, feature: "department-reports", asLink: true }] },
+    ];
+    render(<SidebarNav groups={linkGroups} pathname="/admin" onNavigate={onNavigate} />);
+    fireEvent.click(screen.getByRole("link", { name: "Department Reports" }), { ctrlKey: true });
+    expect(onNavigate).not.toHaveBeenCalled();
+  });
 });

@@ -28,6 +28,7 @@ const STAFF_ROLE = {
   isContentAdmin: false,
   canSendBulkMessage: false,
   adminCategoryIds: [],
+  ledDepartmentIds: [],
   adminGroupNames: [],
   adminCategories: [],
 };

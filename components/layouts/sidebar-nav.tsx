@@ -7,7 +7,8 @@
  * is never rendered, and a parent left with one child shows as a plain item.
  */
 
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useState, type ComponentType, type MouseEvent, type ReactNode } from "react";
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,11 @@ export interface NavItem {
   icon: ComponentType<{ className?: string }>;
   feature: AdminFeature;
   children?: NavItem[];
+  /**
+   * Render as a real link (`<a href>`) instead of a button. Plain clicks still
+   * go through `onNavigate`; modified clicks (new tab) are left to the browser.
+   */
+  asLink?: boolean;
 }
 
 export interface NavGroup {
@@ -129,20 +135,15 @@ function NavButton({
 }) {
   const Icon = item.icon;
   const emphasis = active || highlighted;
-  return (
-    <Button
-      variant="ghost"
-      aria-current={active ? "page" : undefined}
-      aria-expanded={expanded}
-      className={`w-full justify-start ${small ? "h-8" : "h-9"} px-3 relative transition-all rounded-lg ${
-        active
-          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold hover:bg-sidebar-accent"
-          : highlighted
-            ? "text-sidebar-foreground font-medium hover:bg-sidebar-accent/40"
-            : "text-sidebar-foreground/75 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
-      }`}
-      onClick={onClick}
-    >
+  const className = `w-full justify-start ${small ? "h-8" : "h-9"} px-3 relative transition-all rounded-lg ${
+    active
+      ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold hover:bg-sidebar-accent"
+      : highlighted
+        ? "text-sidebar-foreground font-medium hover:bg-sidebar-accent/40"
+        : "text-sidebar-foreground/75 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground"
+  }`;
+  const content = (
+    <>
       {/* F2.5 — left accent bar for active item */}
       {active && <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-sidebar-primary rounded-r-full" />}
       <Icon className={`h-4 w-4 mr-2.5 flex-shrink-0 ${emphasis ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/50"}`} />
@@ -154,6 +155,34 @@ function NavButton({
           className={`ml-auto h-4 w-4 text-sidebar-foreground/50 transition-transform ${expanded ? "" : "-rotate-90"}`}
         />
       )}
+    </>
+  );
+
+  if (item.asLink && expanded === undefined) {
+    const onLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
+      // Let the browser handle new-tab / new-window clicks.
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      event.preventDefault();
+      onClick();
+    };
+    return (
+      <Button asChild variant="ghost" className={className}>
+        <Link href={item.href} aria-current={active ? "page" : undefined} onClick={onLinkClick}>
+          {content}
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      aria-current={active ? "page" : undefined}
+      aria-expanded={expanded}
+      className={className}
+      onClick={onClick}
+    >
+      {content}
     </Button>
   );
 }

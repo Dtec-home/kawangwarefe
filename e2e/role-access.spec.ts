@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { injectSession, clearSession } from "./helpers/auth";
+import { fakeDepartmentReports } from "./helpers/department-reports-staff";
+import { fakeWhatsAppPosts } from "./helpers/whatsapp-posts";
+import { fakeFundTransfers } from "./helpers/fund-transfers";
 
 /**
  * Role-based access tests.
@@ -108,6 +111,64 @@ test.describe("Category Admin Role -- Limited Access", () => {
     // while redirect is pending. Verify the page content is NOT shown.
     const hasCatAdminsHeading = await page.getByRole("heading", { name: /category admins/i }).count();
     expect(hasCatAdminsHeading).toBe(0);
+  });
+});
+
+test.describe("Department reports staff pages -- members and recorders kept out (DR-8)", () => {
+  const pages = ["/admin/department-reports/periods", "/admin/department-reports/period/1"];
+  for (const persona of ["member", "recorder"] as const) {
+    for (const path of pages) {
+      test(`${persona} cannot reach ${path}`, async ({ page }) => {
+        test.setTimeout(60_000);
+        await fakeDepartmentReports(page, { persona });
+        await page.goto(path, { waitUntil: "networkidle" });
+        // AdminProtectedRoute sends members to /dashboard and pure recorders to /record;
+        // it renders null while that redirect is pending (the target may still be compiling).
+        await page.waitForURL(persona === "recorder" ? /\/record/ : /\/dashboard/, { timeout: 20_000 }).catch(() => {});
+        // Still here? Then the guard must have decided (no spinner) and show none of the page.
+        if (page.url().includes(path)) await expect(page.getByText("Loading...")).toHaveCount(0);
+        expect(await page.getByRole("heading", { name: /Reporting periods|Department reports/ }).count()).toBe(0);
+        expect(await page.getByTestId("dept-report-tracker-row").count()).toBe(0);
+      });
+    }
+  }
+});
+
+test.describe("Fund transfers -- members and recorders kept out (FT-2)", () => {
+  for (const persona of ["member", "recorder"] as const) {
+    test(`${persona} cannot reach /admin/transfers`, async ({ page }) => {
+      test.setTimeout(60_000);
+      const state = await fakeFundTransfers(page, { persona });
+      await page.goto("/admin/transfers", { waitUntil: "networkidle" });
+      await page.waitForURL(persona === "recorder" ? /\/record/ : /\/dashboard/, { timeout: 20_000 }).catch(() => {});
+      if (page.url().includes("/admin/transfers")) await expect(page.getByText("Loading...")).toHaveCount(0);
+      expect(await page.getByRole("heading", { name: "Fund transfers" }).count()).toBe(0);
+      expect(await page.getByTestId("fund-transfer-row").count()).toBe(0);
+      expect(state.calls.some((c) => c.op === "GetFundTransfers")).toBe(false);
+    });
+  }
+});
+
+test.describe("WhatsApp posts settings -- admins only (WA-3)", () => {
+  for (const persona of ["member", "recorder"] as const) {
+    test(`${persona} cannot reach /admin/whatsapp-posts`, async ({ page }) => {
+      test.setTimeout(60_000);
+      await fakeWhatsAppPosts(page, { persona });
+      await page.goto("/admin/whatsapp-posts", { waitUntil: "networkidle" });
+      // AdminProtectedRoute sends members to /dashboard and pure recorders to /record.
+      await page.waitForURL(persona === "recorder" ? /\/record/ : /\/dashboard/, { timeout: 20_000 }).catch(() => {});
+      if (page.url().includes("/admin/whatsapp-posts")) await expect(page.getByText("Loading...")).toHaveCount(0);
+      expect(await page.getByTestId("schedule-summary").count()).toBe(0);
+      expect(await page.getByRole("list", { name: "Post layout" }).count()).toBe(0);
+    });
+  }
+
+  test("a treasurer (staff, not admin) sees no settings", async ({ page }) => {
+    test.setTimeout(60_000);
+    await fakeWhatsAppPosts(page, { persona: "treasurer" });
+    await page.goto("/admin/whatsapp-posts", { waitUntil: "networkidle" });
+    await expect(page.getByText("Only admins change the WhatsApp posts")).toBeVisible({ timeout: 20_000 });
+    expect(await page.getByTestId("schedule-summary").count()).toBe(0);
   });
 });
 

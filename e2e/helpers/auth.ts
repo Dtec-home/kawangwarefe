@@ -71,6 +71,7 @@ function buildRoleResponse(role: Role) {
         isContentAdmin,
         canSendBulkMessage,
         adminCategoryIds: [],
+        ledDepartmentIds: [],
         adminCategories: [],
         adminGroupNames: isGroupAdmin ? ["Youth"] : [],
       },

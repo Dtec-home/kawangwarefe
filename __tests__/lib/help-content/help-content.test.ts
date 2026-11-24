@@ -162,3 +162,12 @@ describe('searchArticles', () => {
     expect(searchArticles('   ', HELP_ARTICLES)).toBe(HELP_ARTICLES)
   })
 })
+
+describe('department report guides (DR-10)', () => {
+  it.each(['department-reports-writing', 'department-reports-review'])('registers %s for admins on the reports page', (slug) => {
+    const article = HELP_ARTICLES.find((a) => a.slug === slug)
+    expect(article, slug).toBeDefined()
+    expect(article!.roles).toEqual(['admin'])
+    expect(article!.relatedRoute).toBe('/admin/department-reports')
+  })
+})

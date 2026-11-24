@@ -31,6 +31,7 @@ import { channelLabel } from "@/lib/contributions/channel";
 import { Search, Filter, DollarSign, CheckCircle, XCircle, Clock, Plus, ChevronDown, ChevronRight, Pencil, Receipt } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { MoveGiftLoader } from "@/components/fund-transfers/move-gift-loader";
 
 interface Contribution {
   id: string;
@@ -247,7 +248,10 @@ function BookReceiptDialog({
 }
 
 export default function ContributionsPage() {
-  const { isStaff, isCategoryAdmin, isGroupAdmin } = useUserRole();
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isAdmin, isTreasurer } = useUserRole();
+  // RA-2: treasurer/admin may move a gift put in the wrong department/purpose.
+  const canMoveGift = isAdmin || isTreasurer;
+  const [moveGiftTarget, setMoveGiftTarget] = useState<ContributionGroup | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [purposeFilter, setPurposeFilter] = useState<string>("all");
@@ -795,6 +799,11 @@ export default function ContributionsPage() {
                           >
                             <Pencil className="h-3 w-3" />
                           </Button>
+                          {canMoveGift && rep.contributionGroupId && rep.status !== "failed" && (
+                            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => setMoveGiftTarget(group)}>
+                              Move gift…
+                            </Button>
+                          )}
                         </div>
                         {!group.isSplit && (rep.purposeName || rep.routedGroupName) && (
                           <div className="text-xs text-muted-foreground">
@@ -967,6 +976,11 @@ export default function ContributionsPage() {
                                 >
                                   <Pencil className="h-3 w-3" />
                                 </Button>
+                                {canMoveGift && rep.contributionGroupId && rep.status !== "failed" && (
+                                  <Button variant="ghost" size="sm" className="h-7 px-2 whitespace-nowrap" onClick={() => setMoveGiftTarget(group)}>
+                                    Move gift…
+                                  </Button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -1038,6 +1052,19 @@ export default function ContributionsPage() {
         onOpenChange={(v) => { if (!v) setBookReceiptTarget(null); }}
         onSaved={refetchActive}
       />
+      {moveGiftTarget?.representative.contributionGroupId && (
+        <MoveGiftLoader
+          onClose={() => setMoveGiftTarget(null)}
+          contributionGroupId={moveGiftTarget.representative.contributionGroupId}
+          pageLines={moveGiftTarget.contributions.map((c) => ({
+            departmentId: c.category.id,
+            departmentName: c.category.name,
+            purposeName: c.purposeName ?? null,
+            amount: c.amount,
+          }))}
+          onMoved={refetchActive}
+        />
+      )}
     </AdminLayout>
   );
 }

@@ -26,6 +26,7 @@ function roleResponse(persona: Persona) {
     isAdmin: false,
     isTreasurer: persona === "treasurer",
     adminCategoryIds: [],
+    ledDepartmentIds: [],
     adminCategories: [],
     adminGroupNames: [],
   };

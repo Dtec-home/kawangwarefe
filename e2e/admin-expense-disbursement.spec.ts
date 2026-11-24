@@ -21,6 +21,7 @@ function roleResponse() {
     isContentAdmin: false,
     canSendBulkMessage: true,
     adminCategoryIds: [],
+    ledDepartmentIds: [],
     adminCategories: [],
     adminGroupNames: [],
   };

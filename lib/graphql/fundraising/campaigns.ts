@@ -80,6 +80,7 @@ const CAMPAIGN_FIELDS = `
   whatsappGroupId
   dailyTotalEnabled
   dailyTotalPostWhenZero
+  whatsappMentionsEnabled
   status
   isPublic
   allowPledges
