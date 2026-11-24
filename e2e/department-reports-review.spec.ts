@@ -100,12 +100,14 @@ test.describe("Tracker (US-8, US-12)", () => {
     await expect(trackerRow(page, "Welfare").getByTestId("dept-report-status")).toHaveText("Not started");
     await expect(trackerRow(page, "Choir").getByTestId("dept-report-overdue")).toBeVisible();
     await expect(trackerRow(page, "Welfare")).toContainText("No leader assigned");
-    await expect(page.getByRole("alert").filter({ hasText: "no leader assigned" })).toBeVisible();
+    // Leaderless departments without a report sit apart, collapsed, out of the counts.
+    await expect(page.getByTestId("dept-report-unassigned")).toContainText("1 department has no leader");
 
+    const main = page.getByRole("list", { name: "Departments" });
     await page.getByRole("group", { name: "Filter by status" }).getByRole("button", { name: /Overdue/ }).click();
-    await expect(page.getByTestId("dept-report-tracker-row")).toHaveCount(2);
+    await expect(main.getByTestId("dept-report-tracker-row")).toHaveCount(1);
     await page.getByRole("group", { name: "Filter by status" }).getByRole("button", { name: /Submitted/ }).click();
-    await expect(page.getByTestId("dept-report-tracker-row")).toHaveCount(1);
+    await expect(main.getByTestId("dept-report-tracker-row")).toHaveCount(1);
     await expect(trackerRow(page, "Building Fund").getByRole("link", { name: "Open" })).toHaveAttribute(
       "href",
       "/admin/department-reports/5",

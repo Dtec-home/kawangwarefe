@@ -45,7 +45,9 @@ describe("stepper", () => {
   it("has one button per section named by the registry title, with the current one marked", () => {
     const { stepper } = setup(report());
     const buttons = within(stepper()).getAllByRole("button");
-    expect(buttons.map((b) => b.textContent?.replace(/^\d/, ""))).toEqual(SERVER_SPECS.map((s) => s.title));
+    expect(buttons.map((b) => b.textContent?.replace(/^\d/, "").replace(/Optional$/, ""))).toEqual(
+      SERVER_SPECS.map((s) => s.title),
+    );
     // A new report opens on the first section still missing.
     expect(within(stepper()).getByRole("button", { name: "Introduction / Departmental Mission" })).toHaveAttribute(
       "aria-current",
@@ -57,6 +59,13 @@ describe("stepper", () => {
     const { stepper } = setup(report());
     expect(within(stepper()).getByRole("button", { name: "Leaders" })).toHaveAccessibleDescription("Done");
     expect(within(stepper()).getByRole("button", { name: "Objectives" })).toHaveAccessibleDescription("Not done yet");
+  });
+
+  it("shows an empty optional section as optional, never as done", () => {
+    const { stepper } = setup(report());
+    const challenges = within(stepper()).getByRole("button", { name: "Challenges" });
+    expect(challenges).toHaveAccessibleDescription("Optional, nothing added");
+    expect(challenges).toHaveTextContent("Optional");
   });
 
   it("saves pending edits, moves to the section and focuses its heading", () => {

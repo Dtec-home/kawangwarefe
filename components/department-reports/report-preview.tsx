@@ -53,7 +53,7 @@ function Paragraphs({ text }: { text: string }) {
 }
 
 function ItemList({ items, objectives }: { items: ReportItem[]; objectives: Map<string, string> }) {
-  if (items.length === 0) return <p className="text-sm italic text-muted-foreground">None listed.</p>;
+  if (items.length === 0) return <p className="text-sm italic text-muted-foreground">None recorded.</p>;
   return (
     <ol className="list-decimal space-y-1.5 pl-6">
       {items.map((item) => {
@@ -81,7 +81,8 @@ function SectionBody({ spec, report }: { spec: ReportSectionSpec; report: Report
           <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 p-2">
             <span className="font-medium break-words">{leader.name}</span>
             <span className="text-sm text-muted-foreground break-words">
-              {[leader.roleTitle, leader.phone].filter(Boolean).join(" · ")}
+              {/* Phones stay in the editor: the report, like the PDF, shows name and role only. */}
+              {leader.roleTitle}
             </span>
           </li>
         ))}

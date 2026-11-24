@@ -36,7 +36,7 @@ Feature: A department leader writes the yearly report (DR-7)
     Given the leader is editing a freshly started report
     When the leader writes the introduction "We look after the church buildings."
     Then the report says it is saved
-    And 5 of 8 sections are done
+    And 5 of 6 required sections are done
 
   Scenario: The money table comes from the books (US-6)
     Given a freshly started draft report

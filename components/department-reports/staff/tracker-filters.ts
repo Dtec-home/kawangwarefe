@@ -49,3 +49,18 @@ export function countTrackerRows(rows: readonly RowStatus[]): Record<TrackerFilt
 export function canDownloadBook(rows: readonly RowStatus[]): boolean {
   return rows.some((row) => row.status === "approved");
 }
+
+
+/**
+ * Departments that report (a leader is assigned, or a report already exists)
+ * versus giving funds nobody leads, such as Tithe: the tracker lists the
+ * second group apart, collapsed, so it does not crowd the real departments.
+ */
+export function splitByLeader<R extends Pick<TrackerRow, "leaderNames" | "report">>(
+  rows: readonly R[],
+): { reporting: R[]; unassigned: R[] } {
+  const reporting: R[] = [];
+  const unassigned: R[] = [];
+  for (const row of rows) (row.leaderNames.length > 0 || row.report ? reporting : unassigned).push(row);
+  return { reporting, unassigned };
+}

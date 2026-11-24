@@ -13,6 +13,8 @@ import {
   sectionProgress,
   sectionValue,
   type ReportDraftContent,
+  requiredSectionCount,
+  sectionState,
 } from "@/lib/department-reports/sections";
 import type { ReportSectionSpec, SectionKey } from "@/lib/department-reports/types";
 
@@ -165,22 +167,42 @@ describe("sectionValue", () => {
 });
 
 describe("sectionProgress", () => {
-  it("counts the sections whose value passes their schema", () => {
+  it("counts required sections only, so optional ones never look done before anything is written", () => {
     const p = sectionProgress(empty, DEFAULT_SECTION_SPECS);
-    expect(p.total).toBe(8);
-    // optional lists and the financial step are already complete
-    expect(p.done).toBe(3);
+    expect(p.total).toBe(6);
+    // only the financial statement (from the books) passes on an empty report
+    expect(p.done).toBe(1);
     expect(p.complete).toEqual({
       introduction: false, leaders: false, objectives: false, achievements: false,
       challenges: true, recommendations: true, financial: true, conclusion: false,
     });
+    expect(p.states).toEqual({
+      introduction: "todo", leaders: "todo", objectives: "todo", achievements: "todo",
+      challenges: "optional", recommendations: "optional", financial: "done", conclusion: "todo",
+    });
   });
 
-  it("reports 8 of 8 for a complete report", () => {
-    expect(sectionProgress(complete, DEFAULT_SECTION_SPECS)).toMatchObject({ done: 8, total: 8 });
+  it("reports 6 of 6 for a complete report", () => {
+    expect(sectionProgress(complete, DEFAULT_SECTION_SPECS)).toMatchObject({ done: 6, total: 6 });
   });
 
   it("handles a null report (loading) as nothing done", () => {
-    expect(sectionProgress(null, DEFAULT_SECTION_SPECS)).toMatchObject({ done: 0, total: 8 });
+    expect(sectionProgress(null, DEFAULT_SECTION_SPECS)).toMatchObject({ done: 0, total: 6 });
+  });
+});
+
+describe("sectionState", () => {
+  it.each([
+    [true, true, true, "done"],
+    [true, false, true, "todo"],
+    [false, true, false, "optional"],
+    [false, true, true, "done"],
+    [false, false, true, "todo"],
+  ] as const)("required=%s passes=%s hasContent=%s -> %s", (required, passes, hasContent, state) => {
+    expect(sectionState({ ...spec("challenges"), required }, passes, hasContent)).toBe(state);
+  });
+
+  it("counts the required sections", () => {
+    expect(requiredSectionCount(DEFAULT_SECTION_SPECS)).toBe(6);
   });
 });

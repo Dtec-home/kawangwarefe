@@ -80,7 +80,7 @@ describe("MyReports", () => {
     expect(within(card).getByTestId("dept-report-status")).toHaveTextContent("Not started");
     expect(card).toHaveTextContent("Due 31 Jul 2027");
     expect(card).toHaveTextContent("Due in 12 days");
-    expect(within(card).getByRole("img", { name: "0 of 8 sections done" })).toBeInTheDocument();
+    expect(within(card).getByRole("img", { name: "0 of 6 sections done" })).toBeInTheDocument();
     expect(within(card).getByRole("button", { name: "Start report" })).toBeEnabled();
   });
 
@@ -114,7 +114,7 @@ describe("MyReports", () => {
     renderPage([periodsMock(), rowsMock([row])]);
     const card = await screen.findByTestId("dept-report-card");
     expect(within(card).getByTestId("dept-report-status")).toHaveTextContent("Draft");
-    expect(card).toHaveTextContent("5 of 8 sections done");
+    expect(card).toHaveTextContent("5 of 6 required sections done");
     vi.useRealTimers();
     await userEvent.click(within(card).getByRole("button", { name: "Continue" }));
     expect(push).toHaveBeenCalledWith("/admin/department-reports/5");

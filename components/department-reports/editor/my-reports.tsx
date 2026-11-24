@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Empty } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DEFAULT_SECTION_SPECS } from "@/lib/department-reports/sections";
+import { DEFAULT_SECTION_SPECS, requiredSectionCount } from "@/lib/department-reports/sections";
 import type { ReportingPeriod, TrackerRow } from "@/lib/department-reports/types";
 import {
   GET_MY_DEPARTMENT_REPORTS,
@@ -39,7 +39,8 @@ export const reportHref = (id: string) => `/admin/department-reports/${encodeURI
 export const trackerHref = (periodId: string) => `/admin/department-reports/period/${encodeURIComponent(periodId)}`;
 export const PERIODS_HREF = "/admin/department-reports/periods";
 
-const TOTAL_SECTIONS = DEFAULT_SECTION_SPECS.length;
+/** Progress counts required sections only (matches the backend). */
+const TOTAL_SECTIONS = requiredSectionCount(DEFAULT_SECTION_SPECS);
 
 const DUE_TONE_CLASS: Record<DueTone, string> = {
   ok: "text-muted-foreground",
@@ -84,7 +85,7 @@ export function ReportCard({ row, period, starting, onStart, onOpen }: ReportCar
         </div>
 
         <p className="text-sm text-muted-foreground">
-          {row.progress} of {TOTAL_SECTIONS} sections done
+          {row.progress} of {TOTAL_SECTIONS} required sections done
           {row.leaderNames.length > 0 ? ` · Leaders: ${row.leaderNames.join(", ")}` : ""}
         </p>
 
