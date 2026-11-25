@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CategoryAmountRow } from "./category-amount-row";
 import { useQuery } from "@apollo/client/react";
-import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
+import { GET_GIVING_CATEGORIES } from "@/lib/graphql/queries";
 
 interface Category {
   id: string;
@@ -58,7 +58,7 @@ export function MultiCategorySelector({
   giver = "self",
 }: MultiCategorySelectorProps) {
   const { data, loading } = useQuery<GetCategoriesData>(
-    GET_CONTRIBUTION_CATEGORIES
+    GET_GIVING_CATEGORIES
   );
 
   const allCategories = data?.contributionCategories || [];

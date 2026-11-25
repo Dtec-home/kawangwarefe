@@ -10,7 +10,8 @@
 import type { Page } from "@playwright/test";
 import { injectSession } from "./auth";
 
-export type StaffPersona = "admin" | "pastor" | "treasurer" | "member" | "recorder";
+/** `clerk` (R4) reads every report, the tracker and the periods; never reviews, no live books. */
+export type StaffPersona = "admin" | "pastor" | "treasurer" | "member" | "recorder" | "clerk";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -34,6 +35,7 @@ function roleFor(persona: StaffPersona) {
     isTreasurer: persona === "treasurer",
     adminCategoryIds: [],
     ledDepartmentIds: [],
+    isClerk: persona === "clerk",
     adminGroupNames: [],
     adminCategories: [],
   };
@@ -245,7 +247,8 @@ export async function fakeDepartmentReports(page: Page, options: FakeOptions): P
     if (q.includes("currentUserRole")) return respond({ currentUserRole: roleFor(state.persona) });
     if (op) state.calls.push({ op, variables });
 
-    const staff = ["admin", "pastor", "treasurer"].includes(state.persona);
+    // Staff and the clerk (R4) may read periods and the tracker.
+    const staff = ["admin", "pastor", "treasurer", "clerk"].includes(state.persona);
     const period = () => state.periods.find((p) => p.id === String(variables.periodId ?? "1")) ?? state.periods[0];
     const findReport = () => state.reports.find((r) => r.id === String(variables.id));
 
@@ -278,6 +281,8 @@ export async function fakeDepartmentReports(page: Page, options: FakeOptions): P
         p.status = "closed";
         return respond({ closeReportingPeriod: p });
       }
+      case "GetMyDepartmentReports":
+        return respond({ myDepartmentReports: [] });
       case "GetDepartmentReportTracker":
         return staff ? respond({ departmentReportTracker: trackerRows(state, period()) }) : notAllowed();
       case "GetDepartmentReport": {

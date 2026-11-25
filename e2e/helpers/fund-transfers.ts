@@ -44,6 +44,7 @@ function roleFor(persona: TransferPersona) {
     isTreasurer: persona === "treasurer",
     adminCategoryIds: persona === "leader" ? ["1"] : [],
     ledDepartmentIds: persona === "leader" ? ["1"] : [],
+    isClerk: false,
     adminGroupNames: [],
     adminCategories: [],
   };
@@ -245,6 +246,7 @@ export async function fakeFundTransfers(page: Page, options: FakeOptions): Promi
 
     switch (op) {
       case "GetContributionCategories":
+      case "GetGivingCategories":
         return respond({ contributionCategories: DEPARTMENTS });
       case "GetDepartmentPurposes": {
         const list = PURPOSES[String(variables.categoryId)] ?? [];

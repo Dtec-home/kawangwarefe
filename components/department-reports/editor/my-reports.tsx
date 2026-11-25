@@ -131,7 +131,7 @@ function StaffLinks({ openPeriod, isAdmin }: { openPeriod: ReportingPeriod | nul
 
 export function MyReports() {
   const router = useRouter();
-  const { isStaff, isAdmin } = useUserRole();
+  const { isStaff, isAdmin, isClerk } = useUserRole();
   const periodsQuery = useQuery(GET_REPORTING_PERIODS, { fetchPolicy: "cache-and-network" });
   const reportsQuery = useQuery(GET_MY_DEPARTMENT_REPORTS, {
     variables: { periodId: null },
@@ -222,7 +222,9 @@ export function MyReports() {
             description={
               isStaff
                 ? "Reports are written by department leaders. Use the tracker to follow every department."
-                : "Only department leaders write reports. Ask the church office if you should be listed as a leader."
+                : isClerk
+                  ? "Reports are written by department leaders. Use the tracker to read every department's report."
+                  : "Only department leaders write reports. Ask the church office if you should be listed as a leader."
             }
           />
         </CardContent>
@@ -247,7 +249,8 @@ export function MyReports() {
 
   return (
     <div className="space-y-4">
-      {isStaff ? <StaffLinks openPeriod={openPeriod} isAdmin={isAdmin} /> : null}
+      {/* Staff and the clerk (R4, read-only) follow every department in the tracker. */}
+      {isStaff || isClerk ? <StaffLinks openPeriod={openPeriod} isAdmin={isAdmin} /> : null}
       {body}
     </div>
   );

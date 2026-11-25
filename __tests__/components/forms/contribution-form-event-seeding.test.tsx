@@ -17,7 +17,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MockedProvider } from '@apollo/client/testing/react'
 import { ContributionForm } from '@/components/forms/contribution-form'
-import { GET_CONTRIBUTION_CATEGORIES } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES } from '@/lib/graphql/queries'
 import { GET_PAYMENT_STATUS } from '@/lib/graphql/payment-status-query'
 import { INITIATE_MULTI_CONTRIBUTION } from '@/lib/graphql/multi-contribution-mutations'
 
@@ -82,7 +82,7 @@ vi.mock('@/components/forms/contribution-summary', () => ({
 
 const baseMocks = [
   {
-    request: { query: GET_CONTRIBUTION_CATEGORIES },
+    request: { query: GET_GIVING_CATEGORIES },
     result: { data: { contributionCategories: [] } },
   },
   {

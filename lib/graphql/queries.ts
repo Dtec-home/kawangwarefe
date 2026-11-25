@@ -32,6 +32,35 @@ export const GET_CONTRIBUTION_CATEGORIES = gql`
 `;
 
 /**
+ * Departments money may be given to (R2): active and "Show in giving" on.
+ * Every place money gets a destination uses this — the give page, the desk
+ * and recorder, campaign departments, C2B resolve and Move gift. Admin lists
+ * keep GET_CONTRIBUTION_CATEGORIES. Same fields as that query.
+ */
+export const GET_GIVING_CATEGORIES = gql`
+  query GetGivingCategories($audience: String) {
+    contributionCategories(isActive: true, audience: $audience, forGiving: true) {
+      id
+      name
+      code
+      description
+      isActive
+      routingMode
+      fallbackIfNoGroup
+      audience
+      hasAutoSplit
+      tracksMemberIdentifier
+      identifierLabel
+      identifierFormat
+      allowedGroups {
+        id
+        name
+      }
+    }
+  }
+`;
+
+/**
  * Public lookup of a giver's department member number (e.g. Welfare number)
  * used to pre-fill / confirm on the contribute form after the phone is entered.
  */

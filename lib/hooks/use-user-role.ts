@@ -23,6 +23,7 @@ export const GET_CURRENT_USER_ROLE = gql`
       canVoidReceipts
       isAdmin
       isTreasurer
+      isClerk
       adminCategoryIds
       ledDepartmentIds
       adminGroupNames
@@ -58,6 +59,11 @@ interface UserRoleInfo {
   isAdmin: boolean;
   /** Holds the `treasurer` role. */
   isTreasurer: boolean;
+  /**
+   * Holds the `clerk` role (R4): reads every yearly department report, no
+   * money. Optional only so older mocks without the field still type-check.
+   */
+  isClerk?: boolean;
   adminCategoryIds: string[];
   adminGroupNames: string[];
   adminCategories: Category[];
@@ -129,6 +135,7 @@ export function useUserRole() {
     canVoidReceipts: roleInfo?.canVoidReceipts ?? false,
     isAdmin: roleInfo?.isAdmin ?? false,
     isTreasurer: roleInfo?.isTreasurer ?? false,
+    isClerk: roleInfo?.isClerk ?? false,
 
     // Treasurer or admin: may change the treasury books (opening balance,
     // remittances). Pastors are staff but read-only here.
@@ -137,6 +144,14 @@ export function useUserRole() {
     // A recorder without staff rights: confined to the /record workspace
     // (plus their own member area). Server-side checks are authoritative.
     isPureRecorder: !!roleInfo?.isRecorder && !roleInfo?.isStaff,
+
+    // A clerk who is nothing else (R4): sees Department Reports only and lands
+    // there after login. A clerk who also leads a department is not "pure".
+    isPureClerk:
+      !!roleInfo?.isClerk &&
+      !roleInfo?.isStaff &&
+      !roleInfo?.isCategoryAdmin &&
+      !(roleInfo?.ledDepartmentIds?.length ?? 0),
 
     // Combined check: can access admin panel
     canAccessAdmin: (roleInfo?.isStaff || roleInfo?.isCategoryAdmin || roleInfo?.isGroupAdmin || roleInfo?.isContentAdmin) ?? false,
@@ -165,10 +180,11 @@ export function useUserRole() {
       // staff, and the recorder workspace — RR-9)
       if (roleInfo.isStaff) return true;
 
-      // Yearly department reports (DR-6): staff (above) and department
-      // leaders. The server decides what each one may do with a report.
+      // Yearly department reports (DR-6): staff (above), department leaders
+      // and the clerk (R4, read-only). The server decides what each one may
+      // do with a report.
       if (feature === "department-reports") {
-        return !!roleInfo.isCategoryAdmin || (roleInfo.ledDepartmentIds?.length ?? 0) > 0;
+        return !!roleInfo.isClerk || !!roleInfo.isCategoryAdmin || (roleInfo.ledDepartmentIds?.length ?? 0) > 0;
       }
 
       // Recorder workspace: recorders only. A pure recorder gets nothing else

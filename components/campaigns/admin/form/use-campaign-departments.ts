@@ -10,7 +10,7 @@
 
 import { useQuery } from "@apollo/client/react";
 
-import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
+import { GET_GIVING_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 
 export interface DepartmentOption {
@@ -29,7 +29,7 @@ interface PurposesData {
 
 export function useCampaignDepartments() {
   const { isStaff, isCategoryAdmin, adminCategoryIds } = useUserRole();
-  const { data, loading } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES);
+  const { data, loading } = useQuery<CategoriesData>(GET_GIVING_CATEGORIES);
   const all = data?.contributionCategories ?? [];
   const ownOnly = isCategoryAdmin && !isStaff;
   const departments = ownOnly ? all.filter((c) => adminCategoryIds.map(String).includes(String(c.id))) : all;

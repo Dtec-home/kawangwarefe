@@ -59,7 +59,7 @@ import {
   type RecordPledgeVars,
 } from '@/lib/graphql/fundraising/admin-pledges'
 import { GET_CAMPAIGNS } from '@/lib/graphql/fundraising/campaigns'
-import { GET_CONTRIBUTION_CATEGORIES } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES } from '@/lib/graphql/queries'
 import { GET_CURRENT_USER_ROLE } from '@/lib/hooks/use-user-role'
 import type { Pledge } from '@/lib/types/fundraising'
 import { PledgeRegister } from '@/components/pledges/admin/pledge-register'
@@ -99,7 +99,7 @@ function mocks(world: World): MockedResponse[] {
   return [
     { request: { query: GET_CURRENT_USER_ROLE }, result: { data: { currentUserRole: world.role } }, maxUsageCount: 20 },
     {
-      request: { query: GET_CONTRIBUTION_CATEGORIES },
+      request: { query: GET_GIVING_CATEGORIES },
       result: { data: { contributionCategories: CATEGORIES } },
       maxUsageCount: 20,
     },

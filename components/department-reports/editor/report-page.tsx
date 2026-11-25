@@ -56,10 +56,13 @@ const asError = (err: unknown): ReportError => ({
   missing: [],
 });
 
-/** Leaders go back to their reports; staff reviewing another department go back to the tracker. */
+/**
+ * Leaders go back to their reports; staff reviewing — or the clerk reading
+ * (R4) — another department go back to the tracker.
+ */
 function BackLink({ report }: { report?: { department: { id: string }; period: { id: string } } | null }) {
-  const { isStaff, ledDepartmentIds } = useUserRole();
-  const toTracker = !!report && isStaff && !(ledDepartmentIds ?? []).includes(report.department.id);
+  const { isStaff, isClerk, ledDepartmentIds } = useUserRole();
+  const toTracker = !!report && (isStaff || !!isClerk) && !(ledDepartmentIds ?? []).includes(report.department.id);
   const href = toTracker ? `/admin/department-reports/period/${report!.period.id}` : MY_REPORTS_HREF;
   return (
     <Button asChild variant="ghost" size="mobile-sm" className="-ml-2">

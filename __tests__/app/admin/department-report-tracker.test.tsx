@@ -83,9 +83,9 @@ afterEach(() => {
 });
 
 describe("Department report tracker", () => {
-  it("is limited to staff and titled by the period", async () => {
+  it("is limited to staff and the clerk (R4) and titled by the period", async () => {
     setup();
-    expect(guard).toHaveBeenCalledWith("staff");
+    expect(guard).toHaveBeenCalledWith("reports-viewer");
     expect(await screen.findByRole("heading", { level: 1, name: "Department reports 2025-2026" })).toBeInTheDocument();
     expect(screen.getByText(/due 31 Jul 2026/)).toBeInTheDocument();
   });

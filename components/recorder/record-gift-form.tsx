@@ -47,7 +47,7 @@ import {
 } from "@/components/contributions/recording-for-field";
 import { useIdempotencyKey } from "@/components/contributions/idempotency";
 import { CREATE_MANUAL_MULTI_CONTRIBUTION } from "@/lib/graphql/manual-contribution-mutations";
-import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
+import { GET_GIVING_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
 import { formatKes, receiptHref } from "@/lib/receipts/format";
 import { cn } from "@/lib/utils";
 
@@ -130,7 +130,7 @@ export function RecordGiftForm({
   const { lookup, loading: lookupLoading } = useGiverLookup();
   const [createContribution] = useMutation<CreateMultiContributionResult>(CREATE_MANUAL_MULTI_CONTRIBUTION);
   const { data: categoryData } = useQuery<{ contributionCategories: CategoryOption[] }>(
-    GET_CONTRIBUTION_CATEGORIES
+    GET_GIVING_CATEGORIES
   );
 
   const recordingFor = hasActiveUnlocks ? effectiveRecordFor(recordFor, unlockDates) : RECORD_FOR_TODAY;

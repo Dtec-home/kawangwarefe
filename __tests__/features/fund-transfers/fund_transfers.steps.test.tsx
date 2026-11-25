@@ -31,6 +31,7 @@ import {
   DEPARTMENTS,
   balanceMock,
   categoriesMock,
+  givingCategoriesMock,
   makeTransfer,
   previewMock,
   previewOk,
@@ -262,7 +263,7 @@ defineFeature(feature, (test) => {
       render(
         <MockedProvider
           mocks={[
-            categoriesMock(),
+            givingCategoriesMock(),
             ...["1", "2", "3"].map((id) => purposesMock(id, id === "2" ? [purpose("8", "Roof")] : [])),
             previewMock(group, targets, previewOk()),
             reallocateMock(group, targets, "Giver meant Building", previewOk({ message: "Gift moved." }), () => {

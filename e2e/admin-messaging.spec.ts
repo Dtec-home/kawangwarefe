@@ -27,6 +27,7 @@ function roleResponse(role: RoleName) {
     canSendBulkMessage: role === "staff" || role === "dept-admin" || role === "group-admin",
     adminCategoryIds: [],
     ledDepartmentIds: [],
+    isClerk: false,
     adminCategories: [],
     adminGroupNames: role === "group-admin" ? ["Youth"] : [],
   };

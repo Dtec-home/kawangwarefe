@@ -31,6 +31,7 @@ const GET_CURRENT_USER_ROLE = gql`
       canVoidReceipts
       isAdmin
       isTreasurer
+      isClerk
       adminCategoryIds
       ledDepartmentIds
       adminGroupNames
@@ -71,6 +72,7 @@ const staffRoleMock = {
         isTreasurer: false,
         adminCategoryIds: [],
         ledDepartmentIds: [],
+        isClerk: false,
         adminGroupNames: [],
         adminCategories: [],
       },
@@ -95,6 +97,7 @@ const contentAdminMock = {
         isTreasurer: false,
         adminCategoryIds: [],
         ledDepartmentIds: [],
+        isClerk: false,
         adminGroupNames: [],
         adminCategories: [],
       },
@@ -119,6 +122,7 @@ const categoryAdminMock = {
         isTreasurer: false,
         adminCategoryIds: ['cat-1'],
         ledDepartmentIds: ['cat-1'],
+        isClerk: false,
         adminGroupNames: [],
         adminCategories: [{ id: 'cat-1', name: 'Tithe', code: 'TITHE', description: '' }],
       },
@@ -143,6 +147,7 @@ const unauthMock = {
         isTreasurer: false,
         adminCategoryIds: [],
         ledDepartmentIds: [],
+        isClerk: false,
         adminGroupNames: [],
         adminCategories: [],
       },
@@ -167,6 +172,7 @@ const groupAdminMock = {
         isTreasurer: false,
         adminCategoryIds: [],
         ledDepartmentIds: [],
+        isClerk: false,
         adminGroupNames: ['Youth'],
         adminCategories: [],
       },
@@ -192,6 +198,7 @@ function roleMock(overrides: Record<string, unknown>) {
           isTreasurer: false,
           adminCategoryIds: [],
           ledDepartmentIds: [],
+          isClerk: false,
           adminGroupNames: [],
           adminCategories: [],
           ...overrides,
@@ -608,5 +615,60 @@ describe('canAccessFeature("member-merge")', () => {
     })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.canAccessFeature('member-merge')).toBe(allowed)
+  })
+})
+
+// R4: the clerk reads every yearly department report and nothing else.
+describe('clerk role (R4)', () => {
+  it('a clerk who is nothing else is a pure clerk with only department reports', async () => {
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: makeWrapper([roleMock({ isClerk: true })]),
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.isClerk).toBe(true)
+    expect(result.current.isPureClerk).toBe(true)
+    expect(result.current.isStaff).toBe(false)
+    expect(result.current.canAccessFeature('department-reports')).toBe(true)
+    for (const f of ['overview', 'contributions', 'members', 'reports', 'expenses', 'messaging', 'content', 'c2b-transactions', 'record', 'receipts', 'campaigns', 'pledges', 'categories', 'category-admins', 'leaders'] as const) {
+      expect(result.current.canAccessFeature(f)).toBe(false)
+    }
+  })
+
+  it('a clerk who also leads a department is not a pure clerk', async () => {
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: makeWrapper([roleMock({ isClerk: true, ledDepartmentIds: ['7'] })]),
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.isClerk).toBe(true)
+    expect(result.current.isPureClerk).toBe(false)
+  })
+
+  it('a clerk who is also a category admin keeps the category-admin features', async () => {
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: makeWrapper([roleMock({ isClerk: true, isCategoryAdmin: true, adminCategoryIds: ['1'] })]),
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.isPureClerk).toBe(false)
+    expect(result.current.canAccessFeature('contributions')).toBe(true)
+    expect(result.current.canAccessFeature('department-reports')).toBe(true)
+  })
+
+  it('staff who also hold clerk are not pure clerks', async () => {
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: makeWrapper([roleMock({ isStaff: true, isClerk: true })]),
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.isPureClerk).toBe(false)
+    expect(result.current.canAccessFeature('members')).toBe(true)
+  })
+
+  it('a plain member is not a clerk', async () => {
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: makeWrapper([roleMock({})]),
+    })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.isClerk).toBe(false)
+    expect(result.current.isPureClerk).toBe(false)
+    expect(result.current.canAccessFeature('department-reports')).toBe(false)
   })
 })

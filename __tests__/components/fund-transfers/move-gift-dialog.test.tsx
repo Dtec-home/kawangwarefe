@@ -15,7 +15,7 @@ import { MoveGiftDialog } from "@/components/fund-transfers/move-gift-dialog";
 import type { PaymentLine } from "@/lib/fund-transfers/types";
 
 import {
-  categoriesMock,
+  givingCategoriesMock,
   previewMock,
   previewOk,
   previewRefused,
@@ -36,7 +36,7 @@ function renderDialog(extra: MockedResponse[] = [], lines = LINES, onMoved = vi.
   render(
     <MockedProvider
       mocks={[
-        categoriesMock(),
+        givingCategoriesMock(),
         purposesMock("1", [purpose("7", "Camp")]),
         purposesMock("2", [purpose("8", "Roof")]),
         purposesMock("3", [purpose("9", "Mission")]),

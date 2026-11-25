@@ -53,7 +53,7 @@ import {
   OPEN_COLLECTION_SESSION,
 } from '@/lib/graphql/collection-session-queries'
 import { CREATE_MANUAL_MULTI_CONTRIBUTION } from '@/lib/graphql/manual-contribution-mutations'
-import { GET_CONTRIBUTION_CATEGORIES, GET_PAYBILL_INSTRUCTION_MESSAGE } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES, GET_PAYBILL_INSTRUCTION_MESSAGE } from '@/lib/graphql/queries'
 import { GET_MY_RECORDED_RECEIPTS } from '@/lib/graphql/recorder-queries'
 import { RecorderWorkspace } from '@/components/recorder/recorder-workspace'
 import { StatementCertificationControl } from '@/components/treasury/statement-certification'
@@ -117,7 +117,7 @@ interface World {
 function recorderMocks(world: World): MockedResponse[] {
   return [
     {
-      request: { query: GET_CONTRIBUTION_CATEGORIES, variables: () => true },
+      request: { query: GET_GIVING_CATEGORIES, variables: () => true },
       result: { data: { contributionCategories: CATEGORIES } },
       maxUsageCount: 20,
     },

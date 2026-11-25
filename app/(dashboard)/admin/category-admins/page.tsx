@@ -50,6 +50,17 @@ import {
   FolderKey,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  EMPTY_PROFILE_DRAFT,
+  EditLeaderProfileDialog,
+  EditProfileButton,
+  LeaderProfileFields,
+  LeaderProfileStatus,
+  draftHasProfile,
+  profileFromDraft,
+  type LeaderProfile,
+  type LeaderProfileDraft,
+} from "@/components/category-admins/leader-profile";
 
 interface Category {
   id: string;
@@ -77,6 +88,8 @@ interface CategoryAdmin {
   } | null;
   assignedAt: string;
   isActive: boolean;
+  /** R3: the leader profile carried by this assignment, if any. */
+  profile?: LeaderProfile | null;
 }
 
 interface CategoriesData {
@@ -115,6 +128,8 @@ function CategoryAdminsPageContent() {
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [assignCategory, setAssignCategory] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [profileDraft, setProfileDraft] = useState<LeaderProfileDraft>(EMPTY_PROFILE_DRAFT);
+  const [editingProfile, setEditingProfile] = useState<CategoryAdmin | null>(null);
 
   const { start: startTour, isReady: isTourReady } = useTour({
     tourKey: "admin_category_admins_v1",
@@ -157,6 +172,7 @@ function CategoryAdminsPageContent() {
           toast.success(data.assignCategoryAdmin.message);
           setSelectedMember("");
           setAssignCategory("");
+          setProfileDraft(EMPTY_PROFILE_DRAFT);
           refetch();
         } else {
           toast.error(data.assignCategoryAdmin.message);
@@ -197,6 +213,8 @@ function CategoryAdminsPageContent() {
       variables: {
         memberId: selectedMember,
         categoryId: assignCategory,
+        // R3: the leader profile travels with the assignment (none if left blank).
+        profile: draftHasProfile(profileDraft) ? profileFromDraft(profileDraft) : null,
       },
     });
   };
@@ -354,6 +372,17 @@ function CategoryAdminsPageContent() {
               </div>
             </div>
 
+            <fieldset className="mt-6 space-y-3 rounded-md border p-4" aria-labelledby="leader-profile-legend">
+              <legend id="leader-profile-legend" className="px-1 text-sm font-medium">
+                Leader profile
+              </legend>
+              <p className="text-xs text-muted-foreground">
+                Optional. Shown on the website Leaders page and in the yearly department report. Name and phone come
+                from the member.
+              </p>
+              <LeaderProfileFields idPrefix="assign-profile" value={profileDraft} onChange={setProfileDraft} />
+            </fieldset>
+
             <div className="flex justify-end mt-4">
               <Button
                 onClick={handleAssignAdmin}
@@ -457,12 +486,15 @@ function CategoryAdminsPageContent() {
                     {/* Mobile card view */}
                     <div className="space-y-3 md:hidden">
                       {admins.map((admin) => (
-                        <div key={admin.id} className="border border-border rounded-lg p-3 space-y-2">
+                        <div key={admin.id} data-admin-id={admin.id} className="border border-border rounded-lg p-3 space-y-2">
                           <div className="flex items-start justify-between">
                             <div>
                               <div className="font-medium">{admin.member.fullName}</div>
                               <div className="text-sm font-mono text-muted-foreground">{admin.member.phoneNumber}</div>
+                              <LeaderProfileStatus profile={admin.profile} />
                             </div>
+                            <div className="flex items-center">
+                            <EditProfileButton memberName={admin.member.fullName} onClick={() => setEditingProfile(admin)} />
                             <Button
                               variant="ghost"
                               size="sm"
@@ -472,6 +504,7 @@ function CategoryAdminsPageContent() {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>{admin.member.memberNumber ? `#${admin.member.memberNumber}` : 'No member #'}</span>
@@ -495,6 +528,9 @@ function CategoryAdminsPageContent() {
                               Admin Name
                             </th>
                             <th className="text-left p-2 font-medium">
+                              Leader profile
+                            </th>
+                            <th className="text-left p-2 font-medium">
                               Phone Number
                             </th>
                             <th className="text-left p-2 font-medium">
@@ -515,6 +551,7 @@ function CategoryAdminsPageContent() {
                           {admins.map((admin) => (
                             <tr
                               key={admin.id}
+                              data-admin-id={admin.id}
                               className="border-b hover:bg-muted/60"
                             >
                               <td className="p-2">
@@ -526,6 +563,9 @@ function CategoryAdminsPageContent() {
                                     {admin.member.email}
                                   </div>
                                 )}
+                              </td>
+                              <td className="p-2">
+                                <LeaderProfileStatus profile={admin.profile} />
                               </td>
                               <td className="p-2 font-mono text-sm">
                                 {admin.member.phoneNumber}
@@ -546,7 +586,8 @@ function CategoryAdminsPageContent() {
                                   }
                                 )}
                               </td>
-                              <td className="p-2 text-center">
+                              <td className="p-2 text-center whitespace-nowrap">
+                                <EditProfileButton memberName={admin.member.fullName} onClick={() => setEditingProfile(admin)} />
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -569,6 +610,21 @@ function CategoryAdminsPageContent() {
           </CardContent>
         </Card>
       </div>
+
+      {editingProfile ? (
+        <EditLeaderProfileDialog
+          key={editingProfile.id}
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditingProfile(null);
+          }}
+          categoryAdminId={editingProfile.id}
+          memberName={editingProfile.member.fullName}
+          departmentName={editingProfile.category.name}
+          profile={editingProfile.profile}
+          onSaved={() => refetch()}
+        />
+      ) : null}
     </AdminLayout>
   );
 }

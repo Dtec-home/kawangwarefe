@@ -10,7 +10,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MockedProvider } from '@apollo/client/testing/react'
 import { MultiCategorySelector } from '@/components/forms/multi-category-selector'
-import { GET_CONTRIBUTION_CATEGORIES } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES } from '@/lib/graphql/queries'
 import { makeCategory, makeCategoryAmount } from '../../fixtures'
 
 // CategoryAmountRow uses Radix Select which doesn't work in jsdom — mock it
@@ -28,12 +28,12 @@ const cat2 = makeCategory({ id: 'cat-2', name: 'Offering', code: 'OFFERING' })
 const cat3 = makeCategory({ id: 'cat-3', name: 'Building Fund', code: 'BUILD' })
 
 const categoriesMock = {
-  request: { query: GET_CONTRIBUTION_CATEGORIES },
+  request: { query: GET_GIVING_CATEGORIES },
   result: { data: { contributionCategories: [cat1, cat2, cat3] } },
 }
 
 const loadingMock = {
-  request: { query: GET_CONTRIBUTION_CATEGORIES },
+  request: { query: GET_GIVING_CATEGORIES },
   // Never resolves — simulates loading state
   result: new Promise(() => { }),
 }

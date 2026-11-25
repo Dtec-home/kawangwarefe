@@ -76,7 +76,7 @@ import Link from "next/link";
 import { useUserRole } from "@/lib/hooks/use-user-role";
 
 const PAGE_SIZE = 100;
-const ALL_ROLES = ["admin", "treasurer", "pastor", "content_admin", "recorder", "member"] as const;
+const ALL_ROLES = ["admin", "treasurer", "pastor", "content_admin", "recorder", "clerk", "member"] as const;
 
 const ROLE_TONES: Record<string, RoleTone> = {
   admin: "warning",
@@ -84,12 +84,14 @@ const ROLE_TONES: Record<string, RoleTone> = {
   pastor: "primary",
   content_admin: "success",
   recorder: "info",
+  clerk: "info",
   member: "neutral",
 };
 
 // Short help text shown next to a role in the role pickers
 const ROLE_DESCRIPTIONS: Partial<Record<string, string>> = {
   recorder: "Can record cash/envelope giving only",
+  clerk: "Reads all yearly department reports",
 };
 
 interface GroupItem {

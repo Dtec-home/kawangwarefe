@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const role = { isStaff: false, isAdmin: false };
+const role = { isStaff: false, isAdmin: false, isClerk: false };
 vi.mock("@/lib/hooks/use-user-role", () => ({ useUserRole: () => role }));
 
 const toastError = vi.fn();
@@ -69,6 +69,7 @@ afterEach(() => {
   toastError.mockReset();
   role.isStaff = false;
   role.isAdmin = false;
+  role.isClerk = false;
 });
 
 describe("MyReports", () => {
@@ -164,5 +165,16 @@ describe("MyReports", () => {
     renderPage([periodsMock(), rowsMock([])]);
     expect(await screen.findByRole("link", { name: "Open the tracker" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Reporting periods" })).not.toBeInTheDocument();
+  });
+
+  it("links the clerk to the tracker but not to the reporting-period settings (R4)", async () => {
+    role.isClerk = true;
+    renderPage([periodsMock(), rowsMock([])]);
+    expect(await screen.findByRole("link", { name: "Open the tracker" })).toHaveAttribute(
+      "href",
+      "/admin/department-reports/period/3",
+    );
+    expect(screen.queryByRole("link", { name: "Reporting periods" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Use the tracker to read every department's report/)).toBeInTheDocument();
   });
 });

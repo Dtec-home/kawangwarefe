@@ -26,7 +26,7 @@ vi.mock("@/components/department-reports/staff/report-actions", () => ({
   },
 }));
 
-const role = vi.hoisted(() => ({ isStaff: false, ledDepartmentIds: [] as string[] }));
+const role = vi.hoisted(() => ({ isStaff: false, isClerk: false, ledDepartmentIds: [] as string[] }));
 vi.mock("@/lib/hooks/use-user-role", () => ({ useUserRole: () => role }));
 
 const toastSuccess = vi.fn();
@@ -150,5 +150,19 @@ describe("ReportPage", () => {
     renderPage([loadMock(null), specsMock]);
     expect(await screen.findByText("This report isn't available")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to my reports" })).toHaveAttribute("href", "/admin/department-reports");
+  });
+
+  it("sends the clerk back to the tracker (R4)", async () => {
+    role.isClerk = true;
+    try {
+      const approved = completeReport({ status: "approved", canEdit: false });
+      renderPage([loadMock(approved), specsMock]);
+      expect(await screen.findByRole("link", { name: "Tracker" })).toHaveAttribute(
+        "href",
+        `/admin/department-reports/period/${approved.period.id}`,
+      );
+    } finally {
+      role.isClerk = false;
+    }
   });
 });

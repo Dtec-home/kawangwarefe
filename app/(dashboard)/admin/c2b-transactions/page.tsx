@@ -18,7 +18,7 @@ import {
   RESOLVE_UNMATCHED_C2B,
 } from "@/lib/graphql/c2b-queries";
 import {
-  GET_CONTRIBUTION_CATEGORIES,
+  GET_GIVING_CATEGORIES,
   GET_DEPARTMENT_PURPOSES,
 } from "@/lib/graphql/queries";
 import { AdminLayout } from "@/components/layouts/admin-layout";
@@ -499,7 +499,7 @@ export default function C2BTransactionsPage() {
   });
 
   const { data: categoriesData } = useQuery<{ contributionCategories: Category[] }>(
-    GET_CONTRIBUTION_CATEGORIES
+    GET_GIVING_CATEGORIES
   );
   const categories = categoriesData?.contributionCategories ?? [];
 

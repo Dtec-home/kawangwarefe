@@ -72,6 +72,10 @@ interface Category {
   identifierFormat?: string;
   isTrustFund?: boolean;
   statementOrder?: number;
+  /** R1: offered wherever money gets a destination. */
+  acceptsGiving?: boolean;
+  /** R1: asked for a yearly department report. */
+  filesYearlyReport?: boolean;
   allowedGroups?: GroupItem[];
 }
 
@@ -89,6 +93,8 @@ function parseStatementOrder(value: string): number | null {
 const STATEMENT_ORDER_ERROR = `Statement order must be a whole number between 0 and ${MAX_STATEMENT_ORDER}`;
 const TRUST_FUND_HELP = "Money in this department is remitted to the conference and shown under trust funds on the Cash Statement.";
 const STATEMENT_ORDER_HELP = "Lower numbers appear first on the Cash Statement; trust funds always come before local funds.";
+const ACCEPTS_GIVING_HELP = "Members and the desk can choose it when giving. Turn off for departments like Elders that never receive money.";
+const FILES_YEARLY_REPORT_HELP = "Asked for a yearly department report.";
 
 interface GroupItem {
   id: string;
@@ -288,6 +294,8 @@ function CategoryManagementPageContent() {
   const [newIdentifierFormat, setNewIdentifierFormat] = useState("");
   const [newIsTrustFund, setNewIsTrustFund] = useState(false);
   const [newStatementOrder, setNewStatementOrder] = useState(DEFAULT_STATEMENT_ORDER);
+  const [newAcceptsGiving, setNewAcceptsGiving] = useState(true);
+  const [newFilesYearlyReport, setNewFilesYearlyReport] = useState(false);
 
   // Edit form state
   const [editName, setEditName] = useState("");
@@ -302,6 +310,8 @@ function CategoryManagementPageContent() {
   const [editIdentifierFormat, setEditIdentifierFormat] = useState("");
   const [editIsTrustFund, setEditIsTrustFund] = useState(false);
   const [editStatementOrder, setEditStatementOrder] = useState(DEFAULT_STATEMENT_ORDER);
+  const [editAcceptsGiving, setEditAcceptsGiving] = useState(true);
+  const [editFilesYearlyReport, setEditFilesYearlyReport] = useState(false);
 
   const [showStatementPreview, setShowStatementPreview] = useState(false);
 
@@ -387,6 +397,8 @@ function CategoryManagementPageContent() {
           identifierFormat: newTracksIdentifier ? newIdentifierFormat.trim() : "",
           isTrustFund: newIsTrustFund,
           statementOrder,
+          acceptsGiving: newAcceptsGiving,
+          filesYearlyReport: newFilesYearlyReport,
         },
       });
 
@@ -404,6 +416,8 @@ function CategoryManagementPageContent() {
         setNewIdentifierFormat("");
         setNewIsTrustFund(false);
         setNewStatementOrder(DEFAULT_STATEMENT_ORDER);
+        setNewAcceptsGiving(true);
+        setNewFilesYearlyReport(false);
         setShowCreateForm(false);
         refetch();
       } else {
@@ -432,6 +446,8 @@ function CategoryManagementPageContent() {
     setEditIdentifierFormat(category.identifierFormat ?? "");
     setEditIsTrustFund(category.isTrustFund ?? false);
     setEditStatementOrder(String(category.statementOrder ?? DEFAULT_STATEMENT_ORDER));
+    setEditAcceptsGiving(category.acceptsGiving ?? true);
+    setEditFilesYearlyReport(category.filesYearlyReport ?? false);
     clearMessages();
   };
 
@@ -473,6 +489,8 @@ function CategoryManagementPageContent() {
           identifierFormat: editTracksIdentifier ? editIdentifierFormat.trim() : "",
           isTrustFund: editIsTrustFund,
           statementOrder,
+          acceptsGiving: editAcceptsGiving,
+          filesYearlyReport: editFilesYearlyReport,
         },
       });
 
@@ -805,6 +823,30 @@ function CategoryManagementPageContent() {
                 <div className="grid md:grid-cols-2 gap-4 rounded-md border p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
+                      <Label htmlFor="acceptsGiving">Show in giving</Label>
+                      <p className="text-xs text-muted-foreground">{ACCEPTS_GIVING_HELP}</p>
+                    </div>
+                    <Switch
+                      id="acceptsGiving"
+                      checked={newAcceptsGiving}
+                      onCheckedChange={setNewAcceptsGiving}
+                    />
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="filesYearlyReport">Writes a yearly report</Label>
+                      <p className="text-xs text-muted-foreground">{FILES_YEARLY_REPORT_HELP}</p>
+                    </div>
+                    <Switch
+                      id="filesYearlyReport"
+                      checked={newFilesYearlyReport}
+                      onCheckedChange={setNewFilesYearlyReport}
+                    />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4 rounded-md border p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
                       <Label htmlFor="isTrustFund">Trust fund (remitted to conference)</Label>
                       <p className="text-xs text-muted-foreground">{TRUST_FUND_HELP}</p>
                     </div>
@@ -1031,6 +1073,36 @@ function CategoryManagementPageContent() {
                         <div className="grid md:grid-cols-2 gap-3 rounded-md border p-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1">
+                              <Label htmlFor={`edit-giving-${category.id}`} className="text-xs">
+                                Show in giving
+                              </Label>
+                              <p className="text-xs text-muted-foreground">{ACCEPTS_GIVING_HELP}</p>
+                            </div>
+                            <Switch
+                              id={`edit-giving-${category.id}`}
+                              checked={editAcceptsGiving}
+                              onCheckedChange={setEditAcceptsGiving}
+                              disabled={isTreasurer && !isAdmin}
+                            />
+                          </div>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <Label htmlFor={`edit-report-${category.id}`} className="text-xs">
+                                Writes a yearly report
+                              </Label>
+                              <p className="text-xs text-muted-foreground">{FILES_YEARLY_REPORT_HELP}</p>
+                            </div>
+                            <Switch
+                              id={`edit-report-${category.id}`}
+                              checked={editFilesYearlyReport}
+                              onCheckedChange={setEditFilesYearlyReport}
+                              disabled={isTreasurer && !isAdmin}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-3 rounded-md border p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
                               <Label htmlFor={`edit-trust-${category.id}`} className="text-xs">
                                 Trust fund (remitted to conference)
                               </Label>
@@ -1109,6 +1181,12 @@ function CategoryManagementPageContent() {
                               ) : (
                                 <StatusBadge variant="neutral">Local</StatusBadge>
                               )
+                            )}
+                            {category.acceptsGiving === false && (
+                              <StatusBadge variant="warning">Not in giving</StatusBadge>
+                            )}
+                            {category.filesYearlyReport && (
+                              <StatusBadge variant="info">Yearly report</StatusBadge>
                             )}
                             {category.statementOrder !== undefined && (
                               <Badge variant="outline" className="text-xs" title="Cash Statement order">

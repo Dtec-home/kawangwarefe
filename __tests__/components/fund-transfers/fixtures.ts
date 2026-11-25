@@ -12,7 +12,7 @@ import {
   PREVIEW_PAYMENT_REALLOCATION,
   REALLOCATE_PAYMENT,
 } from "@/lib/graphql/fund-transfers";
-import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
+import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES, GET_GIVING_CATEGORIES } from "@/lib/graphql/queries";
 import type { FundTransfer, ReallocationPreview, ReallocationTargetInput } from "@/lib/fund-transfers/types";
 
 const MANY = Number.POSITIVE_INFINITY;
@@ -76,6 +76,13 @@ export function makeTransfer(overrides: Partial<FundTransfer> = {}): FundTransfe
 
 export const categoriesMock = (): MockedResponse => ({
   request: { query: GET_CONTRIBUTION_CATEGORIES },
+  result: { data: { contributionCategories: DEPARTMENTS } },
+  maxUsageCount: MANY,
+});
+
+/** Move gift picks a target from the departments that accept giving (R2). */
+export const givingCategoriesMock = (): MockedResponse => ({
+  request: { query: GET_GIVING_CATEGORIES },
   result: { data: { contributionCategories: DEPARTMENTS } },
   maxUsageCount: MANY,
 });

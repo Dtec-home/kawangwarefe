@@ -68,6 +68,7 @@ export function leaderRole(): Json {
     isTreasurer: false,
     adminCategoryIds: ["7"],
     ledDepartmentIds: ["7"],
+    isClerk: false,
     adminGroupNames: [],
     adminCategories: [{ __typename: "CategoryType", id: "7", name: "Building Fund", code: "BLDG", description: "" }],
   };

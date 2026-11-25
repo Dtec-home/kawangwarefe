@@ -19,7 +19,7 @@ vi.mock('@/components/ui/select', () => ({
 
 import { CampaignForm } from '@/components/campaigns/admin/form/campaign-form'
 import { EMPTY_CAMPAIGN_FORM } from '@/components/campaigns/admin/form/campaign-form-schema'
-import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES, GET_DEPARTMENT_PURPOSES } from '@/lib/graphql/queries'
 import { GET_CURRENT_USER_ROLE } from '@/lib/hooks/use-user-role'
 import { category, role } from './fixtures'
 
@@ -30,7 +30,7 @@ const purposes = [
 const mocks: MockedResponse[] = [
   { request: { query: GET_CURRENT_USER_ROLE }, result: { data: { currentUserRole: role() } }, maxUsageCount: 5 },
   {
-    request: { query: GET_CONTRIBUTION_CATEGORIES },
+    request: { query: GET_GIVING_CATEGORIES },
     result: { data: { contributionCategories: [category('3', 'Building Fund', 'BUILDING')] } },
     maxUsageCount: 5,
   },

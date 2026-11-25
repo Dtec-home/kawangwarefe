@@ -70,7 +70,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, isPureRecorder, canVoidReceipts, canAccessFeature, adminCategories, isAdmin, loading: roleLoading } = useUserRole();
+  const { isStaff, isCategoryAdmin, isGroupAdmin, isContentAdmin, canSendBulkMessage, isPureRecorder, isClerk, canVoidReceipts, canAccessFeature, adminCategories, isAdmin, loading: roleLoading } = useUserRole();
   // T2.6 — pending receipt void requests (treasurer/admin only)
   const pendingVoidRequests = usePendingVoidRequestCount({ enabled: !!canVoidReceipts });
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -161,6 +161,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     if (isGroupAdmin)    return { text: "Group Admin",  tone: "success" };
     if (canSendBulkMessage) return { text: "Messaging",  tone: "neutral" };
     if (isPureRecorder)  return { text: "Recorder",     tone: "info" };
+    if (isClerk)         return { text: "Clerk",        tone: "info" };
     return null;
   };
 

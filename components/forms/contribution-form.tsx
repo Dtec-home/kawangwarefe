@@ -13,7 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { INITIATE_MULTI_CONTRIBUTION } from "@/lib/graphql/multi-contribution-mutations";
-import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
+import { GET_GIVING_CATEGORIES } from "@/lib/graphql/queries";
 import { useAuth } from "@/lib/auth/auth-context";
 import { PhoneInput } from "./phone-input";
 import { MultiCategorySelector, CategoryAmount } from "./multi-category-selector";
@@ -222,7 +222,7 @@ function ContributionFormInner({ onSuccess }: ContributionFormProps) {
 
   // Fetch categories for summary display
   const { data: categoriesData } = useQuery<GetCategoriesData>(
-    GET_CONTRIBUTION_CATEGORIES
+    GET_GIVING_CATEGORIES
   );
 
   const [initiateContribution, { loading: mutationLoading }] = useMutation<
