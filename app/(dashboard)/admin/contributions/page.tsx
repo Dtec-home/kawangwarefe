@@ -7,6 +7,7 @@
 
 "use client";
 
+import { AdminProtectedRoute } from "@/components/auth/admin-protected-route";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_ALL_CONTRIBUTIONS, GET_CONTRIBUTION_STATS, GET_GROUP_CONTRIBUTIONS, GET_MY_GROUP_NAMES } from "@/lib/graphql/admin-queries";
@@ -247,7 +248,7 @@ function BookReceiptDialog({
   );
 }
 
-export default function ContributionsPage() {
+function ContributionsPageContent() {
   const { isStaff, isCategoryAdmin, isGroupAdmin, isAdmin, isTreasurer } = useUserRole();
   // RA-2: treasurer/admin may move a gift put in the wrong department/purpose.
   const canMoveGift = isAdmin || isTreasurer;
@@ -1066,5 +1067,15 @@ export default function ContributionsPage() {
         />
       )}
     </AdminLayout>
+  );
+}
+
+export default function ContributionsPage() {
+  // Staff, department/group admins; a clerk or pure recorder is sent to their
+  // own landing page instead of an empty money page (R4).
+  return (
+    <AdminProtectedRoute requiredAccess="any-admin">
+      <ContributionsPageContent />
+    </AdminProtectedRoute>
   );
 }

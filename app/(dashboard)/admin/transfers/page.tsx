@@ -14,7 +14,7 @@ import { AdminLayout } from "@/components/layouts/admin-layout";
 
 export default function FundTransfersPage() {
   return (
-    <AdminProtectedRoute requiredAccess="department-reports">
+    <AdminProtectedRoute requiredAccess="department-leaders">
       <AdminLayout>
         <FundTransfersView />
       </AdminLayout>

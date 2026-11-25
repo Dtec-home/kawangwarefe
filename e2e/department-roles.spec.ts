@@ -77,6 +77,14 @@ test.describe("Clerk (R4)", () => {
     await page.goto("/admin/members");
     await expect(page).toHaveURL(/\/admin\/department-reports$/, { timeout: 30_000 });
   });
+
+  for (const moneyPage of ["/admin/transfers", "/admin/contributions"]) {
+    test(`is sent back to Department Reports from ${moneyPage}`, async ({ page }) => {
+      await fakeClerk(page);
+      await page.goto(moneyPage);
+      await expect(page).toHaveURL(/\/admin\/department-reports$/, { timeout: 30_000 });
+    });
+  }
 });
 
 test.describe("Leader profile (R3)", () => {

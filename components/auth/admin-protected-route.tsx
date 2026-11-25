@@ -21,6 +21,8 @@ interface AdminProtectedRouteProps {
    * A pure recorder (recorder, not staff) who lacks access to a route is sent
    * to `/record` instead of `/dashboard`.
    * - `department-reports`: staff, department leaders and clerks (R4).
+   * - `department-leaders`: staff and department leaders, never a clerk —
+   * money pages a leader may use for their own department (fund transfers).
    * - `reports-viewer`: staff or clerks — the department-report tracker and
    * periods (read-only for a clerk; the server enforces it). A pure clerk who
    * lacks access to a route is sent to `/admin/department-reports`.
@@ -33,6 +35,7 @@ interface AdminProtectedRouteProps {
     | "messaging"
     | "recorder"
     | "department-reports"
+    | "department-leaders"
     | "reports-viewer";
 }
 
@@ -68,6 +71,9 @@ export function AdminProtectedRoute({
         // Staff, the clerk (R4), or anyone who leads a department under
         // either assignment (D1).
         return isStaff || !!isClerk || isCategoryAdmin || (ledDepartmentIds?.length ?? 0) > 0;
+      case "department-leaders":
+        // Money pages scoped to a leader's own department: no clerk (R4).
+        return isStaff || isCategoryAdmin || (ledDepartmentIds?.length ?? 0) > 0;
       case "reports-viewer":
         // The tracker and periods: staff, or the clerk reading (R4).
         return isStaff || !!isClerk;

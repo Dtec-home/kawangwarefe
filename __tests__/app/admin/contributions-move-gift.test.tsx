@@ -53,6 +53,9 @@ vi.mock("@apollo/client/react", () => ({
   useMutation: () => [vi.fn(), { loading: false }],
 }));
 vi.mock("@/lib/hooks/use-user-role", () => ({ useUserRole: () => role }));
+vi.mock("@/components/auth/admin-protected-route", () => ({
+  AdminProtectedRoute: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
 vi.mock("@/components/layouts/admin-layout", () => ({
   AdminLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));

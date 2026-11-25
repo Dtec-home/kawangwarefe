@@ -212,7 +212,7 @@ export function PeriodTracker({ periodId }: { periodId: string }) {
             <Empty
               icon={ClipboardList}
               title="No departments to report on"
-              description="Departments appear here once a leader is assigned under Category Admins."
+              description="Departments appear here once a leader is assigned under Dept. Admins."
             />
           ) : visible.length === 0 ? (
             <Empty
@@ -251,7 +251,7 @@ export function PeriodTracker({ periodId }: { periodId: string }) {
             <TriangleAlert className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
             {unassigned.length === 1 ? "1 department has" : `${unassigned.length} departments have`} no leader
             <span className="font-normal text-muted-foreground">
-              — nobody is asked for a report. Assign a leader under Category Admins if one is needed.
+              — nobody is asked for a report. Assign a leader under Dept. Admins if one is needed.
             </span>
           </summary>
           <ul className="mt-3 divide-y divide-border" aria-label="Departments without a leader">

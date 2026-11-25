@@ -164,7 +164,21 @@ describe('AdminProtectedRoute', () => {
       else expect(screen.queryByText('Tracker')).not.toBeInTheDocument()
     })
 
-    it.each(['staff', 'any-admin', 'category-admin', 'recorder', 'messaging', 'content-admin'] as const)(
+    it.each([
+      ['staff', { isStaff: true }, true],
+      ['a department leader', { isCategoryAdmin: true }, true],
+      ['a scoped leader', { ledDepartmentIds: ['7'] }, true],
+      ['a clerk', { isClerk: true, isPureClerk: true }, false],
+      ['a plain member', {}, false],
+    ])('department-leaders (fund transfers): %s → %s', (_who, overrides, allowed) => {
+      signedIn()
+      vi.mocked(useUserRole).mockReturnValue({ ...base, ...overrides } as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="department-leaders"><div>Transfers</div></AdminProtectedRoute>)
+      if (allowed) expect(screen.getByText('Transfers')).toBeInTheDocument()
+      else expect(screen.queryByText('Transfers')).not.toBeInTheDocument()
+    })
+
+    it.each(['staff', 'any-admin', 'category-admin', 'recorder', 'messaging', 'content-admin', 'department-leaders'] as const)(
       'keeps a clerk out of %s routes and sends them to Department Reports',
       (access) => {
         signedIn()
