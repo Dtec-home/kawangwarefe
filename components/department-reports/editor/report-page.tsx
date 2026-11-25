@@ -17,6 +17,7 @@ import { AutosaveIndicator } from "@/components/department-reports/autosave-indi
 import { ProgressRing } from "@/components/department-reports/progress-ring";
 import { ReportPreview } from "@/components/department-reports/report-preview";
 import { ReportActions } from "@/components/department-reports/staff/report-actions";
+import { ReviewHistory } from "@/components/department-reports/editor/review-comments";
 import { ReportStatusBadge } from "@/components/department-reports/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +25,9 @@ import { Empty } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DEFAULT_SECTION_SPECS } from "@/lib/department-reports/sections";
 import type { ReportError, ReportSectionSpec } from "@/lib/department-reports/types";
+import { requiredSectionCount } from "@/lib/department-reports/sections";
 import { useReportDraft } from "@/lib/department-reports/use-report-draft";
+import { useUserRole } from "@/lib/hooks/use-user-role";
 import {
   CARRY_FORWARD_OBJECTIVES,
   GET_DEPARTMENT_REPORT,
@@ -53,12 +56,19 @@ const asError = (err: unknown): ReportError => ({
   missing: [],
 });
 
-function BackLink() {
+/**
+ * Leaders go back to their reports; staff reviewing — or the clerk reading
+ * (R4) — another department go back to the tracker.
+ */
+function BackLink({ report }: { report?: { department: { id: string }; period: { id: string } } | null }) {
+  const { isStaff, isClerk, ledDepartmentIds } = useUserRole();
+  const toTracker = !!report && (isStaff || !!isClerk) && !(ledDepartmentIds ?? []).includes(report.department.id);
+  const href = toTracker ? `/admin/department-reports/period/${report!.period.id}` : MY_REPORTS_HREF;
   return (
     <Button asChild variant="ghost" size="mobile-sm" className="-ml-2">
-      <Link href={MY_REPORTS_HREF}>
+      <Link href={href}>
         <ArrowLeft aria-hidden="true" />
-        My reports
+        {toTracker ? "Tracker" : "My reports"}
       </Link>
     </Button>
   );
@@ -148,7 +158,7 @@ export function ReportPage({ reportId }: { reportId: string }) {
 
   return (
     <div className="space-y-4">
-      <BackLink />
+      <BackLink report={report} />
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
           <h1 className="text-2xl font-bold tracking-tight break-words">{report.department.name} report</h1>
@@ -169,9 +179,9 @@ export function ReportPage({ reportId }: { reportId: string }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <ProgressRing done={report.progress} total={specs.length} size={52} />
+          <ProgressRing done={report.progress} total={requiredSectionCount(specs)} size={52} />
           <span className="text-sm text-muted-foreground">
-            {report.progress} of {specs.length} sections done
+            {report.progress} of {requiredSectionCount(specs)} required sections done
           </span>
         </div>
       </header>
@@ -191,7 +201,10 @@ export function ReportPage({ reportId }: { reportId: string }) {
           onNotify={(kind, message) => (kind === "success" ? toast.success(message) : toast.error(message))}
         />
       ) : (
-        <ReportPreview report={report} specs={specs} />
+        <>
+          <ReviewHistory comments={report.comments} specs={specs} expanded={report.status === "returned"} />
+          <ReportPreview report={report} specs={specs} />
+        </>
       )}
     </div>
   );

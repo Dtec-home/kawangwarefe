@@ -41,6 +41,7 @@ function roleResponse(persona: Persona) {
     canVoidReceipts: treasurer,
     adminCategoryIds: [],
     ledDepartmentIds: [],
+    isClerk: false,
     adminCategories: [],
     adminGroupNames: [],
   };
@@ -141,6 +142,7 @@ async function interceptGraphQL(page: Page) {
       case "GetActiveEntryDateUnlocks":
         return respond({ activeEntryDateUnlocks: [] });
       case "GetContributionCategories":
+      case "GetGivingCategories":
         return respond({ contributionCategories: CATEGORIES });
       case "GetPaybillInstructionMessage":
         return respond({ paybillInstructionMessage: null });

@@ -14,6 +14,7 @@ const LEADER_FIELDS = `
   phone
   displayOrder
   isActive
+  isDepartmentLeader
   category {
     id
     name
@@ -135,5 +136,11 @@ export interface Leader {
   phone: string | null;
   displayOrder: number;
   isActive: boolean;
+  /**
+   * R3: linked to a Dept. Admins assignment. Such a profile is edited under
+   * Dept. Admins; the Leaders page shows it read-only. Optional so older
+   * fixtures still type-check.
+   */
+  isDepartmentLeader?: boolean;
   category: LeaderCategory | null;
 }

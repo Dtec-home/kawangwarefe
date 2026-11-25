@@ -29,10 +29,12 @@ describe("ReportPreview", () => {
     render(<ReportPreview report={completeReport()} specs={SERVER_SPECS} />);
     expect(screen.getByText("We look after the church buildings.")).toBeInTheDocument();
     expect(screen.getByText("Dan Builder")).toBeInTheDocument();
-    expect(screen.getByText("Department leader · 254700000001")).toBeInTheDocument();
+    // Phones stay in the editor; the report itself (like the PDF) shows name and role only.
+    expect(screen.getByText("Department leader")).toBeInTheDocument();
+    expect(screen.queryByText(/254700000001/)).not.toBeInTheDocument();
     expect(screen.getByText("Repair the roof")).toBeInTheDocument();
     expect(screen.getByText("Fulfils: Repair the roof")).toBeInTheDocument();
-    expect(screen.getAllByText("None listed.")).toHaveLength(2); // challenges, recommendations
+    expect(screen.getAllByText("None recorded.")).toHaveLength(2); // challenges, recommendations (as in the PDF)
     expect(screen.getByTestId("financial-row-money-in")).toHaveTextContent("KES 4,500.00");
     expect(screen.getByText("Paint")).toBeInTheDocument(); // a line note
   });

@@ -55,7 +55,7 @@ import {
   SUBMIT_CAMPAIGN,
   UPDATE_CAMPAIGN,
 } from '@/lib/graphql/fundraising/campaigns'
-import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES, GET_DEPARTMENT_PURPOSES } from '@/lib/graphql/queries'
 import { GET_CURRENT_USER_ROLE } from '@/lib/hooks/use-user-role'
 import type { CampaignInput } from '@/lib/types/fundraising'
 import { CampaignList } from '@/components/campaigns/admin/list/campaign-list'
@@ -138,7 +138,7 @@ function formMocks(world: World): MockedResponse[] {
   return [
     { request: { query: GET_CURRENT_USER_ROLE }, result: { data: { currentUserRole: world.role } }, maxUsageCount: 10 },
     {
-      request: { query: GET_CONTRIBUTION_CATEGORIES },
+      request: { query: GET_GIVING_CATEGORIES },
       result: { data: { contributionCategories: world.categories } },
       maxUsageCount: 10,
     },

@@ -14,6 +14,8 @@ export const CREATE_CATEGORY = gql`
     $identifierFormat: String
     $isTrustFund: Boolean
     $statementOrder: Int
+    $acceptsGiving: Boolean
+    $filesYearlyReport: Boolean
   ) {
     createCategory(
       name: $name
@@ -28,6 +30,8 @@ export const CREATE_CATEGORY = gql`
       identifierFormat: $identifierFormat
       isTrustFund: $isTrustFund
       statementOrder: $statementOrder
+      acceptsGiving: $acceptsGiving
+      filesYearlyReport: $filesYearlyReport
     ) {
       success
       message
@@ -45,6 +49,8 @@ export const CREATE_CATEGORY = gql`
         identifierFormat
         isTrustFund
         statementOrder
+        acceptsGiving
+        filesYearlyReport
         allowedGroups {
           id
           name
@@ -70,6 +76,8 @@ export const UPDATE_CATEGORY = gql`
     $identifierFormat: String
     $isTrustFund: Boolean
     $statementOrder: Int
+    $acceptsGiving: Boolean
+    $filesYearlyReport: Boolean
   ) {
     updateCategory(
       categoryId: $categoryId
@@ -86,6 +94,8 @@ export const UPDATE_CATEGORY = gql`
       identifierFormat: $identifierFormat
       isTrustFund: $isTrustFund
       statementOrder: $statementOrder
+      acceptsGiving: $acceptsGiving
+      filesYearlyReport: $filesYearlyReport
     ) {
       success
       message
@@ -103,6 +113,8 @@ export const UPDATE_CATEGORY = gql`
         identifierFormat
         isTrustFund
         statementOrder
+        acceptsGiving
+        filesYearlyReport
         allowedGroups {
           id
           name
@@ -137,6 +149,8 @@ export const GET_ALL_CATEGORIES = gql`
       identifierFormat
       isTrustFund
       statementOrder
+      acceptsGiving
+      filesYearlyReport
       allowedGroups {
         id
         name

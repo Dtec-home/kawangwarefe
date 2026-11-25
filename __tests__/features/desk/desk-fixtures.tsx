@@ -15,7 +15,7 @@ import {
   CREATE_MANUAL_MULTI_CONTRIBUTION,
   LOOKUP_MEMBER_BY_PHONE,
 } from '@/lib/graphql/manual-contribution-mutations'
-import { GET_CONTRIBUTION_CATEGORIES, GET_PAYBILL_INSTRUCTION_MESSAGE } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES, GET_PAYBILL_INSTRUCTION_MESSAGE } from '@/lib/graphql/queries'
 import { GET_MY_RECORDED_RECEIPTS } from '@/lib/graphql/recorder-queries'
 import { GET_MY_OPEN_COLLECTION_SESSION } from '@/lib/graphql/collection-session-queries'
 import { ACTIVE_CAMPAIGNS_FOR_LINES } from '@/lib/graphql/fundraising/give'
@@ -165,7 +165,7 @@ function givingCampaigns(world: DeskWorld) {
 export function formMocks(world: DeskWorld): MockedResponse[] {
   return [
     {
-      request: { query: GET_CONTRIBUTION_CATEGORIES, variables: () => true },
+      request: { query: GET_GIVING_CATEGORIES, variables: () => true },
       result: { data: { contributionCategories: DEPARTMENTS } },
       maxUsageCount: 50,
     },

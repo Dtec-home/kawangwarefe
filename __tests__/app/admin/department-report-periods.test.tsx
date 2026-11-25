@@ -81,9 +81,9 @@ afterEach(() => {
 });
 
 describe("Reporting periods page", () => {
-  it("is limited to staff", () => {
+  it("is limited to staff and the clerk (R4)", () => {
     setup();
-    expect(guard).toHaveBeenCalledWith("staff");
+    expect(guard).toHaveBeenCalledWith("reports-viewer");
   });
 
   it("lists periods (open first) with dates, due date, status and a tracker link", async () => {

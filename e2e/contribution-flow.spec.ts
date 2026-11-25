@@ -23,7 +23,7 @@ async function mockContributionCategories(page: Page) {
     } catch {
       // ignore
     }
-    if (query.includes('GetContributionCategories')) {
+    if (query.includes('GetGivingCategories') || query.includes('GetContributionCategories')) {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

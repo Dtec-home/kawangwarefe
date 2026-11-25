@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { resolvePostLoginRedirect } from '@/lib/auth/post-login-redirect'
 
-function mockRole(role: { isStaff: boolean; isRecorder: boolean }) {
+function mockRole(role: { isStaff: boolean; isRecorder: boolean; isClerk?: boolean; isCategoryAdmin?: boolean; ledDepartmentIds?: string[] }) {
   return vi.fn().mockResolvedValue({ json: async () => ({ data: { currentUserRole: role } }) })
 }
 
@@ -53,5 +53,30 @@ describe('resolvePostLoginRedirect', () => {
     vi.stubGlobal('fetch', fetchMock)
     await expect(resolvePostLoginRedirect(null)).resolves.toBe('/dashboard')
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  describe('clerk (R4)', () => {
+    it('asks the server for the clerk flag', async () => {
+      const fetchMock = mockRole({ isStaff: false, isRecorder: false, isClerk: true })
+      vi.stubGlobal('fetch', fetchMock)
+      await resolvePostLoginRedirect(null)
+      const [, init] = fetchMock.mock.calls[0]
+      expect(JSON.parse(init.body).query).toMatch(/isClerk/)
+    })
+
+    it('sends a pure clerk to /admin/department-reports', async () => {
+      vi.stubGlobal('fetch', mockRole({ isStaff: false, isRecorder: false, isClerk: true, isCategoryAdmin: false, ledDepartmentIds: [] }))
+      await expect(resolvePostLoginRedirect(null)).resolves.toBe('/admin/department-reports')
+    })
+
+    it('sends a clerk who also leads a department to /dashboard', async () => {
+      vi.stubGlobal('fetch', mockRole({ isStaff: false, isRecorder: false, isClerk: true, isCategoryAdmin: true, ledDepartmentIds: ['7'] }))
+      await expect(resolvePostLoginRedirect(null)).resolves.toBe('/dashboard')
+    })
+
+    it('sends staff who also hold clerk to /dashboard', async () => {
+      vi.stubGlobal('fetch', mockRole({ isStaff: true, isRecorder: false, isClerk: true }))
+      await expect(resolvePostLoginRedirect(null)).resolves.toBe('/dashboard')
+    })
   })
 })

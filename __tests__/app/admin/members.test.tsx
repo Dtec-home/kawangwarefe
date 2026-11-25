@@ -140,4 +140,11 @@ describe('MembersPage', () => {
     expect(await screen.findByText('recorder')).toBeInTheDocument()
     expect(screen.getByText('Can record cash/envelope giving only')).toBeInTheDocument()
   })
+
+  it('offers the clerk role with its description (R4)', async () => {
+    render(<MembersPage />)
+    fireEvent.click(screen.getAllByTitle('Manage Roles')[0])
+    expect(await screen.findByText('clerk')).toBeInTheDocument()
+    expect(screen.getByText('Reads all yearly department reports')).toBeInTheDocument()
+  })
 })

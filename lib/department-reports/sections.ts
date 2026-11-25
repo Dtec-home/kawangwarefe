@@ -237,28 +237,60 @@ export function sectionValue(report: ReportDraftContent, spec: ReportSectionSpec
   }
 }
 
+/**
+ * How a section shows in the stepper:
+ *  - "done": passes, and is either required or has content;
+ *  - "todo": fails its rules (required and missing, or over a limit);
+ *  - "optional": an optional section left empty — never shown as done.
+ */
+export type SectionState = "done" | "todo" | "optional";
+
+export function sectionState(
+  spec: Pick<ReportSectionSpec, "required">,
+  passes: boolean,
+  hasContent: boolean,
+): SectionState {
+  if (!passes) return "todo";
+  if (!spec.required && !hasContent) return "optional";
+  return "done";
+}
+
+/** Progress is counted over required sections only (backend `REQUIRED_SECTION_COUNT`). */
+export function requiredSectionCount(specs: readonly Pick<ReportSectionSpec, "required">[]): number {
+  return specs.filter((s) => s.required).length;
+}
+
+/** Does the section hold anything the leader wrote (lists: at least one entry)? */
+export function sectionHasContent(report: ReportDraftContent, spec: ReportSectionSpec): boolean {
+  const value = sectionValue(report, spec) as unknown;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "string") return value.trim().length > 0;
+  return true;
+}
+
 export interface SectionProgress {
+  /** Required sections that pass. */
   done: number;
+  /** Number of required sections. */
   total: number;
   /** Per key: does the section's value pass its schema? */
   complete: Record<SectionKey, boolean>;
+  /** Per key: how the stepper shows it. */
+  states: Record<SectionKey, SectionState>;
 }
 
-/**
- * Client-side progress: a section is done when its value passes its schema
- * (so an empty optional list counts, matching the server's completeness
- * check). The server's `report.progress` is authoritative once saved.
- */
 export function sectionProgress(
   report: ReportDraftContent | null | undefined,
   specs: readonly ReportSectionSpec[],
 ): SectionProgress {
   const complete = {} as Record<SectionKey, boolean>;
+  const states = {} as Record<SectionKey, SectionState>;
   let done = 0;
   for (const spec of specs) {
     const ok = !!report && buildSectionSchema(spec).safeParse(sectionValue(report, spec)).success;
     complete[spec.key] = ok;
-    if (ok) done += 1;
+    states[spec.key] = report ? sectionState(spec, ok, sectionHasContent(report, spec)) : "todo";
+    if (ok && spec.required) done += 1;
   }
-  return { done, total: specs.length, complete };
+  return { done, total: requiredSectionCount(specs), complete, states };
 }

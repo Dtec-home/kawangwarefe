@@ -10,13 +10,15 @@
 
 import { Check, ChevronDown, Circle, MessageSquareWarning } from "lucide-react";
 
+import { requiredSectionCount, type SectionState } from "@/lib/department-reports/sections";
 import type { ReportSectionSpec, SectionKey } from "@/lib/department-reports/types";
 import { cn } from "@/lib/utils";
 
 interface SectionStepperProps {
   specs: readonly ReportSectionSpec[];
   current: SectionKey | null;
-  complete: Record<string, boolean>;
+  /** Per section: done, to do, or an empty optional section (never shown as done). */
+  states: Record<string, SectionState>;
   /** Sections with a reviewer comment waiting. */
   flagged?: ReadonlySet<string>;
   onSelect: (key: SectionKey) => void;
@@ -25,9 +27,9 @@ interface SectionStepperProps {
   onToggle: () => void;
 }
 
-export function SectionStepper({ specs, current, complete, flagged, onSelect, open, onToggle }: SectionStepperProps) {
+export function SectionStepper({ specs, current, states, flagged, onSelect, open, onToggle }: SectionStepperProps) {
   const index = specs.findIndex((s) => s.key === current);
-  const doneCount = specs.filter((s) => complete[s.key]).length;
+  const requiredDone = specs.filter((s) => s.required && states[s.key] === "done").length;
   return (
     <div className="space-y-2">
       <button
@@ -41,7 +43,7 @@ export function SectionStepper({ specs, current, complete, flagged, onSelect, op
           {index >= 0 ? `Section ${index + 1} of ${specs.length}` : "All sections"}
           <span className="font-normal text-muted-foreground">
             {" · "}
-            {doneCount} of {specs.length} done
+            {requiredDone} of {requiredSectionCount(specs)} required done
           </span>
         </span>
         <ChevronDown aria-hidden="true" className={cn("size-4 transition-transform", open && "rotate-180")} />
@@ -55,7 +57,9 @@ export function SectionStepper({ specs, current, complete, flagged, onSelect, op
       >
         <ol className="space-y-1 rounded-lg border bg-card p-1.5 shadow-xs sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
           {specs.map((spec) => {
-            const done = !!complete[spec.key];
+            const state = states[spec.key] ?? "todo";
+            const done = state === "done";
+            const optional = state === "optional";
             const active = spec.key === current;
             const hasComment = flagged?.has(spec.key) ?? false;
             const stateId = `dept-step-state-${spec.key}`;
@@ -83,12 +87,16 @@ export function SectionStepper({ specs, current, complete, flagged, onSelect, op
                   <span className="min-w-0 flex-1 break-words">{spec.title}</span>
                   {hasComment ? (
                     <MessageSquareWarning aria-hidden="true" className="size-4 shrink-0 text-destructive" />
+                  ) : optional ? (
+                    <span aria-hidden="true" className="shrink-0 text-xs font-normal text-muted-foreground">
+                      Optional
+                    </span>
                   ) : !done ? (
                     <Circle aria-hidden="true" className="size-2 shrink-0 fill-warning text-warning" />
                   ) : null}
                 </button>
                 <span id={stateId} className="sr-only">
-                  {done ? "Done" : "Not done yet"}
+                  {done ? "Done" : optional ? "Optional, nothing added" : "Not done yet"}
                   {hasComment ? ", the reviewer left a comment" : ""}
                 </span>
               </li>

@@ -72,6 +72,7 @@ function buildRoleResponse(role: Role) {
         canSendBulkMessage,
         adminCategoryIds: [],
         ledDepartmentIds: [],
+        isClerk: false,
         adminCategories: [],
         adminGroupNames: isGroupAdmin ? ["Youth"] : [],
       },

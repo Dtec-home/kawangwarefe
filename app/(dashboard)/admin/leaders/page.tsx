@@ -45,7 +45,9 @@ import {
   X,
   Users,
   GripVertical,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import {
   DndContext,
   closestCenter,
@@ -316,6 +318,9 @@ function SortableLeaderRow({
                   {leader.category.name}
                 </Badge>
               )}
+              {leader.isDepartmentLeader && (
+                <StatusBadge variant="info" className="text-xs">Department leader</StatusBadge>
+              )}
             </div>
             {leader.bio && (
               <p className="text-sm text-muted-foreground line-clamp-2">{leader.bio}</p>
@@ -326,6 +331,17 @@ function SortableLeaderRow({
               </p>
             )}
           </div>
+          {leader.isDepartmentLeader ? (
+            // R3: the profile belongs to the Dept. Admins assignment.
+            <div className="flex gap-2 shrink-0">
+              <Button asChild size="sm" variant="outline">
+                <Link href="/admin/category-admins">
+                  <ExternalLink className="h-3 w-3 mr-1" aria-hidden="true" />
+                  Edit under Dept. Admins
+                </Link>
+              </Button>
+            </div>
+          ) : (
           <div className="flex gap-2 shrink-0">
             <Button size="sm" variant="outline" onClick={() => onStartEdit(leader)}>
               <Pencil className="h-3 w-3 mr-1" />
@@ -359,6 +375,7 @@ function SortableLeaderRow({
               Delete
             </Button>
           </div>
+          )}
         </>
       )}
     </div>

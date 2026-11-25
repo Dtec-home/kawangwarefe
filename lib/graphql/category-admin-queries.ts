@@ -32,6 +32,13 @@ export const GET_CATEGORY_ADMINS = gql`
       }
       assignedAt
       isActive
+      profile {
+        title
+        bio
+        photoUrl
+        showOnWebsite
+        displayOrder
+      }
     }
   }
 `;
@@ -56,11 +63,12 @@ export const GET_MY_CATEGORY_ADMIN_ROLES = gql`
 `;
 
 /**
- * Assign a member as category admin
+ * Assign a member as category admin, optionally with the leader profile shown
+ * on the website and in the yearly report (R3: one leader record).
  */
 export const ASSIGN_CATEGORY_ADMIN = gql`
-  mutation AssignCategoryAdmin($memberId: ID!, $categoryId: ID!) {
-    assignCategoryAdmin(memberId: $memberId, categoryId: $categoryId) {
+  mutation AssignCategoryAdmin($memberId: ID!, $categoryId: ID!, $profile: LeaderProfileInput) {
+    assignCategoryAdmin(memberId: $memberId, categoryId: $categoryId, profile: $profile) {
       success
       message
       categoryAdmin {
@@ -77,6 +85,36 @@ export const ASSIGN_CATEGORY_ADMIN = gql`
         }
         assignedAt
         isActive
+        profile {
+          title
+          bio
+          photoUrl
+          showOnWebsite
+          displayOrder
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Create or update the leader profile of a department assignment (R3). Name
+ * and phone always come from the member.
+ */
+export const UPDATE_DEPARTMENT_LEADER_PROFILE = gql`
+  mutation UpdateDepartmentLeaderProfile($categoryAdminId: ID!, $profile: LeaderProfileInput!) {
+    updateDepartmentLeaderProfile(categoryAdminId: $categoryAdminId, profile: $profile) {
+      success
+      message
+      categoryAdmin {
+        id
+        profile {
+          title
+          bio
+          photoUrl
+          showOnWebsite
+          displayOrder
+        }
       }
     }
   }

@@ -244,8 +244,8 @@ defineFeature(feature, (test) => {
     then("the report says it is saved", async () => {
       await waitFor(() => expect(screen.getByTestId("autosave-status")).toHaveTextContent("Saved"));
     });
-    and(/^(\d+) of (\d+) sections are done$/, async (done: string, total: string) => {
-      await waitFor(() => expect(screen.getByText(`${done} of ${total} sections done`)).toBeInTheDocument());
+    and(/^(\d+) of (\d+) required sections are done$/, async (done: string, total: string) => {
+      await waitFor(() => expect(screen.getByText(`${done} of ${total} required sections done`)).toBeInTheDocument());
     });
   });
 

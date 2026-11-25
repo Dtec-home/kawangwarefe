@@ -40,7 +40,7 @@ import {
   INITIATE_CAMPAIGN_CONTRIBUTION,
   PUBLIC_CAMPAIGN_FOR_GIVING,
 } from '@/lib/graphql/fundraising/give'
-import { GET_CONTRIBUTION_CATEGORIES, GET_PAYBILL_INSTRUCTION_MESSAGE } from '@/lib/graphql/queries'
+import { GET_GIVING_CATEGORIES, GET_PAYBILL_INSTRUCTION_MESSAGE } from '@/lib/graphql/queries'
 import { CampaignGiveSlot } from '@/components/campaigns/give/campaign-give-slot'
 import {
   ContributionLinesForm,
@@ -111,7 +111,7 @@ const CAMPAIGN_IDS: Record<string, string> = { 'New Church Roof': '42' }
 function linesMocks(campaigns: MockedResponse): MockedResponse[] {
   return [
     {
-      request: { query: GET_CONTRIBUTION_CATEGORIES, variables: () => true },
+      request: { query: GET_GIVING_CATEGORIES, variables: () => true },
       result: { data: { contributionCategories: DEPARTMENTS } },
       maxUsageCount: 20,
     },

@@ -22,7 +22,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/lib/utils";
 import { ProgressRing } from "@/components/department-reports/progress-ring";
 import { ReportStatusBadge } from "@/components/department-reports/status-badge";
-import { DEFAULT_SECTION_SPECS } from "@/lib/department-reports/sections";
+import { DEFAULT_SECTION_SPECS, requiredSectionCount } from "@/lib/department-reports/sections";
 import { GET_DEPARTMENT_REPORT_TRACKER, GET_REPORTING_PERIODS } from "@/lib/graphql/department-reports";
 import type { TrackerRow } from "@/lib/department-reports/types";
 import { formatPeriodDate } from "@/components/department-reports/staff/period-form";
@@ -31,12 +31,14 @@ import {
   canDownloadBook,
   countTrackerRows,
   filterTrackerRows,
+  splitByLeader,
   TRACKER_FILTERS,
   type TrackerFilter,
 } from "@/components/department-reports/staff/tracker-filters";
 import { useReportDownload } from "@/components/department-reports/staff/use-report-download";
 
-const SECTION_COUNT = DEFAULT_SECTION_SPECS.length;
+/** Progress counts required sections only (matches the backend). */
+const SECTION_COUNT = requiredSectionCount(DEFAULT_SECTION_SPECS);
 
 export const reportHref = (reportId: string) => `/admin/department-reports/${reportId}`;
 
@@ -97,9 +99,10 @@ export function PeriodTracker({ periodId }: { periodId: string }) {
     () => [...(data?.departmentReportTracker ?? [])].sort((a, b) => a.department.name.localeCompare(b.department.name)),
     [data],
   );
-  const counts = useMemo(() => countTrackerRows(rows), [rows]);
-  const visible = useMemo(() => filterTrackerRows(rows, filter), [rows, filter]);
-  const leaderless = rows.filter((row) => row.leaderNames.length === 0).length;
+  // Funds nobody leads and nobody reported on (e.g. Tithe) are listed apart, collapsed.
+  const { reporting, unassigned } = useMemo(() => splitByLeader(rows), [rows]);
+  const counts = useMemo(() => countTrackerRows(reporting), [reporting]);
+  const visible = useMemo(() => filterTrackerRows(reporting, filter), [reporting, filter]);
   const bookReady = canDownloadBook(rows);
   const handedIn = counts.submitted + counts.approved;
   const showBookHelp = !bookReady && rows.length > 0;
@@ -148,22 +151,9 @@ export function PeriodTracker({ periodId }: { periodId: string }) {
 
       {rows.length > 0 ? (
         <p className="text-sm text-muted-foreground" data-testid="dept-report-tracker-summary">
-          {handedIn} of {rows.length} departments have handed in their report · {counts.approved} approved
+          {handedIn} of {reporting.length} departments have handed in their report · {counts.approved} approved
           {counts.overdue > 0 ? ` · ${counts.overdue} overdue` : ""}
         </p>
-      ) : null}
-
-      {leaderless > 0 ? (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning"
-        >
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <p>
-            {leaderless === 1 ? "1 department has" : `${leaderless} departments have`} no leader assigned, so nobody
-            can write {leaderless === 1 ? "its" : "their"} report. Assign a leader under Category Admins.
-          </p>
-        </div>
       ) : null}
 
       {rows.length > 0 ? (
@@ -218,11 +208,11 @@ export function PeriodTracker({ periodId }: { periodId: string }) {
                 </Button>
               }
             />
-          ) : rows.length === 0 ? (
+          ) : reporting.length === 0 ? (
             <Empty
               icon={ClipboardList}
               title="No departments to report on"
-              description="Active departments appear here once the period is open."
+              description="Departments appear here once a leader is assigned under Dept. Admins."
             />
           ) : visible.length === 0 ? (
             <Empty
@@ -254,6 +244,23 @@ export function PeriodTracker({ periodId }: { periodId: string }) {
           )}
         </CardContent>
       </Card>
+
+      {unassigned.length > 0 ? (
+        <details data-testid="dept-report-unassigned" className="rounded-xl border bg-card p-4 shadow-xs">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium">
+            <TriangleAlert className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+            {unassigned.length === 1 ? "1 department has" : `${unassigned.length} departments have`} no leader
+            <span className="font-normal text-muted-foreground">
+              — nobody is asked for a report. Assign a leader under Dept. Admins if one is needed.
+            </span>
+          </summary>
+          <ul className="mt-3 divide-y divide-border" aria-label="Departments without a leader">
+            {unassigned.map((row) => (
+              <TrackerRowItem key={row.department.id} row={row} />
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </div>
   );
 }

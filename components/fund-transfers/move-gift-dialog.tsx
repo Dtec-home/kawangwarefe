@@ -28,7 +28,7 @@ import {
   type PurposeOption,
 } from "@/components/fund-transfers/fund-selects";
 import { PREVIEW_PAYMENT_REALLOCATION, REALLOCATE_PAYMENT } from "@/lib/graphql/fund-transfers";
-import { GET_CONTRIBUTION_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
+import { GET_GIVING_CATEGORIES, GET_DEPARTMENT_PURPOSES } from "@/lib/graphql/queries";
 import {
   amountToCents,
   centsToAmount,
@@ -111,7 +111,7 @@ export function MoveGiftDialog({
     setReason("");
   }
 
-  const { data: categoriesData } = useQuery<CategoriesData>(GET_CONTRIBUTION_CATEGORIES, { skip: !open });
+  const { data: categoriesData } = useQuery<CategoriesData>(GET_GIVING_CATEGORIES, { skip: !open });
   const departments = categoriesData?.contributionCategories ?? [];
   const [reallocate, { loading: applying }] = useMutation(REALLOCATE_PAYMENT);
 

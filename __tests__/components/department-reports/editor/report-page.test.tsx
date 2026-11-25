@@ -26,6 +26,9 @@ vi.mock("@/components/department-reports/staff/report-actions", () => ({
   },
 }));
 
+const role = vi.hoisted(() => ({ isStaff: false, isClerk: false, ledDepartmentIds: [] as string[] }));
+vi.mock("@/lib/hooks/use-user-role", () => ({ useUserRole: () => role }));
+
 const toastSuccess = vi.fn();
 const toastError = vi.fn();
 vi.mock("sonner", () => ({
@@ -66,7 +69,7 @@ describe("ReportPage", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Building Fund report" })).toBeInTheDocument();
     expect(screen.getByText(/Period 2026-2027 · Due 31 Jul 2027/)).toBeInTheDocument();
     expect(screen.getByTestId("dept-report-status")).toHaveTextContent("Draft");
-    expect(screen.getByText("4 of 8 sections done")).toBeInTheDocument();
+    expect(screen.getByText("4 of 6 required sections done")).toBeInTheDocument();
     expect(screen.getByTestId("report-actions-stub")).toBeInTheDocument();
     expect(actions).toHaveBeenLastCalledWith(
       expect.objectContaining({ report: expect.objectContaining({ id: "5" }), onChanged: expect.any(Function) }),
@@ -89,7 +92,7 @@ describe("ReportPage", () => {
     });
     vi.useRealTimers();
     await waitFor(() => expect(screen.getByTestId("autosave-status")).toHaveTextContent("Saved"));
-    await waitFor(() => expect(screen.getByText("5 of 8 sections done")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("5 of 6 required sections done")).toBeInTheDocument());
   });
 
   it("submits a complete report and shows it read-only as Submitted", async () => {
@@ -120,9 +123,46 @@ describe("ReportPage", () => {
     expect(screen.getAllByTestId("dept-report-status")).toHaveLength(1);
   });
 
+  it("sends staff reviewing another department back to the tracker, and shows the comments they left", async () => {
+    role.isStaff = true;
+    role.ledDepartmentIds = [];
+    try {
+      const returned = completeReport({
+        status: "returned",
+        canEdit: false,
+        comments: [{
+          __typename: "ReportComment", sectionKey: "challenges", body: "Mention the late materials.",
+          author: "Paul Pastor", createdAt: "2026-11-24T16:01:00Z", resolved: false,
+        }],
+      });
+      renderPage([loadMock(returned), specsMock]);
+      expect(await screen.findByTestId("dept-report-review-history")).toHaveTextContent("Mention the late materials.");
+      expect(screen.getByRole("link", { name: "Tracker" })).toHaveAttribute(
+        "href",
+        `/admin/department-reports/period/${returned.period.id}`,
+      );
+    } finally {
+      role.isStaff = false;
+    }
+  });
+
   it("explains when the report is not available", async () => {
     renderPage([loadMock(null), specsMock]);
     expect(await screen.findByText("This report isn't available")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to my reports" })).toHaveAttribute("href", "/admin/department-reports");
+  });
+
+  it("sends the clerk back to the tracker (R4)", async () => {
+    role.isClerk = true;
+    try {
+      const approved = completeReport({ status: "approved", canEdit: false });
+      renderPage([loadMock(approved), specsMock]);
+      expect(await screen.findByRole("link", { name: "Tracker" })).toHaveAttribute(
+        "href",
+        `/admin/department-reports/period/${approved.period.id}`,
+      );
+    } finally {
+      role.isClerk = false;
+    }
   });
 });

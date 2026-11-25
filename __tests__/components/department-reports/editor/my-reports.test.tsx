@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-const role = { isStaff: false, isAdmin: false };
+const role = { isStaff: false, isAdmin: false, isClerk: false };
 vi.mock("@/lib/hooks/use-user-role", () => ({ useUserRole: () => role }));
 
 const toastError = vi.fn();
@@ -69,6 +69,7 @@ afterEach(() => {
   toastError.mockReset();
   role.isStaff = false;
   role.isAdmin = false;
+  role.isClerk = false;
 });
 
 describe("MyReports", () => {
@@ -80,7 +81,7 @@ describe("MyReports", () => {
     expect(within(card).getByTestId("dept-report-status")).toHaveTextContent("Not started");
     expect(card).toHaveTextContent("Due 31 Jul 2027");
     expect(card).toHaveTextContent("Due in 12 days");
-    expect(within(card).getByRole("img", { name: "0 of 8 sections done" })).toBeInTheDocument();
+    expect(within(card).getByRole("img", { name: "0 of 6 sections done" })).toBeInTheDocument();
     expect(within(card).getByRole("button", { name: "Start report" })).toBeEnabled();
   });
 
@@ -114,7 +115,7 @@ describe("MyReports", () => {
     renderPage([periodsMock(), rowsMock([row])]);
     const card = await screen.findByTestId("dept-report-card");
     expect(within(card).getByTestId("dept-report-status")).toHaveTextContent("Draft");
-    expect(card).toHaveTextContent("5 of 8 sections done");
+    expect(card).toHaveTextContent("5 of 6 required sections done");
     vi.useRealTimers();
     await userEvent.click(within(card).getByRole("button", { name: "Continue" }));
     expect(push).toHaveBeenCalledWith("/admin/department-reports/5");
@@ -164,5 +165,16 @@ describe("MyReports", () => {
     renderPage([periodsMock(), rowsMock([])]);
     expect(await screen.findByRole("link", { name: "Open the tracker" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Reporting periods" })).not.toBeInTheDocument();
+  });
+
+  it("links the clerk to the tracker but not to the reporting-period settings (R4)", async () => {
+    role.isClerk = true;
+    renderPage([periodsMock(), rowsMock([])]);
+    expect(await screen.findByRole("link", { name: "Open the tracker" })).toHaveAttribute(
+      "href",
+      "/admin/department-reports/period/3",
+    );
+    expect(screen.queryByRole("link", { name: "Reporting periods" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Use the tracker to read every department's report/)).toBeInTheDocument();
   });
 });

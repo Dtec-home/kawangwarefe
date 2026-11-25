@@ -29,6 +29,7 @@ const STAFF_ROLE = {
   canSendBulkMessage: false,
   adminCategoryIds: [],
   ledDepartmentIds: [],
+  isClerk: false,
   adminGroupNames: [],
   adminCategories: [],
 };

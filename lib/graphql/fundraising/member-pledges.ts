@@ -62,7 +62,7 @@ export interface MyPledgesData {
 
 /**
  * What a member can pledge to: public campaigns (filtered to those taking
- * pledges) and the church's active departments.
+ * pledges) and the church's active departments that accept giving (R2).
  */
 export const PLEDGE_TARGETS = gql`
   query PledgeTargets {
@@ -73,7 +73,7 @@ export const PLEDGE_TARGETS = gql`
       allowPledges
       isAcceptingGifts
     }
-    contributionCategories(isActive: true) {
+    contributionCategories(isActive: true, forGiving: true) {
       id
       name
     }

@@ -132,4 +132,61 @@ describe('AdminProtectedRoute', () => {
       expect(mockPush).toHaveBeenCalledWith('/record')
     })
   })
+
+  describe('clerk (R4)', () => {
+    const base = {
+      isStaff: false, isCategoryAdmin: false, canAccessContent: false, canAccessAdmin: false,
+      canSendBulkMessage: false, isRecorder: false, isPureRecorder: false, ledDepartmentIds: [] as string[],
+      isClerk: false, isPureClerk: false,
+      loading: false, roleInfo: { isAuthenticated: true },
+    }
+    const clerk = { ...base, isClerk: true, isPureClerk: true }
+    const signedIn = () =>
+      vi.mocked(useAuth).mockReturnValue({ isAuthenticated: true, isLoading: false } as unknown as AuthValue)
+
+    it('lets a clerk into department reports', () => {
+      signedIn()
+      vi.mocked(useUserRole).mockReturnValue(clerk as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="department-reports"><div>Reports page</div></AdminProtectedRoute>)
+      expect(screen.getByText('Reports page')).toBeInTheDocument()
+    })
+
+    it.each([
+      ['staff', { isStaff: true }, true],
+      ['a clerk', { isClerk: true, isPureClerk: true }, true],
+      ['a department leader', { isCategoryAdmin: true, ledDepartmentIds: ['7'] }, false],
+      ['a plain member', {}, false],
+    ])('reports-viewer (tracker, periods): %s → %s', (_who, overrides, allowed) => {
+      signedIn()
+      vi.mocked(useUserRole).mockReturnValue({ ...base, ...overrides } as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="reports-viewer"><div>Tracker</div></AdminProtectedRoute>)
+      if (allowed) expect(screen.getByText('Tracker')).toBeInTheDocument()
+      else expect(screen.queryByText('Tracker')).not.toBeInTheDocument()
+    })
+
+    it.each([
+      ['staff', { isStaff: true }, true],
+      ['a department leader', { isCategoryAdmin: true }, true],
+      ['a scoped leader', { ledDepartmentIds: ['7'] }, true],
+      ['a clerk', { isClerk: true, isPureClerk: true }, false],
+      ['a plain member', {}, false],
+    ])('department-leaders (fund transfers): %s → %s', (_who, overrides, allowed) => {
+      signedIn()
+      vi.mocked(useUserRole).mockReturnValue({ ...base, ...overrides } as unknown as RoleValue)
+      render(<AdminProtectedRoute requiredAccess="department-leaders"><div>Transfers</div></AdminProtectedRoute>)
+      if (allowed) expect(screen.getByText('Transfers')).toBeInTheDocument()
+      else expect(screen.queryByText('Transfers')).not.toBeInTheDocument()
+    })
+
+    it.each(['staff', 'any-admin', 'category-admin', 'recorder', 'messaging', 'content-admin', 'department-leaders'] as const)(
+      'keeps a clerk out of %s routes and sends them to Department Reports',
+      (access) => {
+        signedIn()
+        vi.mocked(useUserRole).mockReturnValue(clerk as unknown as RoleValue)
+        render(<AdminProtectedRoute requiredAccess={access}><div>Money page</div></AdminProtectedRoute>)
+        expect(screen.queryByText('Money page')).not.toBeInTheDocument()
+        expect(mockPush).toHaveBeenCalledWith('/admin/department-reports')
+      },
+    )
+  })
 })

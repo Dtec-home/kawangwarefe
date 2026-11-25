@@ -8,7 +8,7 @@
 import React from "react";
 import { FieldError } from "react-hook-form";
 import { useQuery } from "@apollo/client/react";
-import { GET_CONTRIBUTION_CATEGORIES } from "@/lib/graphql/queries";
+import { GET_GIVING_CATEGORIES } from "@/lib/graphql/queries";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -47,7 +47,7 @@ export function CategorySelect({
   required = true,
 }: Readonly<CategorySelectProps>) {
   const { data, loading, error: queryError } = useQuery<GetCategoriesData>(
-    GET_CONTRIBUTION_CATEGORIES
+    GET_GIVING_CATEGORIES
   );
 
   return (

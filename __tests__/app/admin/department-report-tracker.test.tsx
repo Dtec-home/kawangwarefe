@@ -83,9 +83,9 @@ afterEach(() => {
 });
 
 describe("Department report tracker", () => {
-  it("is limited to staff and titled by the period", async () => {
+  it("is limited to staff and the clerk (R4) and titled by the period", async () => {
     setup();
-    expect(guard).toHaveBeenCalledWith("staff");
+    expect(guard).toHaveBeenCalledWith("reports-viewer");
     expect(await screen.findByRole("heading", { level: 1, name: "Department reports 2025-2026" })).toBeInTheDocument();
     expect(screen.getByText(/due 31 Jul 2026/)).toBeInTheDocument();
   });
@@ -98,7 +98,7 @@ describe("Department report tracker", () => {
     expect(within(row("Youth")).getByTestId("dept-report-status")).toHaveTextContent("Not started");
     expect(within(row("Choir")).getByTestId("dept-report-overdue")).toBeInTheDocument();
     expect(within(row("Building Fund")).queryByTestId("dept-report-overdue")).not.toBeInTheDocument();
-    expect(within(row("Choir")).getByRole("img", { name: "4 of 8 sections done" })).toBeInTheDocument();
+    expect(within(row("Choir")).getByRole("img", { name: "4 of 6 sections done" })).toBeInTheDocument();
   });
 
   it("links to the report when one exists", async () => {
@@ -110,31 +110,37 @@ describe("Department report tracker", () => {
     expect(row("Youth")).toHaveTextContent("No report yet");
   });
 
-  it("warns about departments with no leader", async () => {
+  it("lists departments with no leader and no report apart, collapsed", async () => {
     setup();
     await screen.findAllByTestId("dept-report-tracker-row");
-    expect(within(row("Youth")).getByText("No leader assigned")).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveTextContent("1 department has no leader assigned");
+    const unassigned = screen.getByTestId("dept-report-unassigned");
+    expect(unassigned).not.toHaveAttribute("open");
+    expect(unassigned).toHaveTextContent("1 department has no leader");
+    expect(within(unassigned).getByText("Youth")).toBeInTheDocument();
+    expect(within(unassigned).getByText("No leader assigned")).toBeInTheDocument();
+    const main = screen.getByRole("list", { name: "Departments" });
+    expect(within(main).queryByText("Youth")).not.toBeInTheDocument();
   });
 
   it("counts chips and filters the list", async () => {
     setup();
     await screen.findAllByTestId("dept-report-tracker-row");
     const chips = screen.getByRole("group", { name: "Filter by status" });
-    expect(within(chips).getByRole("button", { name: /All\s*5/ })).toHaveAttribute("aria-pressed", "true");
-    expect(within(chips).getByRole("button", { name: /Overdue\s*2/ })).toBeInTheDocument();
+    // Youth has no leader and no report, so it is counted apart (collapsed group).
+    expect(within(chips).getByRole("button", { name: /All\s*4/ })).toHaveAttribute("aria-pressed", "true");
+    expect(within(chips).getByRole("button", { name: /Overdue\s*1/ })).toBeInTheDocument();
     expect(within(chips).getByRole("button", { name: /Approved\s*1/ })).toBeInTheDocument();
     expect(screen.getByTestId("dept-report-tracker-summary")).toHaveTextContent(
-      "2 of 5 departments have handed in their report · 1 approved · 2 overdue",
+      "2 of 4 departments have handed in their report · 1 approved · 1 overdue",
     );
 
+    const main = () => screen.getByRole("list", { name: "Departments" });
     fireEvent.click(within(chips).getByRole("button", { name: /Overdue/ }));
-    expect(screen.getAllByTestId("dept-report-tracker-row").map((r) => r.querySelector("p")?.textContent)).toEqual([
-      "Choir",
-      "Youth",
-    ]);
+    expect(
+      within(main()).getAllByTestId("dept-report-tracker-row").map((r) => r.querySelector("p")?.textContent),
+    ).toEqual(["Choir"]);
     fireEvent.click(within(chips).getByRole("button", { name: /Submitted/ }));
-    expect(screen.getAllByTestId("dept-report-tracker-row")).toHaveLength(1);
+    expect(within(main()).getAllByTestId("dept-report-tracker-row")).toHaveLength(1);
   });
 
   it("offers 'Show all' when a filter matches nothing", async () => {

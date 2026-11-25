@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   GET_CONTRIBUTION_CATEGORIES,
+  GET_GIVING_CATEGORIES,
   GET_DEPARTMENT_PURPOSES,
   GET_PAYBILL_INSTRUCTION_MESSAGE,
   GET_MY_CONTRIBUTIONS,
@@ -17,6 +18,21 @@ describe('queries', () => {
   it('GET_CONTRIBUTION_CATEGORIES contains contributionCategories query', () => {
     const body = (GET_CONTRIBUTION_CATEGORIES as any).loc?.source?.body || ''
     expect(body).toContain('contributionCategories')
+  })
+
+  it('GET_GIVING_CATEGORIES asks only for departments that accept giving (R2)', () => {
+    const body = GET_GIVING_CATEGORIES.loc?.source?.body || ''
+    expect(body).toMatch(/query GetGivingCategories/)
+    expect(body).toMatch(/contributionCategories\(isActive: true, audience: \$audience, forGiving: true\)/)
+    // Same fields as the admin list so every picker keeps working.
+    for (const field of ['routingMode', 'hasAutoSplit', 'tracksMemberIdentifier', 'identifierFormat', 'allowedGroups']) {
+      expect(body).toContain(field)
+    }
+  })
+
+  it('GET_CONTRIBUTION_CATEGORIES (admin lists) does not filter by giving', () => {
+    const body = GET_CONTRIBUTION_CATEGORIES.loc?.source?.body || ''
+    expect(body).not.toContain('forGiving')
   })
 
   it('exports GET_DEPARTMENT_PURPOSES as DocumentNode', () => {

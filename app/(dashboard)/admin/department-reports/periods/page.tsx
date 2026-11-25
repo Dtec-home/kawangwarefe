@@ -1,7 +1,7 @@
 /**
  * /admin/department-reports/periods — reporting periods (DEPARTMENT_REPORTS, DR-8, US-1).
  *
- * Staff can see the periods; only admins may open, edit or close them (the
+ * Staff and the clerk (R4) can see the periods; only admins may open, edit or close them (the
  * server enforces it too: `ReportPermissions.can_manage_periods`).
  */
 
@@ -13,7 +13,7 @@ import { PeriodsManager } from "@/components/department-reports/staff/periods-ma
 
 export default function ReportingPeriodsPage() {
   return (
-    <AdminProtectedRoute requiredAccess="staff">
+    <AdminProtectedRoute requiredAccess="reports-viewer">
       <AdminLayout>
         <PeriodsManager />
       </AdminLayout>

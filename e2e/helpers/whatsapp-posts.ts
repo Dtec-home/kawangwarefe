@@ -36,6 +36,7 @@ function roleFor(persona: WaPersona) {
     isTreasurer: persona === "treasurer",
     adminCategoryIds: [],
     ledDepartmentIds: [],
+    isClerk: false,
     adminGroupNames: [],
     adminCategories: [],
   };

@@ -22,6 +22,7 @@ function roleResponse() {
     canSendBulkMessage: true,
     adminCategoryIds: [],
     ledDepartmentIds: [],
+    isClerk: false,
     adminCategories: [],
     adminGroupNames: [],
   };

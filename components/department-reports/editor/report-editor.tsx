@@ -15,7 +15,15 @@ import { ArrowLeft, ArrowRight, Eye, History } from "lucide-react";
 
 import type { ReportPreviewData } from "@/components/department-reports/report-preview";
 import { Button } from "@/components/ui/button";
-import { ITEM_KIND_BY_SECTION, SECTION_HINTS, isListSection, type ListSectionKey } from "@/lib/department-reports/sections";
+import {
+  ITEM_KIND_BY_SECTION,
+  SECTION_HINTS,
+  isListSection,
+  sectionHasContent,
+  sectionState,
+  type ListSectionKey,
+  type SectionState,
+} from "@/lib/department-reports/sections";
 import type {
   DepartmentReport,
   ReportError,
@@ -108,11 +116,14 @@ export function ReportEditorView({
 
   const comments = useMemo(() => (report.status === "returned" ? openComments(report.comments) : []), [report]);
   const flagged = useMemo(() => new Set(comments.map((c) => c.sectionKey)), [comments]);
-  const complete = useMemo(() => {
-    const out: Record<string, boolean> = {};
-    for (const spec of specs) out[spec.key] = !report.missing.some((m) => m.key === spec.key);
+  const states = useMemo(() => {
+    const out: Record<string, SectionState> = {};
+    for (const spec of specs) {
+      const passes = !report.missing.some((m) => m.key === spec.key);
+      out[spec.key] = sectionState(spec, passes, sectionHasContent(report, spec));
+    }
     return out;
-  }, [report.missing, specs]);
+  }, [report, specs]);
 
   // ── Current values: local edits, else the saved report ────────────────
   const listRows = (key: ListSectionKey): ItemRow[] => {
@@ -289,7 +300,7 @@ export function ReportEditorView({
           <SectionStepper
             specs={specs}
             current={mode === "edit" ? step : null}
-            complete={complete}
+            states={states}
             flagged={flagged}
             onSelect={goTo}
             open={listOpen}

@@ -17,6 +17,7 @@ import {
   countTrackerRows,
   filterTrackerRows,
   isRowOverdue,
+  splitByLeader,
 } from "@/components/department-reports/staff/tracker-filters";
 import { compareStatements, statementsDiffer, toCents } from "@/components/department-reports/staff/financial-compare";
 
@@ -160,5 +161,17 @@ describe("compareStatements", () => {
   it("reads bad money as zero", () => {
     expect(toCents("abc")).toBe(0);
     expect(toCents("12.345")).toBe(1235);
+  });
+});
+
+
+describe("splitByLeader (tracker noise: funds nobody reports on)", () => {
+  it("keeps departments with a leader or a report, and sets aside leaderless ones with no report", () => {
+    const youth = makeRow("Youth", "draft", { leaderNames: ["Amina"] });
+    const tithe = makeRow("Tithe", "not_started", { leaderNames: [], report: null });
+    const orphanReport = makeRow("Choir", "submitted", { leaderNames: [] });
+    const { reporting, unassigned } = splitByLeader([youth, tithe, orphanReport]);
+    expect(reporting.map((r) => r.department.name)).toEqual(["Youth", "Choir"]);
+    expect(unassigned.map((r) => r.department.name)).toEqual(["Tithe"]);
   });
 });

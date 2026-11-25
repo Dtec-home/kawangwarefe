@@ -20,6 +20,7 @@ const primaryAdminLinks: NavItem[] = [
 ];
 
 const recordLink: NavItem = { href: "/record", label: "Record giving", icon: NotebookPen };
+const departmentReportsLink: NavItem = { href: "/admin/department-reports", label: "Department Reports", icon: ClipboardList };
 
 const moreAdminLinks: NavItem[] = [
   recordLink,
@@ -28,7 +29,7 @@ const moreAdminLinks: NavItem[] = [
   { href: "/admin/categories", label: "Departments", icon: FolderOpen },
   { href: "/admin/groups", label: "Groups", icon: UserRound },
   { href: "/admin/category-admins", label: "Dept. Admins", icon: Shield },
-  { href: "/admin/department-reports", label: "Department Reports", icon: ClipboardList },
+  departmentReportsLink,
   { href: "/admin/c2b-transactions", label: "C2B / Pay Bill", icon: Smartphone },
   { href: "/admin/catch-up-windows", label: "Catch-up windows", icon: CalendarClock },
   { href: "/admin/collection-sessions", label: "Collection sessions", icon: Coins },
@@ -41,7 +42,7 @@ const moreAdminLinks: NavItem[] = [
 export function AdminBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { canAccessFeature, isPureRecorder, canVoidReceipts, isAdmin } = useUserRole();
+  const { canAccessFeature, isPureRecorder, isPureClerk, canVoidReceipts, isAdmin } = useUserRole();
   // T2.6 — pending receipt void requests (treasurer/admin only)
   const pendingVoidRequests = usePendingVoidRequestCount({ enabled: !!canVoidReceipts && !isPureRecorder });
   const [moreOpen, setMoreOpen] = useState(false);
@@ -71,12 +72,15 @@ export function AdminBottomNav() {
     "/admin/department-reports": "department-reports",
   };
 
-  // A pure recorder has a single destination — show it in the bar itself
+  // A pure recorder (or a pure clerk, R4) has a single destination — show it
+  // in the bar itself
   const visiblePrimary = isPureRecorder
     ? [recordLink]
-    : primaryAdminLinks.filter((link) => canAccessFeature(featureMap[link.href] as never));
+    : isPureClerk
+      ? [departmentReportsLink]
+      : primaryAdminLinks.filter((link) => canAccessFeature(featureMap[link.href] as never));
 
-  const visibleMore = isPureRecorder
+  const visibleMore = isPureRecorder || isPureClerk
     ? []
     : moreAdminLinks.filter((link) =>
         // WA-3: WhatsApp posts are for admins only (not treasurers or pastors).

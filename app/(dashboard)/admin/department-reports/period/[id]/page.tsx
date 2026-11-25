@@ -1,6 +1,6 @@
 /**
  * /admin/department-reports/period/[id] — every department's report for one
- * period (DEPARTMENT_REPORTS, DR-8, US-8/US-12). Staff only.
+ * period (DEPARTMENT_REPORTS, DR-8, US-8/US-12). Staff, and the clerk read-only (R4).
  */
 
 "use client";
@@ -15,7 +15,7 @@ export default function DepartmentReportTrackerPage() {
   const params = useParams<{ id: string }>();
   const periodId = String(params?.id ?? "");
   return (
-    <AdminProtectedRoute requiredAccess="staff">
+    <AdminProtectedRoute requiredAccess="reports-viewer">
       <AdminLayout>
         <PeriodTracker periodId={periodId} />
       </AdminLayout>

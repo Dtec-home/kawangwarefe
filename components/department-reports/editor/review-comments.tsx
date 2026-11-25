@@ -85,3 +85,51 @@ export function PinnedComments({ comments }: { comments: readonly ReportComment[
     </div>
   );
 }
+
+interface ReviewHistoryProps {
+  comments: readonly ReportComment[];
+  specs: readonly ReportSectionSpec[];
+  /** Open while the report is waiting on the leader; collapsed otherwise. */
+  expanded: boolean;
+}
+
+/**
+ * The read-only view's record of what reviewers asked for, newest first, so
+ * the pastor or admin still sees their comments after sending a report back.
+ */
+export function ReviewHistory({ comments, specs, expanded }: ReviewHistoryProps) {
+  if (comments.length === 0) return null;
+  const titles = new Map(specs.map((s) => [s.key, s.title]));
+  const newestFirst = [...comments].reverse();
+  return (
+    <details
+      data-testid="dept-report-review-history"
+      open={expanded}
+      className="rounded-xl border bg-card p-4 shadow-xs [&_summary::-webkit-details-marker]:hidden"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2 font-semibold">
+        <MessageSquareWarning aria-hidden="true" className="size-4 text-muted-foreground" />
+        Comments sent to the leader
+        <span className="text-sm font-normal text-muted-foreground">({comments.length})</span>
+      </summary>
+      <ul className="mt-3 space-y-2">
+        {newestFirst.map((comment, i) => (
+          <li key={i} className="rounded-lg border p-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-sm font-semibold">
+                {titles.get(comment.sectionKey) ?? comment.sectionKey}
+                {comment.resolved ? (
+                  <span className="ml-2 rounded-full bg-success/10 px-2 py-0.5 text-xs font-normal text-success">
+                    Resolved
+                  </span>
+                ) : null}
+              </span>
+              <Byline comment={comment} />
+            </div>
+            <p className="mt-1 whitespace-pre-line break-words text-sm">{comment.body}</p>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
